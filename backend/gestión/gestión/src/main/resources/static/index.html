@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Gestión de Instituto</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background-color: #f4f4f9; }
+        h1 { color: #333; }
+        button { padding: 10px 15px; background-color: #007bff; color: white; border: none; cursor: pointer; border-radius: 4px; }
+        button:hover { background-color: #0056b3; }
+        table { width: 100%; margin-top: 20px; border-collapse: collapse; background: white; }
+        th, td { padding: 12px; border: 1px solid #ddd; text-align: left; }
+        th { background-color: #007bff; color: white; }
+    </style>
+</head>
+<body>
+
+    <h1>Lista de Inscripciones</h1>
+    <button onclick="cargarInscripciones()">Cargar Datos desde la API</button>
+
+    <!-- Nuevo Formulario para dar de alta (POST) -->
+    <div style="margin-top: 20px; margin-bottom: 20px; padding: 15px; background: #e9ecef; border-radius: 5px;">
+        <h3>Nueva Inscripción</h3>
+        <form id="form-inscripcion">
+            <label>Fecha: <input type="date" id="fecha"></label>
+            <label style="margin-left: 10px;">ID Alumno: <input type="number" id="idAlumno"></label>
+            <label style="margin-left: 10px;">ID Curso: <input type="number" id="idCurso"></label>
+            <button type="button" onclick="crearInscripcion()" style="margin-left: 10px; background-color: #28a745;">Guardar</button>
+        </form>
+    </div>
+
+    <!-- Tabla que ya tenías para listar (GET) -->
+    <table>
+        <thead>
+            <tr>
+                <th>ID Inscripción</th>
+                <th>Fecha</th>
+                <th>Alumno</th>
+                <th>Curso</th>
+            </tr>
+        </thead>
+        <tbody id="cuerpo-tabla">
+        </tbody>
+    </table>
+
+    <script>
+        // Función existente para el GET
+        function cargarInscripciones() {
+            fetch('http://localhost:8080/api/inscripciones')
+                .then(response => response.json())
+                .then(data => {
+                    let cuerpoTabla = document.getElementById('cuerpo-tabla');
+                    cuerpoTabla.innerHTML = '';
+
+                    data.forEach(inscripcion => {
+                        let fila = `<tr>
+                            <td>${inscripcion.id}</td>
+                            <td>${inscripcion.fechaInscripcion}</td>
+                            <td>${inscripcion.alumno.nya}</td>
+                            <td>${inscripcion.curso.nombre}</td>
+                        </tr>`;
+                        cuerpoTabla.innerHTML += fila;
+                    });
+                })
+                .catch(error => console.error('Error al conectar con la API:', error));
+        }
+
+        // Nueva función para el POST (Crear)
+        function crearInscripcion() {
+            let nuevaInscripcion = {
+                fechaInscripcion: document.getElementById('fecha').value,
+                alumno: { id: document.getElementById('idAlumno').value },
+                curso: { id: document.getElementById('idCurso').value }
+            };
+
+            fetch('http://localhost:8080/api/inscripciones', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(nuevaInscripcion)
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert('¡Inscripción creada con el ID: ' + data.id + '!');
+                document.getElementById('form-inscripcion').reset(); 
+                cargarInscripciones(); 
+            })
+            .catch(error => console.error('Error al guardar:', error));
+        }
+    </script>
+
+</body>
+</html>
