@@ -16,17 +16,21 @@
 <body>
 
     <h1>Lista de Alumnos</h1>
-    <!-- Menú simple para navegar -->
     <a href="index.html" style="margin-bottom: 20px; display: inline-block;">Volver a Inscripciones</a>
     <br>
-    <button onclick="cargarAlumnos()">Cargar Alumnos</button>
+    
+    <!-- Eliminamos el botón azul de "Cargar Alumnos" -->
 
     <div style="margin-top: 20px; margin-bottom: 20px; padding: 15px; background: #e9ecef; border-radius: 5px;">
-        <h3>Nuevo Alumno</h3>
+        <h3 id="titulo-formulario">Nuevo Alumno</h3>
         <form id="form-alumno">
+            <input type="hidden" id="alumno-id">
+            
             <label>Nombre y Apellido: <input type="text" id="nya"></label>
             <label style="margin-left: 10px;">DNI: <input type="text" id="dni"></label>
-            <button type="button" onclick="crearAlumno()" style="margin-left: 10px; background-color: #28a745;">Guardar</button>
+            
+            <button type="button" id="btn-guardar" onclick="guardarAlumno()" style="margin-left: 10px; background-color: #28a745;">Guardar</button>
+            <button type="button" id="btn-cancelar" onclick="cancelarEdicion()" style="margin-left: 5px; background-color: #6c757d; display: none;">Cancelar</button>
         </form>
     </div>
 
@@ -36,7 +40,7 @@
                 <th>ID</th>
                 <th>Nombre y Apellido</th>
                 <th>DNI</th>
-                <th>Acciones</th> <!-- Columna agregada -->
+                <th>Acciones</th>
             </tr>
         </thead>
         <tbody id="cuerpo-tabla">
@@ -44,6 +48,9 @@
     </table>
 
     <script>
+        // Esta línea hace que la función se ejecute sola al abrir la página
+        window.onload = cargarAlumnos;
+
         function cargarAlumnos() {
             fetch('http://localhost:8080/api/alumnos')
                 .then(response => response.json())
@@ -52,12 +59,12 @@
                     cuerpoTabla.innerHTML = '';
 
                     data.forEach(alumno => {
-                        // Fila actualizada con el botón de borrar
                         let fila = `<tr>
                             <td>${alumno.id}</td>
                             <td>${alumno.nya}</td>
                             <td>${alumno.dni}</td>
                             <td>
+                                <button onclick="prepararEdicion(${alumno.id}, '${alumno.nya}', '${alumno.dni}')" style="background-color: #ffc107; color: black; padding: 5px 10px; margin-right: 5px;">Editar</button>
                                 <button onclick="eliminarAlumno(${alumno.id})" style="background-color: #dc3545; padding: 5px 10px;">Borrar</button>
                             </td>
                         </tr>`;
@@ -67,52 +74,69 @@
                 .catch(error => console.error('Error:', error));
         }
 
-        function crearAlumno() {
+        function prepararEdicion(id, nya, dni) {
+            document.getElementById('alumno-id').value = id;
+            document.getElementById('nya').value = nya;
+            document.getElementById('dni').value = dni;
+            
+            document.getElementById('titulo-formulario').innerText = "Modificar Alumno ID: " + id;
+            document.getElementById('btn-guardar').innerText = "Actualizar";
+            document.getElementById('btn-cancelar').style.display = "inline-block";
+        }
+
+        function cancelarEdicion() {
+            document.getElementById('form-alumno').reset();
+            document.getElementById('alumno-id').value = '';
+            document.getElementById('titulo-formulario').innerText = "Nuevo Alumno";
+            document.getElementById('btn-guardar').innerText = "Guardar";
+            document.getElementById('btn-cancelar').style.display = "none";
+        }
+
+        function guardarAlumno() {
+            let idValor = document.getElementById('alumno-id').value;
             let nyaValor = document.getElementById('nya').value;
             let dniValor = document.getElementById('dni').value;
 
-            // 1. Validación de campos vacíos
             if (nyaValor.trim() === '' || dniValor.trim() === '') {
                 alert('Error: Por favor, completá tanto el Nombre como el DNI.');
                 return; 
             }
-
-            // 2. Validación de comas
             if (dniValor.includes(',')) {
                 alert('Error: Ingrese correctamente el DNI (use puntos o solo números, sin comas).');
                 return;
             }
 
-            // 3. Le sacamos todos los puntos al DNI ingresado
             let dniLimpio = dniValor.replace(/\./g, '');
 
-            // 4. Validación de formato
             if (!/^\d{7,8}$/.test(dniLimpio)) {
                 alert('Error: El DNI debe ser un número válido de 7 u 8 cifras.');
                 return;
             }
 
-            // Armamos el objeto
-            let nuevoAlumno = {
-                nya: nyaValor,
-                dni: dniLimpio 
-            };
+            let alumnoData = { nya: nyaValor, dni: dniLimpio };
 
-            fetch('http://localhost:8080/api/alumnos', {
-                method: 'POST',
+            let url = 'http://localhost:8080/api/alumnos';
+            let metodo = 'POST';
+
+            if (idValor !== '') {
+                url = url + '/' + idValor;
+                metodo = 'PUT';
+            }
+
+            fetch(url, {
+                method: metodo,
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(nuevoAlumno)
+                body: JSON.stringify(alumnoData)
             })
             .then(response => response.json())
             .then(data => {
-                alert('¡Alumno creado con ID: ' + data.id + '!');
-                document.getElementById('form-alumno').reset(); 
+                alert('¡Operación exitosa!');
+                cancelarEdicion(); 
                 cargarAlumnos(); 
             })
             .catch(error => console.error('Error:', error));
         }
 
-        // Función nueva para eliminar
         function eliminarAlumno(id) {
             if (!confirm('¿Estás seguro de que querés eliminar el alumno con ID ' + id + '?')) {
                 return; 

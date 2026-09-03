@@ -2,91 +2,159 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Gestión de Instituto</title>
+    <title>Sistema del Instituto</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 40px; background-color: #f4f4f9; }
-        h1 { color: #333; }
-        button { padding: 10px 15px; background-color: #007bff; color: white; border: none; cursor: pointer; border-radius: 4px; }
-        button:hover { background-color: #0056b3; }
+        h1 { color: #333; text-align: center; }
+        .menu { text-align: center; margin-bottom: 30px; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .menu a { text-decoration: none; padding: 12px 25px; background-color: #17a2b8; color: white; border-radius: 5px; margin: 0 10px; font-weight: bold; font-size: 16px; display: inline-block; }
+        .menu a:hover { background-color: #138496; }
         table { width: 100%; margin-top: 20px; border-collapse: collapse; background: white; }
         th, td { padding: 12px; border: 1px solid #ddd; text-align: left; }
-        th { background-color: #007bff; color: white; }
+        th { background-color: #17a2b8; color: white; }
+        .form-container { margin-top: 20px; margin-bottom: 20px; padding: 15px; background: #e9ecef; border-radius: 5px; }
+        select, button { padding: 8px; margin-right: 10px; }
     </style>
 </head>
 <body>
 
-    <h1>Lista de Inscripciones</h1>
-    <button onclick="cargarInscripciones()">Cargar Datos desde la API</button>
+    <h1>Panel Principal - Inscripciones</h1>
+    
+    <div class="menu">
+        <a href="Alumnos.html">Gestión de Alumnos</a>
+        <a href="Cursos.html">Gestión de Cursos</a>
+    </div>
 
-    <!-- Nuevo Formulario para dar de alta (POST) -->
-    <div style="margin-top: 20px; margin-bottom: 20px; padding: 15px; background: #e9ecef; border-radius: 5px;">
+    <div class="form-container">
         <h3>Nueva Inscripción</h3>
         <form id="form-inscripcion">
-            <label>Fecha: <input type="date" id="fecha"></label>
-            <label style="margin-left: 10px;">ID Alumno: <input type="number" id="idAlumno"></label>
-            <label style="margin-left: 10px;">ID Curso: <input type="number" id="idCurso"></label>
-            <button type="button" onclick="crearInscripcion()" style="margin-left: 10px; background-color: #28a745;">Guardar</button>
+            <label>Alumno: 
+                <select id="select-alumno">
+                    <option value="">Seleccione un alumno...</option>
+                </select>
+            </label>
+
+            <label>Curso de Idioma: 
+                <select id="select-curso">
+                    <option value="">Seleccione un idioma...</option>
+                    <option value="1">Español</option>
+                    <option value="2">Inglés</option>
+                    <option value="3">Italiano</option>
+                    <option value="4">Francés</option>
+                    <option value="5">Portugués</option>
+                </select>
+            </label>
+            
+            <button type="button" onclick="guardarInscripcion()" style="background-color: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">Inscribir</button>
         </form>
     </div>
 
-    <!-- Tabla que ya tenías para listar (GET) -->
+    <h3>Inscripciones Activas</h3>
     <table>
         <thead>
             <tr>
                 <th>ID Inscripción</th>
-                <th>Fecha</th>
                 <th>Alumno</th>
                 <th>Curso</th>
+                <th>Fecha</th>
+                <th>Acciones</th>
             </tr>
         </thead>
-        <tbody id="cuerpo-tabla">
+        <tbody id="cuerpo-tabla-inscripciones">
         </tbody>
     </table>
 
     <script>
-        // Función existente para el GET
+        window.onload = function() {
+            cargarInscripciones();
+            cargarAlumnosEnSelect();
+        };
+
+        function cargarAlumnosEnSelect() {
+            fetch('http://localhost:8080/api/alumnos')
+                .then(response => response.json())
+                .then(data => {
+                    let select = document.getElementById('select-alumno');
+                    data.forEach(alumno => {
+                        let opcion = document.createElement('option');
+                        opcion.value = alumno.id; 
+                        opcion.text = `${alumno.nya} (DNI: ${alumno.dni})`;
+                        select.appendChild(opcion);
+                    });
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
         function cargarInscripciones() {
             fetch('http://localhost:8080/api/inscripciones')
                 .then(response => response.json())
                 .then(data => {
-                    let cuerpoTabla = document.getElementById('cuerpo-tabla');
-                    cuerpoTabla.innerHTML = '';
+                    let cuerpo = document.getElementById('cuerpo-tabla-inscripciones');
+                    cuerpo.innerHTML = '';
 
-                    data.forEach(inscripcion => {
+                    data.forEach(insc => {
+                        let nombreAlumno = insc.alumno ? insc.alumno.nya : 'Desconocido';
+                        let nombreCurso = insc.curso ? insc.curso.nombre : 'Desconocido'; 
+                        let fecha = insc.fechaInscripcion ? insc.fechaInscripcion : '-';
+                        
                         let fila = `<tr>
-                            <td>${inscripcion.id}</td>
-                            <td>${inscripcion.fechaInscripcion}</td>
-                            <td>${inscripcion.alumno.nya}</td>
-                            <td>${inscripcion.curso.nombre}</td>
+                            <td>${insc.id}</td>
+                            <td>${nombreAlumno}</td>
+                            <td>${nombreCurso}</td>
+                            <td>${fecha}</td>
+                            <td>
+                                <button onclick="borrarInscripcion(${insc.id})" style="background-color: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer;">Dar de baja</button>
+                            </td>
                         </tr>`;
-                        cuerpoTabla.innerHTML += fila;
+                        cuerpo.innerHTML += fila;
                     });
                 })
-                .catch(error => console.error('Error al conectar con la API:', error));
+                .catch(error => console.error('Error:', error));
         }
 
-        // Nueva función para el POST (Crear)
-        function crearInscripcion() {
-            let nuevaInscripcion = {
-                fechaInscripcion: document.getElementById('fecha').value,
-                alumno: { id: document.getElementById('idAlumno').value },
-                curso: { id: document.getElementById('idCurso').value }
+        function guardarInscripcion() {
+            let idAlumno = document.getElementById('select-alumno').value;
+            let idCurso = document.getElementById('select-curso').value;
+
+            if (idAlumno === '' || idCurso === '') {
+                alert('Por favor, seleccione un alumno y un curso.');
+                return;
+            }
+
+            let inscripcionData = {
+                alumno: { id: idAlumno },
+                curso: { id: idCurso }
             };
 
             fetch('http://localhost:8080/api/inscripciones', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(nuevaInscripcion)
+                body: JSON.stringify(inscripcionData)
             })
-            .then(response => response.json())
-            .then(data => {
-                alert('¡Inscripción creada con el ID: ' + data.id + '!');
-                document.getElementById('form-inscripcion').reset(); 
-                cargarInscripciones(); 
+            .then(response => {
+                if (response.ok) {
+                    alert('¡Inscripción guardada exitosamente!');
+                    document.getElementById('form-inscripcion').reset();
+                    cargarInscripciones();
+                } else {
+                    alert('Error al guardar. ¿Existe el curso en la base de datos?');
+                }
             })
-            .catch(error => console.error('Error al guardar:', error));
+            .catch(error => console.error('Error:', error));
+        }
+
+        function borrarInscripcion(id) {
+            if (!confirm('¿Seguro que querés dar de baja esta inscripción?')) return;
+
+            fetch('http://localhost:8080/api/inscripciones/' + id, { method: 'DELETE' })
+                .then(response => {
+                    if(response.ok) {
+                        alert('Inscripción dada de baja');
+                        cargarInscripciones();
+                    }
+                })
+                .catch(error => console.error('Error:', error));
         }
     </script>
-
 </body>
 </html>
