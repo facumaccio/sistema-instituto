@@ -23,4 +23,15 @@ public class CursoController {
     public Curso crear(@RequestBody Curso curso) {
         return service.guardarCurso(curso);
     }
+
+    @PutMapping("/{id}")
+    public Curso actualizar(@PathVariable Long id, @RequestBody Curso curso) {
+        return service.actualizarCurso(id, curso);
+    }
+
+    @DeleteMapping("/{id}")
+    public String eliminar(@PathVariable Long id) {
+        service.eliminarCurso(id);
+        return "Curso con ID " + id + " eliminado correctamente.";
+    }
 }

@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profesores - Instituto</title>
+    <link rel="stylesheet" href="css/instituto.css?v=20261024">
+</head>
+<body>
+
+    <header class="topbar">
+        <div class="brand">Instituto <span>Gestión Académica</span></div>
+        <nav>
+            <a href="Dashboard.html">Dashboard</a>
+            <a href="index.html">Inscripciones</a>
+            <a href="Alumnos.html">Alumnos</a>
+            <a href="Curso.html">Cursos</a>
+            <a href="Profesores.html" class="active">Profesores</a>
+            <a href="Pagos.html">Pagos y Cuotas</a>
+            <a href="Calendario.html">Calendario</a>
+            <a href="Finanzas.html">Finanzas</a>
+        </nav>
+    </header>
+
+    <main class="page">
+
+        <div class="page-head">
+            <div>
+                <h1>Profesores</h1>
+                <p class="subtitle">Plantel docente, especialidades, datos de contacto y foto de perfil.</p>
+            </div>
+            <div class="page-actions">
+                <span class="last-update" id="ultima-actualizacion">Cargando...</span>
+                <button type="button" class="btn btn-ghost" onclick="cargarTodo()">Actualizar</button>
+                <button type="button" class="btn btn-primary" onclick="abrirModalNuevo()">Nuevo profesor</button>
+            </div>
+        </div>
+
+        <section class="kpis" aria-label="Indicadores de profesores">
+            <article class="kpi">
+                <p class="kpi-label">Total de profesores</p>
+                <div class="kpi-value" id="kpi-total">—</div>
+                <div class="kpi-detail" id="kpi-total-detalle">—</div>
+            </article>
+            <article class="kpi">
+                <p class="kpi-label">Con foto de perfil</p>
+                <div class="kpi-value success" id="kpi-con-foto">—</div>
+                <div class="kpi-detail" id="kpi-con-foto-detalle">—</div>
+            </article>
+            <article class="kpi">
+                <p class="kpi-label">Con cursos asignados</p>
+                <div class="kpi-value" id="kpi-con-cursos">—</div>
+                <div class="kpi-detail" id="kpi-con-cursos-detalle">—</div>
+            </article>
+            <article class="kpi">
+                <p class="kpi-label">Especialidades</p>
+                <div class="kpi-value" id="kpi-especialidades">—</div>
+                <div class="kpi-detail" id="kpi-especialidades-detalle">—</div>
+            </article>
+        </section>
+
+        <section class="toolbar" aria-label="Búsqueda y filtros">
+            <div class="toolbar-main">
+                <div class="search-field">
+                    <label class="field-label" for="buscador">Buscar profesor</label>
+                    <input type="search" id="buscador" placeholder="Nombre, DNI, email o especialidad..." autocomplete="off" oninput="programarBusqueda()">
+                </div>
+            </div>
+            <div class="filters">
+                <div class="filter-field">
+                    <label for="filtro-especialidad">Especialidad</label>
+                    <select id="filtro-especialidad" onchange="cambiarFiltroEspecialidad()">
+                        <option value="">Todas</option>
+                    </select>
+                </div>
+            </div>
+            <div class="toolbar-meta">
+                <div class="results-info" id="resultados-info">—</div>
+                <button type="button" class="btn btn-ghost btn-sm hidden" id="btn-limpiar" onclick="quitarFiltros()">Limpiar</button>
+            </div>
+        </section>
+
+        <section class="profesores-grid" id="grid-profesores" aria-label="Listado de profesores">
+            <div class="empty-state">Cargando profesores...</div>
+        </section>
+
+    </main>
+
+    <!-- Modal: alta / edición de profesor -->
+    <div class="modal-overlay hidden" id="modal-profesor" onclick="cerrarModalPorOverlay(event, 'modal-profesor')">
+        <div class="modal modal-lg modal-profesor" role="dialog" aria-modal="true" aria-labelledby="titulo-profesor">
+            <div class="modal-head">
+                <h3 id="titulo-profesor">Nuevo profesor</h3>
+                <button type="button" class="icon-btn" aria-label="Cerrar" onclick="cerrarModal('modal-profesor')">&times;</button>
+            </div>
+            <form id="form-profesor" onsubmit="guardarProfesor(event)" autocomplete="off">
+                <div class="modal-body">
+                    <input type="hidden" id="profesor-id">
+
+                    <div class="foto-editor">
+                        <div class="avatar avatar-xl avatar-color-0" id="profesor-foto-preview">
+                            <span>?</span>
+                        </div>
+                        <div class="foto-editor-info">
+                            <strong>Foto de perfil</strong>
+                            <span class="field-hint">Se comprime en el navegador y se guarda en la base de datos.</span>
+                            <div class="foto-editor-actions">
+                                <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('profesor-foto').click()">Seleccionar imagen</button>
+                                <input type="file" id="profesor-foto" class="file-input-oculto" accept="image/png,image/jpeg,image/webp" aria-label="Seleccionar foto de perfil" onchange="seleccionarFotoProfesor(event)">
+                                <button type="button" class="btn btn-ghost btn-sm" id="btn-quitar-foto" onclick="quitarFotoProfesor()" disabled>Quitar foto</button>
+                            </div>
+                            <span class="field-hint" id="foto-estado">JPG, PNG o WebP. Máximo 8 MB.</span>
+                        </div>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="field">
+                            <label for="profesor-nombre">Nombre *</label>
+                            <input type="text" id="profesor-nombre" maxlength="80" placeholder="Ej: Laura" required oninput="actualizarPreviewIniciales()">
+                        </div>
+                        <div class="field">
+                            <label for="profesor-apellido">Apellido *</label>
+                            <input type="text" id="profesor-apellido" maxlength="80" placeholder="Ej: Gómez" required oninput="actualizarPreviewIniciales()">
+                        </div>
+                        <div class="field">
+                            <label for="profesor-dni">DNI *</label>
+                            <input type="text" id="profesor-dni" maxlength="11" placeholder="Ej: 30123456" required>
+                            <span class="field-hint">7 u 8 cifras, sin comas.</span>
+                        </div>
+                        <div class="field">
+                            <label for="profesor-fecha">Fecha de nacimiento *</label>
+                            <input type="date" id="profesor-fecha" required>
+                        </div>
+                        <div class="field">
+                            <label for="profesor-email">Email</label>
+                            <input type="email" id="profesor-email" maxlength="120" placeholder="Ej: laura@instituto.com">
+                        </div>
+                        <div class="field">
+                            <label for="profesor-telefono">Teléfono</label>
+                            <input type="tel" id="profesor-telefono" maxlength="40" placeholder="Ej: 11 5555-5555">
+                        </div>
+                        <div class="field full">
+                            <label for="profesor-especialidad">Especialidad / título</label>
+                            <input type="text" id="profesor-especialidad" maxlength="120" placeholder="Ej: Profesora de inglés">
+                        </div>
+                    </div>
+
+                    <p class="nota">El DNI es único por persona. Si el profesor tiene cursos asignados, no se podrá eliminar hasta reasignar esos cursos.</p>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-ghost" onclick="cerrarModal('modal-profesor')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" id="btn-guardar-profesor">Guardar profesor</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="toasts" id="toasts" aria-live="polite"></div>
+
+    <script src="js/instituto.js"></script>
+    <script>
+        const state = {
+            profesores: [],
+            cursos: [],
+            busqueda: '',
+            filtroEspecialidad: '',
+            editandoId: null,
+            fotoPerfil: null,
+            fotoToken: 0,
+            timerBusqueda: null
+        };
+
+        const MAX_ARCHIVO_FOTO = 8 * 1024 * 1024;
+        const MAX_FOTO_DATA_URL = 1400000;
+
+        document.addEventListener('DOMContentLoaded', iniciarProfesores);
+
+        async function iniciarProfesores() {
+            document.getElementById('buscador').addEventListener('keydown', event => {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    ejecutarBusqueda();
+                }
+            });
+
+            document.addEventListener('keydown', event => {
+                if (event.key === 'Escape' && !document.getElementById('modal-profesor').classList.contains('hidden')) {
+                    cerrarModal('modal-profesor');
+                }
+            });
+
+            await cargarTodo();
+        }
+
+        async function cargarTodo() {
+            try {
+                const [profesores, cursos] = await Promise.all([
+                    apiFetch(API + '/profesores'),
+                    apiFetch(API + '/cursos')
+                ]);
+
+                state.profesores = Array.isArray(profesores) ? profesores : [];
+                state.cursos = Array.isArray(cursos) ? cursos : [];
+
+                actualizarFiltroEspecialidades();
+                renderTodo();
+                actualizarUltimaActualizacion();
+            } catch (error) {
+                document.getElementById('grid-profesores').innerHTML =
+                    '<div class="empty-state">No se pudieron cargar los profesores.</div>';
+                document.getElementById('resultados-info').textContent = 'Error de conexión';
+                document.getElementById('ultima-actualizacion').textContent = 'Sin conexión';
+                mostrarToast('No se pudieron cargar los datos: ' + error.message, 'error');
+            }
+        }
+
+        function actualizarUltimaActualizacion() {
+            const hora = new Date().toLocaleTimeString('es-AR', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            document.getElementById('ultima-actualizacion').textContent = 'Actualizado ' + hora;
+        }
+
+        function actualizarFiltroEspecialidades() {
+            const especialidades = new Map();
+            state.profesores.forEach(profesor => {
+                const texto = String(profesor.especialidad || '').trim();
+                if (!texto) return;
+                const clave = normalizarTexto(texto);
+                if (!especialidades.has(clave)) {
+                    especialidades.set(clave, texto);
+                }
+            });
+
+            const valores = Array.from(especialidades.values())
+                .sort((a, b) => a.localeCompare(b, 'es'))
+                .map(texto => ({ id: texto, nombre: texto }));
+
+            llenarSelect(document.getElementById('filtro-especialidad'), valores, {
+                placeholder: 'Todas'
+            });
+        }
+
+        function programarBusqueda() {
+            clearTimeout(state.timerBusqueda);
+            state.timerBusqueda = setTimeout(ejecutarBusqueda, 280);
+        }
+
+        function ejecutarBusqueda() {
+            clearTimeout(state.timerBusqueda);
+            state.busqueda = document.getElementById('buscador').value.trim();
+            renderTodo();
+        }
+
+        function cambiarFiltroEspecialidad() {
+            state.filtroEspecialidad = document.getElementById('filtro-especialidad').value;
+            renderTodo();
+        }
+
+        function quitarFiltros() {
+            state.busqueda = '';
+            state.filtroEspecialidad = '';
+            document.getElementById('buscador').value = '';
+            document.getElementById('filtro-especialidad').value = '';
+            renderTodo();
+        }
+
+        function renderTodo() {
+            renderKpis();
+            renderTarjetas();
+            document.getElementById('btn-limpiar').classList.toggle(
+                'hidden',
+                !(state.busqueda || state.filtroEspecialidad)
+            );
+        }
+
+        function renderKpis() {
+            const total = state.profesores.length;
+            const conFoto = state.profesores.filter(profesor => esFotoPerfilValida(profesor.fotoPerfil)).length;
+            const conCursos = state.profesores.filter(profesor => cursosDeProfesor(profesor.id).length > 0).length;
+            const especialidades = new Set(
+                state.profesores
+                    .map(profesor => normalizarTexto(profesor.especialidad))
+                    .filter(Boolean)
+            ).size;
+
+            document.getElementById('kpi-total').textContent = total;
+            document.getElementById('kpi-total-detalle').textContent =
+                conFoto + ' ' + pluralizar(conFoto, 'profesor con foto', 'profesores con foto');
+
+            document.getElementById('kpi-con-foto').textContent = conFoto;
+            document.getElementById('kpi-con-foto-detalle').textContent =
+                (total - conFoto) + ' ' + pluralizar(total - conFoto, 'sin foto de perfil', 'sin foto de perfil');
+
+            document.getElementById('kpi-con-cursos').textContent = conCursos;
+            document.getElementById('kpi-con-cursos-detalle').textContent =
+                (total - conCursos) + ' ' + pluralizar(total - conCursos, 'sin curso asignado', 'sin curso asignado');
+
+            document.getElementById('kpi-especialidades').textContent = especialidades;
+            document.getElementById('kpi-especialidades-detalle').textContent =
+                pluralizar(especialidades, 'especialidad registrada', 'especialidades registradas');
+        }
+
+        function obtenerProfesoresFiltrados() {
+            const busqueda = normalizarTexto(state.busqueda);
+            const especialidad = normalizarTexto(state.filtroEspecialidad);
+
+            return state.profesores
+                .filter(profesor => {
+                    if (especialidad && normalizarTexto(profesor.especialidad) !== especialidad) {
+                        return false;
+                    }
+                    if (!busqueda) return true;
+
+                    const texto = [
+                        profesor.nombre,
+                        profesor.apellido,
+                        nombreCompleto(profesor),
+                        profesor.dni,
+                        profesor.email,
+                        profesor.telefono,
+                        profesor.especialidad
+                    ].join(' ');
+                    return normalizarTexto(texto).includes(busqueda);
+                })
+                .sort((a, b) => nombreCompleto(a).localeCompare(nombreCompleto(b), 'es'));
+        }
+
+        function renderTarjetas() {
+            const contenedor = document.getElementById('grid-profesores');
+            const profesores = obtenerProfesoresFiltrados();
+            let info = profesores.length + ' ' + pluralizar(profesores.length, 'profesor', 'profesores');
+            if (profesores.length !== state.profesores.length) {
+                info += ' de ' + state.profesores.length;
+            }
+            document.getElementById('resultados-info').textContent = info;
+
+            if (!profesores.length) {
+                const mensaje = state.profesores.length
+                    ? 'No se encontraron profesores con los filtros seleccionados.'
+                    : 'Todavía no hay profesores. Usá “Nuevo profesor” para crear el primero.';
+                contenedor.innerHTML = '<div class="empty-state">' + mensaje + '</div>';
+                return;
+            }
+
+            contenedor.innerHTML = profesores.map(profesor => {
+                const nombre = nombreCompleto(profesor);
+                const cursos = cursosDeProfesor(profesor.id);
+                const edad = calcularEdad(profesor.fechaNacimiento);
+                const cursosTexto = cursos.length
+                    ? cursos.map(curso => curso.nombre).join(', ')
+                    : 'Sin asignar';
+
+                return '<article class="profesor-card">' +
+                    '<div class="profesor-card-head">' +
+                        avatarProfesorHtml(profesor, 'avatar-lg') +
+                        '<div class="profesor-card-title">' +
+                            '<h3>' + escapeHtml(nombre) + '</h3>' +
+                            '<p class="profesor-especialidad">' +
+                                escapeHtml(profesor.especialidad || 'Sin especialidad registrada') +
+                            '</p>' +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="profesor-meta">' +
+                        '<div class="profesor-dato"><span>DNI</span><strong>' +
+                            escapeHtml(profesor.dni || '—') + '</strong></div>' +
+                        '<div class="profesor-dato"><span>Edad</span><strong>' +
+                            (edad !== null ? edad + ' años' : '—') + '</strong></div>' +
+                        '<div class="profesor-dato"><span>Nacimiento</span><strong>' +
+                            formatearFecha(profesor.fechaNacimiento) + '</strong></div>' +
+                        '<div class="profesor-dato"><span>Email</span><strong>' +
+                            escapeHtml(profesor.email || 'Sin email') + '</strong></div>' +
+                        '<div class="profesor-dato"><span>Teléfono</span><strong>' +
+                            escapeHtml(profesor.telefono || 'Sin teléfono') + '</strong></div>' +
+                        '<div class="profesor-dato full"><span>Cursos asignados</span><strong>' +
+                            escapeHtml(cursosTexto) + '</strong></div>' +
+                    '</div>' +
+                    '<div class="profesor-card-actions">' +
+                        '<button type="button" class="action-link" onclick="abrirModalEditar(' + profesor.id + ')">Editar</button>' +
+                        '<button type="button" class="btn-danger-link" onclick="eliminarProfesor(' + profesor.id + ')">Eliminar</button>' +
+                    '</div>' +
+                '</article>';
+            }).join('');
+        }
+
+        function nombreCompleto(profesor) {
+            if (!profesor) return '';
+            const nombre = [profesor.nombre, profesor.apellido].filter(Boolean).join(' ').trim();
+            return nombre || profesor.nya || 'Sin nombre';
+        }
+
+        function inicialesProfesor(profesor) {
+            const nombre = String(profesor?.nombre || '').trim();
+            const apellido = String(profesor?.apellido || '').trim();
+            let iniciales = (nombre.charAt(0) + apellido.charAt(0)).trim();
+
+            if (!iniciales) {
+                const texto = [nombre, apellido].filter(Boolean).join(' ') || String(profesor?.nya || '').trim();
+                const partes = texto.split(/\s+/).filter(Boolean);
+                iniciales = (partes[0]?.charAt(0) || '') + (partes[1]?.charAt(0) || '');
+            }
+
+            return (iniciales || '?').toUpperCase();
+        }
+
+        function colorAvatar(profesor) {
+            const texto = nombreCompleto(profesor) || 'Profesor';
+            const base = Number(profesor?.id) || Array.from(texto)
+                .reduce((total, caracter) => total + caracter.charCodeAt(0), 0);
+            return Math.abs(Number(base) || 0) % 6;
+        }
+
+        function avatarProfesorHtml(profesor, clase) {
+            const nombre = nombreCompleto(profesor);
+            const color = 'avatar-color-' + colorAvatar(profesor);
+
+            if (esFotoPerfilValida(profesor.fotoPerfil)) {
+                return '<div class="avatar ' + clase + ' ' + color + '">' +
+                    '<img src="' + escapeHtml(profesor.fotoPerfil) + '" alt="Foto de ' + escapeHtml(nombre) + '">' +
+                '</div>';
+            }
+
+            return '<div class="avatar ' + clase + ' ' + color + '">' +
+                '<span>' + escapeHtml(inicialesProfesor(profesor)) + '</span>' +
+            '</div>';
+        }
+
+        function cursosDeProfesor(profesorId) {
+            return state.cursos.filter(curso => Number(curso.profesor?.id) === Number(profesorId));
+        }
+
+        function calcularEdad(fecha) {
+            if (!fecha) return null;
+            const partes = String(fecha).slice(0, 10).split('-').map(Number);
+            if (partes.length !== 3 || !partes[0] || !partes[1] || !partes[2]) return null;
+
+            const hoy = new Date();
+            let edad = hoy.getFullYear() - partes[0];
+            const mesActual = hoy.getMonth() + 1;
+            if (mesActual < partes[1] || (mesActual === partes[1] && hoy.getDate() < partes[2])) {
+                edad -= 1;
+            }
+            return edad >= 0 ? edad : null;
+        }
+
+        function esFotoPerfilValida(foto) {
+            return typeof foto === 'string' && /^data:image\/(png|jpe?g|webp);base64,/i.test(foto);
+        }
+
+        function abrirModalNuevo() {
+            state.editandoId = null;
+            state.fotoPerfil = null;
+            state.fotoToken += 1;
+
+            document.getElementById('form-profesor').reset();
+            document.getElementById('profesor-id').value = '';
+            document.getElementById('profesor-foto').value = '';
+            document.getElementById('titulo-profesor').textContent = 'Nuevo profesor';
+            document.getElementById('btn-guardar-profesor').textContent = 'Guardar profesor';
+            document.getElementById('foto-estado').textContent = 'JPG, PNG o WebP. Máximo 8 MB.';
+            configurarLimitesFecha();
+            renderPreviewFoto();
+            abrirModal('modal-profesor');
+        }
+
+        function abrirModalEditar(id) {
+            const profesor = state.profesores.find(item => Number(item.id) === Number(id));
+            if (!profesor) {
+                mostrarToast('No se encontró el profesor seleccionado.', 'error');
+                return;
+            }
+
+            state.editandoId = Number(id);
+            state.fotoPerfil = profesor.fotoPerfil || null;
+            state.fotoToken += 1;
+
+            document.getElementById('profesor-id').value = profesor.id;
+            document.getElementById('profesor-nombre').value = profesor.nombre || '';
+            document.getElementById('profesor-apellido').value = profesor.apellido || '';
+            document.getElementById('profesor-dni').value = profesor.dni || '';
+            document.getElementById('profesor-fecha').value = String(profesor.fechaNacimiento || '').slice(0, 10);
+            document.getElementById('profesor-email').value = profesor.email || '';
+            document.getElementById('profesor-telefono').value = profesor.telefono || '';
+            document.getElementById('profesor-especialidad').value = profesor.especialidad || '';
+            document.getElementById('profesor-foto').value = '';
+            document.getElementById('titulo-profesor').textContent = 'Editar profesor';
+            document.getElementById('btn-guardar-profesor').textContent = 'Guardar cambios';
+            document.getElementById('foto-estado').textContent = state.fotoPerfil
+                ? 'Foto actual cargada.'
+                : 'Sin foto de perfil.';
+            configurarLimitesFecha();
+            renderPreviewFoto();
+            abrirModal('modal-profesor');
+        }
+
+        function configurarLimitesFecha() {
+            const input = document.getElementById('profesor-fecha');
+            const maximo = new Date();
+            maximo.setFullYear(maximo.getFullYear() - 18);
+            input.max = fechaISO(maximo);
+            input.min = '1900-01-01';
+        }
+
+        function fechaISO(fecha) {
+            const anio = fecha.getFullYear();
+            const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+            const dia = String(fecha.getDate()).padStart(2, '0');
+            return anio + '-' + mes + '-' + dia;
+        }
+
+        function actualizarPreviewIniciales() {
+            if (!esFotoPerfilValida(state.fotoPerfil)) {
+                renderPreviewFoto();
+            }
+        }
+
+        function renderPreviewFoto() {
+            const preview = document.getElementById('profesor-foto-preview');
+            const nombre = document.getElementById('profesor-nombre')?.value || '';
+            const apellido = document.getElementById('profesor-apellido')?.value || '';
+            const profesor = {
+                nombre: nombre,
+                apellido: apellido,
+                id: state.editandoId
+            };
+            const color = 'avatar-color-' + colorAvatar(profesor);
+
+            preview.className = 'avatar avatar-xl ' + color;
+            if (esFotoPerfilValida(state.fotoPerfil)) {
+                preview.innerHTML = '<img src="' + escapeHtml(state.fotoPerfil) + '" alt="Vista previa de la foto de perfil">';
+            } else {
+                preview.innerHTML = '<span>' + escapeHtml(inicialesProfesor(profesor)) + '</span>';
+            }
+
+            document.getElementById('btn-quitar-foto').disabled = !state.fotoPerfil;
+        }
+
+        function seleccionarFotoProfesor(event) {
+            const input = event.target;
+            const archivo = input.files && input.files[0];
+            if (!archivo) return;
+
+            if (!archivo.type || !archivo.type.startsWith('image/')) {
+                mostrarToast('Seleccioná un archivo de imagen JPG, PNG o WebP.', 'error');
+                input.value = '';
+                return;
+            }
+
+            if (archivo.size > MAX_ARCHIVO_FOTO) {
+                mostrarToast('La imagen supera los 8 MB. Elegí una más liviana.', 'error');
+                input.value = '';
+                return;
+            }
+
+            const token = ++state.fotoToken;
+            const lector = new FileReader();
+
+            lector.onload = () => {
+                if (token !== state.fotoToken) return;
+                const original = String(lector.result || '');
+                if (!esFotoPerfilValida(original)) {
+                    mostrarToast('No se pudo leer la imagen seleccionada.', 'error');
+                    return;
+                }
+
+                state.fotoPerfil = original;
+                renderPreviewFoto();
+                document.getElementById('foto-estado').textContent = 'Optimizando imagen...';
+
+                const imagen = new Image();
+                imagen.onload = () => {
+                    if (token !== state.fotoToken) return;
+                    try {
+                        const comprimida = comprimirFoto(imagen);
+                        state.fotoPerfil = comprimida;
+                        renderPreviewFoto();
+                        document.getElementById('foto-estado').textContent =
+                            'Foto optimizada (' + tamanoAproximadoKB(comprimida) + ' KB).';
+                    } catch (error) {
+                        state.fotoPerfil = null;
+                        renderPreviewFoto();
+                        document.getElementById('foto-estado').textContent = 'No se pudo optimizar la imagen.';
+                        mostrarToast(error.message, 'error');
+                    }
+                };
+                imagen.onerror = () => {
+                    if (token !== state.fotoToken) return;
+                    state.fotoPerfil = null;
+                    renderPreviewFoto();
+                    document.getElementById('foto-estado').textContent = 'La imagen no es válida.';
+                    mostrarToast('No se pudo interpretar la imagen seleccionada.', 'error');
+                };
+                imagen.src = original;
+            };
+
+            lector.onerror = () => {
+                if (token !== state.fotoToken) return;
+                mostrarToast('No se pudo leer el archivo seleccionado.', 'error');
+            };
+
+            lector.readAsDataURL(archivo);
+        }
+
+        function comprimirFoto(imagen) {
+            let lado = 620;
+            let calidad = 0.86;
+            let dataUrl = dibujarFoto(imagen, lado, calidad);
+
+            while (dataUrl.length > MAX_FOTO_DATA_URL && lado > 260) {
+                lado = Math.max(260, Math.round(lado * 0.8));
+                calidad = Math.max(0.58, calidad - 0.07);
+                dataUrl = dibujarFoto(imagen, lado, calidad);
+            }
+
+            if (dataUrl.length > MAX_FOTO_DATA_URL) {
+                throw new Error('La imagen sigue siendo demasiado pesada. Probá con otra foto.');
+            }
+
+            return dataUrl;
+        }
+
+        function dibujarFoto(imagen, ladoMaximo, calidad) {
+            const anchoOriginal = imagen.naturalWidth || imagen.width;
+            const altoOriginal = imagen.naturalHeight || imagen.height;
+            const escala = Math.min(1, ladoMaximo / Math.max(anchoOriginal, altoOriginal));
+            const ancho = Math.max(1, Math.round(anchoOriginal * escala));
+            const alto = Math.max(1, Math.round(altoOriginal * escala));
+
+            const canvas = document.createElement('canvas');
+            canvas.width = ancho;
+            canvas.height = alto;
+
+            const contexto = canvas.getContext('2d');
+            contexto.fillStyle = '#ffffff';
+            contexto.fillRect(0, 0, ancho, alto);
+            contexto.drawImage(imagen, 0, 0, ancho, alto);
+
+            return canvas.toDataURL('image/jpeg', calidad);
+        }
+
+        function tamanoAproximadoKB(dataUrl) {
+            return Math.max(1, Math.round((dataUrl.length * 3) / 4 / 1024));
+        }
+
+        function quitarFotoProfesor() {
+            state.fotoToken += 1;
+            state.fotoPerfil = null;
+            document.getElementById('profesor-foto').value = '';
+            document.getElementById('foto-estado').textContent = 'Sin foto de perfil.';
+            renderPreviewFoto();
+        }
+
+        async function guardarProfesor(event) {
+            event.preventDefault();
+
+            const id = state.editandoId;
+            const nombre = document.getElementById('profesor-nombre').value.trim();
+            const apellido = document.getElementById('profesor-apellido').value.trim();
+            const dni = document.getElementById('profesor-dni').value.replace(/[.\s]/g, '').trim();
+            const fechaNacimiento = document.getElementById('profesor-fecha').value;
+            const email = document.getElementById('profesor-email').value.trim();
+            const telefono = document.getElementById('profesor-telefono').value.trim();
+            const especialidad = document.getElementById('profesor-especialidad').value.trim();
+
+            if (!nombre || !apellido) {
+                mostrarToast('El nombre y el apellido son obligatorios.', 'error');
+                return;
+            }
+            if (!/^\d{7,8}$/.test(dni)) {
+                mostrarToast('El DNI debe tener 7 u 8 cifras.', 'error');
+                return;
+            }
+            if (!fechaNacimiento) {
+                mostrarToast('Indicá la fecha de nacimiento.', 'error');
+                return;
+            }
+
+            const edad = calcularEdad(fechaNacimiento);
+            if (edad === null || edad < 18 || edad > 100) {
+                mostrarToast('La fecha de nacimiento debe corresponder a una persona de entre 18 y 100 años.', 'error');
+                return;
+            }
+
+            if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                mostrarToast('El email no tiene un formato válido.', 'error');
+                return;
+            }
+
+            const datos = {
+                nombre: nombre,
+                apellido: apellido,
+                dni: dni,
+                fechaNacimiento: fechaNacimiento,
+                email: email || null,
+                telefono: telefono || null,
+                especialidad: especialidad || null,
+                fotoPerfil: state.fotoPerfil || null
+            };
+
+            const boton = document.getElementById('btn-guardar-profesor');
+            setBotonCargando(boton, true, id ? 'Guardando cambios...' : 'Guardando...');
+
+            try {
+                await apiFetch(API + '/profesores' + (id ? '/' + id : ''), {
+                    method: id ? 'PUT' : 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(datos)
+                });
+
+                cerrarModal('modal-profesor');
+                mostrarToast(
+                    id ? 'Profesor actualizado correctamente.' : 'Profesor registrado correctamente.',
+                    'success'
+                );
+                state.editandoId = null;
+                state.fotoPerfil = null;
+                await cargarTodo();
+            } catch (error) {
+                mostrarToast(error.message || 'No se pudo guardar el profesor.', 'error');
+            } finally {
+                setBotonCargando(boton, false);
+            }
+        }
+
+        async function eliminarProfesor(id) {
+            const profesor = state.profesores.find(item => Number(item.id) === Number(id));
+            if (!profesor) return;
+
+            const cursos = cursosDeProfesor(id);
+            let mensaje = '¿Eliminar a ' + nombreCompleto(profesor) + ' del plantel docente?';
+            if (cursos.length) {
+                mensaje += ' Tiene ' + cursos.length + ' ' +
+                    pluralizar(cursos.length, 'curso asignado', 'cursos asignados') +
+                    '. Primero reasigná esos cursos.';
+            }
+
+            const confirmado = await confirmarAccion({
+                titulo: 'Eliminar profesor',
+                mensaje: mensaje,
+                textoConfirmar: 'Eliminar profesor'
+            });
+
+            if (!confirmado) return;
+
+            try {
+                await apiFetch(API + '/profesores/' + id, { method: 'DELETE' });
+                mostrarToast('Profesor eliminado correctamente.', 'success');
+                await cargarTodo();
+            } catch (error) {
+                mostrarToast(error.message || 'No se pudo eliminar el profesor.', 'error');
+            }
+        }
+    </script>
+</body>
+</html>

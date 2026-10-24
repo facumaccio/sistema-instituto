@@ -2,160 +2,541 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Gestión de Alumnos</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 40px; background-color: #f4f4f9; }
-        h1 { color: #333; }
-        button { padding: 10px 15px; background-color: #007bff; color: white; border: none; cursor: pointer; border-radius: 4px; }
-        button:hover { background-color: #0056b3; }
-        table { width: 100%; margin-top: 20px; border-collapse: collapse; background: white; }
-        th, td { padding: 12px; border: 1px solid #ddd; text-align: left; }
-        th { background-color: #007bff; color: white; }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alumnos - Instituto</title>
+    <link rel="stylesheet" href="css/instituto.css?v=20261024">
 </head>
 <body>
 
-    <h1>Lista de Alumnos</h1>
-    <a href="index.html" style="margin-bottom: 20px; display: inline-block;">Volver a Inscripciones</a>
-    <br>
-    
-    <!-- Eliminamos el botón azul de "Cargar Alumnos" -->
+    <header class="topbar">
+        <div class="brand">Instituto <span>Gestión Académica</span></div>
+        <nav>
+            <a href="Dashboard.html">Dashboard</a>
+            <a href="index.html">Inscripciones</a>
+            <a href="Alumnos.html" class="active">Alumnos</a>
+            <a href="Curso.html">Cursos</a>
+            <a href="Profesores.html">Profesores</a>
+            <a href="Pagos.html">Pagos y Cuotas</a>
+            <a href="Calendario.html">Calendario</a>
+            <a href="Finanzas.html">Finanzas</a>
+        </nav>
+    </header>
 
-    <div style="margin-top: 20px; margin-bottom: 20px; padding: 15px; background: #e9ecef; border-radius: 5px;">
-        <h3 id="titulo-formulario">Nuevo Alumno</h3>
-        <form id="form-alumno">
-            <input type="hidden" id="alumno-id">
-            
-            <label>Nombre y Apellido: <input type="text" id="nya"></label>
-            <label style="margin-left: 10px;">DNI: <input type="text" id="dni"></label>
-            
-            <button type="button" id="btn-guardar" onclick="guardarAlumno()" style="margin-left: 10px; background-color: #28a745;">Guardar</button>
-            <button type="button" id="btn-cancelar" onclick="cancelarEdicion()" style="margin-left: 5px; background-color: #6c757d; display: none;">Cancelar</button>
-        </form>
+    <main class="page">
+
+        <div class="page-head">
+            <div>
+                <h1>Alumnos</h1>
+                <p class="subtitle">Legajos, datos personales y regularidad de los alumnos del instituto.</p>
+            </div>
+            <button type="button" class="btn btn-primary" onclick="abrirModalNuevo()">Nuevo alumno</button>
+        </div>
+
+        <section class="kpis" aria-label="Indicadores de alumnos">
+            <article class="kpi">
+                <p class="kpi-label">Total de alumnos</p>
+                <div class="kpi-value" id="kpi-total">—</div>
+                <div class="kpi-detail" id="kpi-total-detalle">—</div>
+            </article>
+            <article class="kpi">
+                <p class="kpi-label">Alumnos regulares</p>
+                <div class="kpi-value success" id="kpi-regulares">—</div>
+                <div class="kpi-detail" id="kpi-regulares-detalle">—</div>
+            </article>
+            <article class="kpi">
+                <p class="kpi-label">Con legajo asignado</p>
+                <div class="kpi-value" id="kpi-legajos">—</div>
+                <div class="kpi-detail" id="kpi-legajos-detalle">—</div>
+            </article>
+            <article class="kpi">
+                <p class="kpi-label">Con inscripciones</p>
+                <div class="kpi-value" id="kpi-inscriptos">—</div>
+                <div class="kpi-detail" id="kpi-inscriptos-detalle">—</div>
+            </article>
+        </section>
+
+        <section class="toolbar" aria-label="Búsqueda y filtros">
+            <div class="toolbar-main">
+                <div class="search-field">
+                    <label class="field-label" for="buscador">Buscar alumno</label>
+                    <input type="search" id="buscador" placeholder="Nombre, DNI o legajo..." autocomplete="off" oninput="programarBusqueda()">
+                </div>
+            </div>
+            <div class="filters">
+                <div class="filter-field">
+                    <label for="filtro-curso">Curso</label>
+                    <select id="filtro-curso" onchange="cambiarFiltroCurso()">
+                        <option value="">Todos los cursos</option>
+                    </select>
+                </div>
+                <div class="filter-field">
+                    <label for="filtro-regularidad">Regularidad</label>
+                    <select id="filtro-regularidad" onchange="cambiarFiltroRegularidad()">
+                        <option value="">Todas</option>
+                        <option value="REGULAR">Regulares</option>
+                        <option value="NO_REGULAR">No regulares</option>
+                        <option value="SIN_DEFINIR">Sin definir</option>
+                    </select>
+                </div>
+            </div>
+            <div class="toolbar-meta">
+                <div class="filter-note hidden" id="filtro-activo"></div>
+                <div class="results-info" id="resultados-info">—</div>
+                <button type="button" class="btn btn-ghost btn-sm" id="btn-limpiar" onclick="quitarFiltros()">Limpiar</button>
+            </div>
+        </section>
+
+        <section class="panel">
+            <div class="panel-head">
+                <h2>Listado de alumnos</h2>
+                <span class="panel-hint">El legajo y la regularidad se usan para la generación de cuotas</span>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Alumno</th>
+                            <th>Legajo</th>
+                            <th>Cursos</th>
+                            <th>Regularidad</th>
+                            <th class="acciones">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cuerpo-alumnos">
+                        <tr><td colspan="5" class="empty">Cargando alumnos...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Modal: alta / edición de alumno -->
+    <div class="modal-overlay hidden" id="modal-alumno" onclick="cerrarModalPorOverlay(event, 'modal-alumno')">
+        <div class="modal modal-lg" role="dialog" aria-modal="true" aria-labelledby="titulo-alumno">
+            <div class="modal-head">
+                <h3 id="titulo-alumno">Nuevo alumno</h3>
+                <button type="button" class="icon-btn" aria-label="Cerrar" onclick="cerrarModal('modal-alumno')">&times;</button>
+            </div>
+            <form id="form-alumno" onsubmit="guardarAlumno(event)">
+                <div class="modal-body">
+                    <input type="hidden" id="alumno-id">
+
+                    <div class="form-grid">
+                        <div class="field full">
+                            <label for="alumno-nya">Nombre y apellido</label>
+                            <input type="text" id="alumno-nya" maxlength="120" required autocomplete="off">
+                        </div>
+                        <div class="field">
+                            <label for="alumno-dni">DNI</label>
+                            <input type="text" id="alumno-dni" maxlength="11" placeholder="Ej: 45123457" required autocomplete="off">
+                            <span class="field-hint">7 u 8 cifras, sin comas.</span>
+                        </div>
+                        <div class="field">
+                            <label for="alumno-legajo">Legajo</label>
+                            <input type="text" id="alumno-legajo" maxlength="30" placeholder="Ej: LEG-001" autocomplete="off">
+                            <span class="field-hint">Opcional, pero recomendado.</span>
+                        </div>
+                        <div class="field">
+                            <label for="alumno-edad">Edad</label>
+                            <input type="number" id="alumno-edad" min="1" max="120" placeholder="Ej: 24">
+                        </div>
+                        <div class="field">
+                            <label>Regularidad</label>
+                            <label class="check-field" for="alumno-regular">
+                                <input type="checkbox" id="alumno-regular" checked>
+                                <span class="check-text">Alumno regular
+                                    <span class="check-hint">Solo los alumnos regulares se incluyen al generar cuotas.</span>
+                                </span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <p class="nota">El DNI es único por persona. Si el alumno tiene cuotas o inscripciones, no se podrá eliminar hasta dar de baja esas relaciones.</p>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-ghost" onclick="cerrarModal('modal-alumno')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" id="btn-guardar-alumno">Guardar alumno</button>
+                </div>
+            </form>
+        </div>
     </div>
 
-    <table>
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Nombre y Apellido</th>
-                <th>DNI</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-        <tbody id="cuerpo-tabla">
-        </tbody>
-    </table>
+    <div class="toasts" id="toasts" aria-live="polite"></div>
 
+    <script src="js/instituto.js"></script>
     <script>
-        // Esta línea hace que la función se ejecute sola al abrir la página
-        window.onload = cargarAlumnos;
+        const state = {
+            alumnos: [],
+            cursos: [],
+            inscripciones: [],
+            busqueda: '',
+            filtroCursoId: null,
+            filtroRegularidad: '',
+            timerBusqueda: null
+        };
 
-        function cargarAlumnos() {
-            fetch('http://localhost:8080/api/alumnos')
-                .then(response => response.json())
-                .then(data => {
-                    let cuerpoTabla = document.getElementById('cuerpo-tabla');
-                    cuerpoTabla.innerHTML = '';
+        document.addEventListener('DOMContentLoaded', iniciar);
 
-                    data.forEach(alumno => {
-                        let fila = `<tr>
-                            <td>${alumno.id}</td>
-                            <td>${alumno.nya}</td>
-                            <td>${alumno.dni}</td>
-                            <td>
-                                <button onclick="prepararEdicion(${alumno.id}, '${alumno.nya}', '${alumno.dni}')" style="background-color: #ffc107; color: black; padding: 5px 10px; margin-right: 5px;">Editar</button>
-                                <button onclick="eliminarAlumno(${alumno.id})" style="background-color: #dc3545; padding: 5px 10px;">Borrar</button>
-                            </td>
-                        </tr>`;
-                        cuerpoTabla.innerHTML += fila;
-                    });
+        async function iniciar() {
+            const parametros = new URLSearchParams(window.location.search);
+            const cursoId = Number(parametros.get('cursoId'));
+            state.filtroCursoId = Number.isInteger(cursoId) && cursoId > 0 ? cursoId : null;
+
+            document.getElementById('buscador').addEventListener('keydown', event => {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    ejecutarBusqueda();
+                }
+            });
+
+            document.addEventListener('keydown', event => {
+                if (event.key === 'Escape' && !document.getElementById('modal-alumno').classList.contains('hidden')) {
+                    cerrarModal('modal-alumno');
+                }
+            });
+
+            await cargarTodo();
+        }
+
+        async function cargarTodo() {
+            try {
+                const [alumnos, cursos, inscripciones] = await Promise.all([
+                    apiFetch(API + '/alumnos'),
+                    apiFetch(API + '/cursos'),
+                    apiFetch(API + '/inscripciones')
+                ]);
+
+                state.alumnos = Array.isArray(alumnos) ? alumnos : [];
+                state.cursos = Array.isArray(cursos) ? cursos : [];
+                state.inscripciones = Array.isArray(inscripciones) ? inscripciones : [];
+
+                actualizarFiltroCursos();
+                renderTodo();
+            } catch (error) {
+                document.getElementById('cuerpo-alumnos').innerHTML = filaVacia(5, 'No se pudieron cargar los alumnos.');
+                document.getElementById('resultados-info').textContent = 'Error de conexión';
+                mostrarToast('No se pudieron cargar los datos: ' + error.message, 'error');
+            }
+        }
+
+        function actualizarFiltroCursos() {
+            llenarSelect(document.getElementById('filtro-curso'), state.cursos, {
+                placeholder: 'Todos los cursos',
+                texto: curso => curso.nombre + (curso.turno ? ' — ' + curso.turno : '')
+            });
+
+            if (state.filtroCursoId) {
+                document.getElementById('filtro-curso').value = String(state.filtroCursoId);
+            }
+        }
+
+        function programarBusqueda() {
+            clearTimeout(state.timerBusqueda);
+            state.timerBusqueda = setTimeout(ejecutarBusqueda, 280);
+        }
+
+        function ejecutarBusqueda() {
+            clearTimeout(state.timerBusqueda);
+            state.busqueda = document.getElementById('buscador').value.trim();
+            renderTodo();
+        }
+
+        function cambiarFiltroCurso() {
+            const valor = document.getElementById('filtro-curso').value;
+            state.filtroCursoId = valor ? Number(valor) : null;
+            actualizarUrl();
+            renderTodo();
+        }
+
+        function cambiarFiltroRegularidad() {
+            state.filtroRegularidad = document.getElementById('filtro-regularidad').value;
+            renderTodo();
+        }
+
+        function quitarFiltros() {
+            state.busqueda = '';
+            state.filtroCursoId = null;
+            state.filtroRegularidad = '';
+            document.getElementById('buscador').value = '';
+            document.getElementById('filtro-curso').value = '';
+            document.getElementById('filtro-regularidad').value = '';
+            actualizarUrl();
+            renderTodo();
+        }
+
+        function actualizarUrl() {
+            const parametros = new URLSearchParams();
+            if (state.filtroCursoId) parametros.set('cursoId', state.filtroCursoId);
+            const query = parametros.toString();
+            history.replaceState(null, '', 'Alumnos.html' + (query ? '?' + query : ''));
+        }
+
+        function cursosDeAlumno(alumnoId) {
+            return state.inscripciones
+                .filter(inscripcion => inscripcion.alumno?.id === alumnoId)
+                .map(inscripcion => inscripcion.curso)
+                .filter(Boolean);
+        }
+
+        function obtenerAlumnosFiltrados() {
+            const busqueda = normalizarTexto(state.busqueda);
+
+            return state.alumnos
+                .filter(alumno => {
+                    if (state.filtroCursoId) {
+                        const estaEnCurso = cursosDeAlumno(alumno.id).some(curso => curso.id === state.filtroCursoId);
+                        if (!estaEnCurso) return false;
+                    }
+
+                    if (state.filtroRegularidad === 'REGULAR' && alumno.esRegular !== true) return false;
+                    if (state.filtroRegularidad === 'NO_REGULAR' && alumno.esRegular !== false) return false;
+                    if (state.filtroRegularidad === 'SIN_DEFINIR' && alumno.esRegular !== null && alumno.esRegular !== undefined) return false;
+
+                    if (!busqueda) return true;
+
+                    const texto = [alumno.nya, alumno.dni, alumno.legajo].join(' ');
+                    return normalizarTexto(texto).includes(busqueda);
                 })
-                .catch(error => console.error('Error:', error));
+                .sort((a, b) => String(a.nya || '').localeCompare(String(b.nya || ''), 'es'));
         }
 
-        function prepararEdicion(id, nya, dni) {
-            document.getElementById('alumno-id').value = id;
-            document.getElementById('nya').value = nya;
-            document.getElementById('dni').value = dni;
-            
-            document.getElementById('titulo-formulario').innerText = "Modificar Alumno ID: " + id;
-            document.getElementById('btn-guardar').innerText = "Actualizar";
-            document.getElementById('btn-cancelar').style.display = "inline-block";
+        function renderTodo() {
+            renderKpis();
+            renderFiltroActivo();
+            renderTabla(obtenerAlumnosFiltrados());
         }
 
-        function cancelarEdicion() {
+        function renderKpis() {
+            const regulares = state.alumnos.filter(alumno => alumno.esRegular === true).length;
+            const noRegulares = state.alumnos.filter(alumno => alumno.esRegular === false).length;
+            const sinDefinir = state.alumnos.filter(alumno => alumno.esRegular === null || alumno.esRegular === undefined).length;
+            const conLegajo = state.alumnos.filter(alumno => alumno.legajo).length;
+            const alumnosInscriptos = new Set(
+                state.inscripciones.map(inscripcion => inscripcion.alumno?.id).filter(Boolean)
+            );
+            const sinInscripcion = state.alumnos.filter(alumno => !alumnosInscriptos.has(alumno.id)).length;
+
+            document.getElementById('kpi-total').textContent = state.alumnos.length;
+            document.getElementById('kpi-total-detalle').textContent =
+                state.alumnos.length + ' ' + pluralizar(state.alumnos.length, 'alumno registrado', 'alumnos registrados');
+
+            document.getElementById('kpi-regulares').textContent = regulares;
+            document.getElementById('kpi-regulares-detalle').textContent =
+                noRegulares + ' no ' + pluralizar(noRegulares, 'regular', 'regulares') +
+                ' · ' + sinDefinir + ' sin definir';
+
+            document.getElementById('kpi-legajos').textContent = conLegajo;
+            document.getElementById('kpi-legajos-detalle').textContent =
+                (state.alumnos.length - conLegajo) + ' ' +
+                pluralizar(state.alumnos.length - conLegajo, 'alumno sin legajo', 'alumnos sin legajo');
+
+            document.getElementById('kpi-inscriptos').textContent = alumnosInscriptos.size;
+            document.getElementById('kpi-inscriptos-detalle').textContent = sinInscripcion
+                ? sinInscripcion + ' ' + pluralizar(sinInscripcion, 'alumno sin curso', 'alumnos sin curso')
+                : 'Todos tienen al menos un curso';
+        }
+
+        function renderFiltroActivo() {
+            const contenedor = document.getElementById('filtro-activo');
+            const partes = [];
+
+            if (state.filtroCursoId) {
+                const curso = state.cursos.find(item => item.id === state.filtroCursoId);
+                partes.push('Curso: <strong>' + escapeHtml(curso?.nombre || ('#' + state.filtroCursoId)) + '</strong>');
+            }
+
+            if (state.filtroRegularidad) {
+                const etiquetas = {
+                    REGULAR: 'Regulares',
+                    NO_REGULAR: 'No regulares',
+                    SIN_DEFINIR: 'Sin definir'
+                };
+                partes.push('Regularidad: <strong>' + escapeHtml(etiquetas[state.filtroRegularidad] || state.filtroRegularidad) + '</strong>');
+            }
+
+            if (partes.length) {
+                contenedor.innerHTML = partes.join(' · ');
+                contenedor.classList.remove('hidden');
+            } else {
+                contenedor.innerHTML = '';
+                contenedor.classList.add('hidden');
+            }
+
+            const hayFiltros = Boolean(state.busqueda || state.filtroCursoId || state.filtroRegularidad);
+            document.getElementById('btn-limpiar').classList.toggle('hidden', !hayFiltros);
+        }
+
+        function renderTabla(alumnos) {
+            const cuerpo = document.getElementById('cuerpo-alumnos');
+            let info = alumnos.length + ' ' + pluralizar(alumnos.length, 'alumno', 'alumnos');
+            if (alumnos.length !== state.alumnos.length) info += ' de ' + state.alumnos.length;
+            document.getElementById('resultados-info').textContent = info;
+
+            if (!alumnos.length) {
+                const mensaje = state.alumnos.length
+                    ? 'No se encontraron alumnos con los filtros seleccionados.'
+                    : 'Todavía no hay alumnos. Usá “Nuevo alumno” para registrar el primero.';
+                cuerpo.innerHTML = filaVacia(5, mensaje);
+                return;
+            }
+
+            cuerpo.innerHTML = alumnos.map(alumno => {
+                const cursos = cursosDeAlumno(alumno.id);
+                const edad = alumno.edad ? ' · ' + alumno.edad + ' años' : '';
+                const urlCuotas = 'Pagos.html?busqueda=' + encodeURIComponent(alumno.nya || '');
+                const urlInscribir = 'index.html?alumnoId=' + alumno.id + '&amp;nuevo=1';
+
+                return '<tr>' +
+                    '<td>' +
+                        '<div class="cell-main">' + escapeHtml(alumno.nya) + '</div>' +
+                        '<div class="cell-sub">DNI ' + escapeHtml(alumno.dni) + edad + '</div>' +
+                    '</td>' +
+                    '<td>' + (alumno.legajo
+                        ? '<span class="cell-main">' + escapeHtml(alumno.legajo) + '</span>'
+                        : '<span class="cell-sub">Sin asignar</span>') + '</td>' +
+                    '<td>' + renderCursos(cursos) + '</td>' +
+                    '<td>' + renderRegularidad(alumno.esRegular) + '</td>' +
+                    '<td class="acciones">' +
+                        '<button type="button" class="action-link" onclick="abrirModalEditar(' + alumno.id + ')">Editar</button>' +
+                        '<a class="action-link" href="' + urlInscribir + '">Inscribir</a>' +
+                        '<a class="action-link" href="' + urlCuotas + '">Ver cuotas</a>' +
+                        '<button type="button" class="btn-danger-link" onclick="eliminarAlumno(' + alumno.id + ')">Eliminar</button>' +
+                    '</td>' +
+                    '</tr>';
+            }).join('');
+        }
+
+        function renderCursos(cursos) {
+            const unicos = Array.from(new Map(cursos.map(curso => [curso.id, curso])).values());
+
+            if (!unicos.length) {
+                return '<span class="cell-sub">Sin inscripciones</span>';
+            }
+
+            const visibles = unicos.slice(0, 2).map(curso =>
+                '<span class="tag">' + escapeHtml(curso.nombre) + '</span>'
+            );
+
+            if (unicos.length > 2) {
+                const titulo = unicos.map(curso => curso.nombre).join(', ');
+                visibles.push('<span class="tag" title="' + escapeHtml(titulo) + '">+' + (unicos.length - 2) + ' más</span>');
+            }
+
+            return visibles.join('');
+        }
+
+        function renderRegularidad(valor) {
+            if (valor === true) return '<span class="badge REGULAR">Regular</span>';
+            if (valor === false) return '<span class="badge NO_REGULAR">No regular</span>';
+            return '<span class="badge SIN_DEFINIR">Sin definir</span>';
+        }
+
+        function filaVacia(columnas, mensaje) {
+            return '<tr><td colspan="' + columnas + '" class="empty">' + escapeHtml(mensaje) + '</td></tr>';
+        }
+
+        function abrirModalNuevo() {
             document.getElementById('form-alumno').reset();
             document.getElementById('alumno-id').value = '';
-            document.getElementById('titulo-formulario').innerText = "Nuevo Alumno";
-            document.getElementById('btn-guardar').innerText = "Guardar";
-            document.getElementById('btn-cancelar').style.display = "none";
+            document.getElementById('alumno-regular').checked = true;
+            document.getElementById('titulo-alumno').textContent = 'Nuevo alumno';
+            document.getElementById('btn-guardar-alumno').textContent = 'Guardar alumno';
+            abrirModal('modal-alumno');
         }
 
-        function guardarAlumno() {
-            let idValor = document.getElementById('alumno-id').value;
-            let nyaValor = document.getElementById('nya').value;
-            let dniValor = document.getElementById('dni').value;
-
-            if (nyaValor.trim() === '' || dniValor.trim() === '') {
-                alert('Error: Por favor, completá tanto el Nombre como el DNI.');
-                return; 
-            }
-            if (dniValor.includes(',')) {
-                alert('Error: Ingrese correctamente el DNI (use puntos o solo números, sin comas).');
+        function abrirModalEditar(id) {
+            const alumno = state.alumnos.find(item => item.id === id);
+            if (!alumno) {
+                mostrarToast('No se encontró el alumno seleccionado.', 'error');
                 return;
             }
 
-            let dniLimpio = dniValor.replace(/\./g, '');
+            document.getElementById('alumno-id').value = alumno.id;
+            document.getElementById('alumno-nya').value = alumno.nya || '';
+            document.getElementById('alumno-dni').value = alumno.dni || '';
+            document.getElementById('alumno-legajo').value = alumno.legajo || '';
+            document.getElementById('alumno-edad').value = alumno.edad || '';
+            document.getElementById('alumno-regular').checked = alumno.esRegular !== false;
+            document.getElementById('titulo-alumno').textContent = 'Editar alumno';
+            document.getElementById('btn-guardar-alumno').textContent = 'Guardar cambios';
+            abrirModal('modal-alumno');
+        }
 
-            if (!/^\d{7,8}$/.test(dniLimpio)) {
-                alert('Error: El DNI debe ser un número válido de 7 u 8 cifras.');
+        async function guardarAlumno(event) {
+            event.preventDefault();
+
+            const id = document.getElementById('alumno-id').value;
+            const nya = document.getElementById('alumno-nya').value.trim();
+            const dniOriginal = document.getElementById('alumno-dni').value.trim();
+            const legajo = document.getElementById('alumno-legajo').value.trim();
+            const edadTexto = document.getElementById('alumno-edad').value.trim();
+            const esRegular = document.getElementById('alumno-regular').checked;
+
+            if (!nya) {
+                mostrarToast('Completá el nombre y apellido del alumno.', 'error');
                 return;
             }
 
-            let alumnoData = { nya: nyaValor, dni: dniLimpio };
-
-            let url = 'http://localhost:8080/api/alumnos';
-            let metodo = 'POST';
-
-            if (idValor !== '') {
-                url = url + '/' + idValor;
-                metodo = 'PUT';
+            const dni = dniOriginal.replace(/[.\s]/g, '');
+            if (!/^\d{7,8}$/.test(dni)) {
+                mostrarToast('El DNI debe ser un número válido de 7 u 8 cifras.', 'error');
+                return;
             }
 
-            fetch(url, {
-                method: metodo,
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(alumnoData)
-            })
-            .then(response => response.json())
-            .then(data => {
-                alert('¡Operación exitosa!');
-                cancelarEdicion(); 
-                cargarAlumnos(); 
-            })
-            .catch(error => console.error('Error:', error));
+            if (edadTexto && (Number(edadTexto) < 1 || Number(edadTexto) > 120)) {
+                mostrarToast('La edad debe estar entre 1 y 120 años.', 'error');
+                return;
+            }
+
+            const datos = {
+                nya: nya,
+                dni: dni,
+                legajo: legajo || null,
+                edad: edadTexto ? Number(edadTexto) : null,
+                esRegular: esRegular
+            };
+
+            const boton = document.getElementById('btn-guardar-alumno');
+            setBotonCargando(boton, true, id ? 'Guardando cambios...' : 'Guardando...');
+
+            try {
+                await apiFetch(API + '/alumnos' + (id ? '/' + id : ''), {
+                    method: id ? 'PUT' : 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(datos)
+                });
+
+                cerrarModal('modal-alumno');
+                mostrarToast(id ? 'Alumno actualizado correctamente.' : 'Alumno registrado correctamente.', 'success');
+                await cargarTodo();
+            } catch (error) {
+                mostrarToast(error.message, 'error');
+            } finally {
+                setBotonCargando(boton, false);
+            }
         }
 
-        function eliminarAlumno(id) {
-            if (!confirm('¿Estás seguro de que querés eliminar el alumno con ID ' + id + '?')) {
-                return; 
-            }
+        async function eliminarAlumno(id) {
+            const alumno = state.alumnos.find(item => item.id === id);
+            if (!alumno) return;
 
-            fetch('http://localhost:8080/api/alumnos/' + id, {
-                method: 'DELETE'
-            })
-            .then(response => {
-                if (response.ok) {
-                    alert('Alumno eliminado correctamente');
-                    cargarAlumnos(); 
-                } else {
-                    alert('Error al eliminar. ¿Quizás tiene una inscripción asociada?');
-                }
-            })
-            .catch(error => console.error('Error al eliminar:', error));
+            const confirmado = await confirmarAccion({
+                titulo: 'Eliminar alumno',
+                mensaje: '¿Eliminar a ' + alumno.nya + '? Solo es posible si no tiene inscripciones, cuotas ni pagos registrados.',
+                textoConfirmar: 'Eliminar alumno'
+            });
+
+            if (!confirmado) return;
+
+            try {
+                await apiFetch(API + '/alumnos/' + id, { method: 'DELETE' });
+                mostrarToast('Alumno eliminado correctamente.', 'success');
+                await cargarTodo();
+            } catch (error) {
+                mostrarToast(error.message, 'error');
+            }
         }
     </script>
-
 </body>
 </html>

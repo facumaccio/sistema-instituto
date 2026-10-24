@@ -32,11 +32,8 @@ public class InscripcionController {
     // Endpoint para Eliminar (DELETE)
     @DeleteMapping("/{id}")
     public String eliminar(@PathVariable Long id) {
-        boolean eliminado = service.eliminarInscripcion(id);
-        if (eliminado) {
-            return "Inscripción con ID " + id + " eliminada correctamente.";
-        }
-        return "No se encontró la inscripción con ID " + id;
+        service.eliminarInscripcion(id);
+        return "Inscripción con ID " + id + " eliminada correctamente.";
     }
 
     // Endpoint para Modificar (PUT)

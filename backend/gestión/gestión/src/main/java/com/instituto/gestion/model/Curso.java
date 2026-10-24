@@ -1,5 +1,6 @@
 package com.instituto.gestion.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 
 @Entity
@@ -11,9 +12,11 @@ public class Curso {
 
     private String nombre;
     private String turno;
+    private Integer cupo;
 
     @ManyToOne
     @JoinColumn(name = "profesor_id")
+    @JsonIgnoreProperties({"fotoPerfil"})
     private Profesor profesor;
 
     public Curso() {}
@@ -26,6 +29,9 @@ public class Curso {
 
     public String getTurno() { return turno; }
     public void setTurno(String turno) { this.turno = turno; }
+
+    public Integer getCupo() { return cupo; }
+    public void setCupo(Integer cupo) { this.cupo = cupo; }
 
     public Profesor getProfesor() { return profesor; }
     public void setProfesor(Profesor profesor) { this.profesor = profesor; }

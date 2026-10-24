@@ -1,0 +1,1457 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pagos y Cuotas - Instituto</title>
+    <style>
+        :root {
+            --navy: #1f3350;
+            --navy-dark: #16263d;
+            --teal: #2e6f6d;
+            --bg: #eef1f5;
+            --surface: #ffffff;
+            --border: #d9e0e8;
+            --text: #1f2933;
+            --muted: #64748b;
+            --danger: #a33a3a;
+            --danger-bg: #f8ecec;
+            --success: #2f6b4f;
+            --success-bg: #eaf4ee;
+            --warning: #8a6320;
+            --warning-bg: #fbf3e3;
+            --shadow: 0 1px 2px rgba(15, 23, 42, .06), 0 4px 14px rgba(15, 23, 42, .05);
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--text);
+            font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+            font-size: 14px;
+            line-height: 1.45;
+        }
+
+        /* ----------------------------- Barra superior ----------------------------- */
+        .topbar {
+            height: 64px;
+            background: var(--navy);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 32px;
+        }
+
+        .brand { font-size: 16px; font-weight: 600; letter-spacing: .2px; }
+        .brand span { color: #a9b8ca; font-weight: 400; font-size: 13px; margin-left: 8px; }
+
+        .topbar nav { display: flex; align-items: center; gap: 24px; }
+
+        .topbar nav a {
+            color: #cbd5e1;
+            text-decoration: none;
+            font-size: 13.5px;
+            padding: 21px 0;
+            border-bottom: 2px solid transparent;
+            transition: color .15s ease, border-color .15s ease;
+        }
+
+        .topbar nav a:hover { color: #fff; }
+        .topbar nav a.active { color: #fff; border-bottom-color: #7fb3ae; }
+
+        /* ----------------------------- Estructura ----------------------------- */
+        .page { max-width: 1260px; margin: 0 auto; padding: 30px 32px 60px; }
+
+        .page-head {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 20px;
+            margin-bottom: 22px;
+        }
+
+        .page-head h1 {
+            margin: 0 0 4px;
+            font-size: 26px;
+            font-weight: 600;
+            letter-spacing: -.2px;
+            color: var(--navy);
+        }
+
+        .subtitle { margin: 0; color: var(--muted); font-size: 13.5px; }
+
+        /* ----------------------------- Indicadores ----------------------------- */
+        .kpis {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .kpi {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 16px 18px;
+            box-shadow: var(--shadow);
+        }
+
+        .kpi-label {
+            margin: 0 0 8px;
+            color: var(--muted);
+            font-size: 10.5px;
+            font-weight: 700;
+            letter-spacing: .8px;
+            text-transform: uppercase;
+        }
+
+        .kpi-value { font-size: 27px; font-weight: 600; color: var(--navy); line-height: 1; }
+        .kpi-value.danger { color: var(--danger); }
+        .kpi-detail { margin-top: 7px; font-size: 12px; color: var(--muted); }
+
+        /* ----------------------------- Buscador ----------------------------- */
+        .toolbar {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 20px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 14px 18px;
+            box-shadow: var(--shadow);
+            margin-bottom: 18px;
+        }
+
+        .search-field { width: min(480px, 100%); }
+
+        .field-label {
+            display: block;
+            margin-bottom: 5px;
+            color: var(--muted);
+            font-size: 10.5px;
+            font-weight: 700;
+            letter-spacing: .7px;
+            text-transform: uppercase;
+        }
+
+        .search-field input {
+            width: 100%;
+            padding: 9px 12px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-size: 13.5px;
+            color: var(--text);
+            background: #fbfcfe;
+        }
+
+        .search-field input:focus,
+        .field input:focus,
+        .field select:focus,
+        .filters input:focus,
+        .filters select:focus {
+            outline: none;
+            border-color: #7d9bbd;
+            box-shadow: 0 0 0 2px rgba(31, 51, 80, .09);
+        }
+
+        .results-info { color: var(--muted); font-size: 12.5px; padding-bottom: 9px; white-space: nowrap; }
+
+        /* ----------------------------- Pestañas ----------------------------- */
+        .tabs {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 18px;
+        }
+
+        .tab {
+            background: none;
+            border: none;
+            border-bottom: 2px solid transparent;
+            color: var(--muted);
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 14px;
+            padding: 11px 16px 12px;
+            transition: color .15s ease, border-color .15s ease;
+        }
+
+        .tab:hover { color: var(--navy); }
+        .tab.active { color: var(--navy); border-bottom-color: var(--navy); font-weight: 600; }
+
+        .tab-alerta { color: var(--danger); }
+        .tab-alerta:hover { color: #7f2b2b; }
+        .tab-alerta.active { color: var(--danger); border-bottom-color: var(--danger); }
+
+        .tab-badge {
+            display: inline-block;
+            min-width: 20px;
+            margin-left: 6px;
+            padding: 1px 6px;
+            border-radius: 999px;
+            background: var(--danger);
+            color: #fff;
+            font-size: 11px;
+            font-weight: 700;
+            text-align: center;
+            vertical-align: 1px;
+        }
+
+        /* ----------------------------- Paneles ----------------------------- */
+        .panel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .hidden { display: none !important; }
+
+        .panel-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            flex-wrap: wrap;
+        }
+
+        .panel-head h2 {
+            margin: 0;
+            font-size: 15.5px;
+            font-weight: 600;
+            color: var(--navy);
+        }
+
+        .panel-hint { color: var(--muted); font-size: 12px; }
+
+        .table-wrap { width: 100%; overflow-x: auto; }
+
+        table { width: 100%; border-collapse: collapse; min-width: 700px; }
+
+        thead th {
+            background: #f7f9fb;
+            border-bottom: 1px solid var(--border);
+            color: var(--muted);
+            font-size: 10.5px;
+            font-weight: 700;
+            letter-spacing: .6px;
+            text-align: left;
+            text-transform: uppercase;
+            padding: 10px 14px;
+            white-space: nowrap;
+        }
+
+        tbody td {
+            border-bottom: 1px solid #edf1f5;
+            padding: 11px 14px;
+            font-size: 13.5px;
+            vertical-align: middle;
+        }
+
+        tbody tr:last-child td { border-bottom: none; }
+        tbody tr:hover td { background: #f9fbfd; }
+
+        .num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+        .text-danger { color: var(--danger) !important; }
+
+        .cell-main { font-weight: 600; color: var(--text); }
+        .cell-sub { color: var(--muted); font-size: 11.5px; margin-top: 2px; }
+        .acciones { white-space: nowrap; text-align: right; }
+        .empty { text-align: center; color: var(--muted); padding: 30px 16px !important; font-size: 13px; }
+
+        /* ----------------------------- Insignias ----------------------------- */
+        .badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 999px;
+            font-size: 11.5px;
+            font-weight: 600;
+            letter-spacing: .15px;
+            white-space: nowrap;
+        }
+
+        .badge.PAGADO, .badge.AL_DIA { background: var(--success-bg); color: var(--success); }
+        .badge.PENDIENTE, .badge.CON_DEUDA { background: var(--warning-bg); color: var(--warning); }
+        .badge.VENCIDO, .badge.MOROSO { background: var(--danger-bg); color: var(--danger); }
+
+        /* ----------------------------- Botones ----------------------------- */
+        .btn {
+            border: 1px solid transparent;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 13.5px;
+            font-weight: 600;
+            padding: 9px 16px;
+            transition: background-color .15s ease, border-color .15s ease, opacity .15s ease;
+        }
+
+        .btn:disabled { opacity: .55; cursor: default; }
+        .btn-primary { background: var(--navy); color: #fff; }
+        .btn-primary:hover:not(:disabled) { background: var(--navy-dark); }
+        .btn-success { background: var(--success); color: #fff; }
+        .btn-success:hover:not(:disabled) { background: #275840; }
+        .btn-danger { background: var(--danger); color: #fff; }
+        .btn-danger:hover:not(:disabled) { background: #842f2f; }
+        .btn-ghost { background: #fff; border-color: var(--border); color: var(--text); }
+        .btn-ghost:hover:not(:disabled) { border-color: #aebccb; background: #f8fafc; }
+        .btn-sm { padding: 6px 11px; font-size: 12.5px; }
+
+        .btn-link {
+            background: none;
+            border: none;
+            padding: 0;
+            color: var(--navy);
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 12.5px;
+            font-weight: 600;
+            text-decoration: underline;
+            text-underline-offset: 2px;
+        }
+
+        .btn-link:hover { color: var(--teal); }
+
+        .btn-danger-link {
+            background: none;
+            border: none;
+            padding: 0 0 0 12px;
+            color: var(--muted);
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 12.5px;
+        }
+
+        .btn-danger-link:hover { color: var(--danger); }
+
+        /* ----------------------------- Filtros ----------------------------- */
+        .filters { display: flex; align-items: flex-end; gap: 10px; flex-wrap: wrap; }
+
+        .filters .filter-field { display: flex; flex-direction: column; gap: 4px; }
+
+        .filters label {
+            color: var(--muted);
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: .5px;
+            text-transform: uppercase;
+        }
+
+        .filters select, .filters input {
+            padding: 7px 9px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            background: #fbfcfe;
+            color: var(--text);
+            font-family: inherit;
+            font-size: 12.5px;
+        }
+
+        .filters input { width: 92px; }
+
+        /* ----------------------------- Chips de morosos ----------------------------- */
+        .chip {
+            display: inline-block;
+            margin: 2px 4px 2px 0;
+            padding: 4px 9px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            background: #fbfcfe;
+            color: var(--text);
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 11.5px;
+            white-space: nowrap;
+            transition: border-color .15s ease, color .15s ease, background-color .15s ease;
+        }
+
+        .chip:hover { border-color: var(--danger); color: var(--danger); background: var(--danger-bg); }
+
+        /* ----------------------------- Modales ----------------------------- */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: rgba(15, 23, 42, .45);
+        }
+
+        .modal {
+            width: 100%;
+            max-width: 470px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            box-shadow: 0 24px 64px rgba(15, 23, 42, .28);
+        }
+
+        .modal-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 17px 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .modal-head h3 { margin: 0; font-size: 16px; font-weight: 600; color: var(--navy); }
+
+        .icon-btn {
+            background: none;
+            border: none;
+            color: var(--muted);
+            cursor: pointer;
+            font-size: 23px;
+            line-height: 1;
+            padding: 0 2px;
+        }
+
+        .icon-btn:hover { color: var(--text); }
+
+        .modal-body { padding: 20px; }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            padding: 15px 20px;
+            border-top: 1px solid var(--border);
+            background: #fbfcfe;
+        }
+
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+        .field { display: flex; flex-direction: column; gap: 5px; }
+        .field.full { grid-column: 1 / -1; }
+
+        .field label {
+            color: var(--muted);
+            font-size: 10.5px;
+            font-weight: 700;
+            letter-spacing: .6px;
+            text-transform: uppercase;
+        }
+
+        .field input, .field select {
+            padding: 9px 10px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            background: #fbfcfe;
+            color: var(--text);
+            font-family: inherit;
+            font-size: 13.5px;
+        }
+
+        .detalle-pago {
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            margin-bottom: 18px;
+            overflow: hidden;
+        }
+
+        .detalle-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            padding: 9px 12px;
+            border-bottom: 1px solid #edf1f5;
+            font-size: 13px;
+        }
+
+        .detalle-row:last-child { border-bottom: none; }
+        .detalle-row span { color: var(--muted); }
+        .detalle-row strong { font-weight: 600; text-align: right; }
+
+        .nota { margin: 12px 0 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
+
+        /* ----------------------------- Toasts ----------------------------- */
+        .toasts {
+            position: fixed;
+            right: 20px;
+            bottom: 20px;
+            z-index: 200;
+            display: flex;
+            flex-direction: column;
+            gap: 9px;
+            max-width: min(380px, calc(100vw - 40px));
+        }
+
+        .toast {
+            padding: 12px 16px;
+            border-left: 4px solid #7fb3ae;
+            border-radius: 4px;
+            background: var(--navy);
+            color: #fff;
+            box-shadow: 0 10px 30px rgba(15, 23, 42, .22);
+            font-size: 13px;
+            transition: opacity .25s ease, transform .25s ease;
+        }
+
+        .toast.error { border-left-color: #d98b8b; }
+        .toast.salir { opacity: 0; transform: translateY(8px); }
+
+        /* ----------------------------- Responsive ----------------------------- */
+        @media (max-width: 980px) {
+            .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
+
+        @media (max-width: 720px) {
+            .topbar { height: auto; padding: 14px 18px; flex-direction: column; align-items: flex-start; gap: 10px; }
+            .topbar nav { gap: 16px; flex-wrap: wrap; }
+            .topbar nav a { padding: 4px 0; }
+            .page { padding: 22px 18px 50px; }
+            .page-head { flex-direction: column; align-items: stretch; }
+            .page-head .btn { align-self: flex-start; }
+            .toolbar { flex-direction: column; align-items: stretch; }
+            .results-info { padding-bottom: 0; }
+            .kpis { grid-template-columns: 1fr; }
+            .form-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <header class="topbar">
+        <div class="brand">Instituto <span>Gestión Académica</span></div>
+        <nav>
+            <a href="Dashboard.html">Dashboard</a>
+            <a href="index.html">Inscripciones</a>
+            <a href="Alumnos.html">Alumnos</a>
+            <a href="Curso.html">Cursos</a>
+            <a href="Profesores.html">Profesores</a>
+            <a href="Pagos.html" class="active">Pagos y Cuotas</a>
+            <a href="Calendario.html">Calendario</a>
+            <a href="Finanzas.html">Finanzas</a>
+        </nav>
+    </header>
+
+    <main class="page">
+
+        <div class="page-head">
+            <div>
+                <h1>Pagos y Cuotas</h1>
+                <p class="subtitle">Administración de cuotas, registro de pagos y estado de cuenta de los alumnos.</p>
+            </div>
+            <button type="button" class="btn btn-primary" onclick="abrirModalGenerar()">Generar cuotas del mes</button>
+        </div>
+
+        <section class="kpis" aria-label="Indicadores">
+            <article class="kpi">
+                <p class="kpi-label">Cuotas pendientes</p>
+                <div class="kpi-value" id="kpi-pendientes">—</div>
+                <div class="kpi-detail" id="kpi-pendientes-monto">—</div>
+            </article>
+            <article class="kpi">
+                <p class="kpi-label">Cuotas vencidas</p>
+                <div class="kpi-value danger" id="kpi-vencidas">—</div>
+                <div class="kpi-detail" id="kpi-vencidas-monto">—</div>
+            </article>
+            <article class="kpi">
+                <p class="kpi-label">Cuotas pagadas</p>
+                <div class="kpi-value" id="kpi-pagadas">—</div>
+                <div class="kpi-detail" id="kpi-pagadas-monto">—</div>
+            </article>
+            <article class="kpi">
+                <p class="kpi-label">Alumnos morosos</p>
+                <div class="kpi-value danger" id="kpi-morosos">—</div>
+                <div class="kpi-detail" id="kpi-morosos-monto">—</div>
+            </article>
+        </section>
+
+        <section class="toolbar">
+            <div class="search-field">
+                <label class="field-label" for="buscador">Buscar por alumno o curso</label>
+                <input type="search" id="buscador" placeholder="Nombre, DNI, legajo o curso..." oninput="programarBusqueda()" autocomplete="off">
+            </div>
+            <div class="results-info" id="resultados-info">—</div>
+        </section>
+
+        <nav class="tabs" role="tablist" aria-label="Secciones de pagos">
+            <button type="button" class="tab active" data-tab="estado" role="tab" aria-selected="true" aria-controls="panel-estado" onclick="cambiarTab('estado')">Estado de cuenta</button>
+            <button type="button" class="tab" data-tab="cuotas" role="tab" aria-selected="false" aria-controls="panel-cuotas" onclick="cambiarTab('cuotas')">Cuotas</button>
+            <button type="button" class="tab tab-alerta" data-tab="morosos" role="tab" aria-selected="false" aria-controls="panel-morosos" onclick="cambiarTab('morosos')">
+                Morosos <span class="tab-badge" id="badge-morosos">0</span>
+            </button>
+        </nav>
+
+        <!-- Estado de cuenta -->
+        <section class="panel tab-panel" id="panel-estado">
+            <div class="panel-head">
+                <h2>Estado de cuenta por alumno y curso</h2>
+                <span class="panel-hint">Facturado, pagado y saldo pendiente</span>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Alumno / Curso</th>
+                            <th class="num">Cuotas</th>
+                            <th class="num">Facturado</th>
+                            <th class="num">Pagado</th>
+                            <th class="num">Saldo</th>
+                            <th>Estado</th>
+                            <th class="acciones">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cuerpo-estado">
+                        <tr><td colspan="7" class="empty">Cargando estado de cuenta...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Cuotas -->
+        <section class="panel tab-panel hidden" id="panel-cuotas">
+            <div class="panel-head">
+                <h2>Cuotas registradas</h2>
+                <div class="filters">
+                    <div class="filter-field">
+                        <label for="filtro-estado">Estado</label>
+                        <select id="filtro-estado" onchange="cargarCuotas()">
+                            <option value="">Todos</option>
+                            <option value="PENDIENTE">Pendiente</option>
+                            <option value="PAGADO">Pagada</option>
+                            <option value="VENCIDO">Vencida</option>
+                        </select>
+                    </div>
+                    <div class="filter-field">
+                        <label for="filtro-mes">Mes</label>
+                        <select id="filtro-mes" onchange="cargarCuotas()">
+                            <option value="">Todos</option>
+                            <option value="1">Enero</option>
+                            <option value="2">Febrero</option>
+                            <option value="3">Marzo</option>
+                            <option value="4">Abril</option>
+                            <option value="5">Mayo</option>
+                            <option value="6">Junio</option>
+                            <option value="7">Julio</option>
+                            <option value="8">Agosto</option>
+                            <option value="9">Septiembre</option>
+                            <option value="10">Octubre</option>
+                            <option value="11">Noviembre</option>
+                            <option value="12">Diciembre</option>
+                        </select>
+                    </div>
+                    <div class="filter-field">
+                        <label for="filtro-anio">Año</label>
+                        <input type="number" id="filtro-anio" min="2000" max="2100" onchange="cargarCuotas()">
+                    </div>
+                    <button type="button" class="btn btn-ghost btn-sm" onclick="limpiarFiltros()">Limpiar filtros</button>
+                </div>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Alumno / Curso</th>
+                            <th>Período</th>
+                            <th class="num">Monto</th>
+                            <th>Fecha de pago</th>
+                            <th>Estado</th>
+                            <th class="acciones">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cuerpo-cuotas">
+                        <tr><td colspan="6" class="empty">Cargando cuotas...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Morosos -->
+        <section class="panel tab-panel hidden" id="panel-morosos">
+            <div class="panel-head">
+                <h2>Alumnos morosos</h2>
+                <span class="panel-hint">Cuotas vencidas impagas y deuda acumulada</span>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Alumno</th>
+                            <th class="num">Cuotas vencidas</th>
+                            <th class="num">Días de mora</th>
+                            <th class="num">Total adeudado</th>
+                            <th>Detalle / Cobrar</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cuerpo-morosos">
+                        <tr><td colspan="5" class="empty">Cargando alumnos morosos...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Modal: generar cuotas -->
+    <div class="modal-overlay hidden" id="modal-generar" onclick="if (event.target === this) cerrarModalGenerar()">
+        <div class="modal" role="dialog" aria-labelledby="titulo-generar">
+            <div class="modal-head">
+                <h3 id="titulo-generar">Generar cuotas del mes</h3>
+                <button type="button" class="icon-btn" aria-label="Cerrar" onclick="cerrarModalGenerar()">&times;</button>
+            </div>
+            <form onsubmit="generarCuotas(event)">
+                <div class="modal-body">
+                    <div class="form-grid">
+                        <div class="field full">
+                            <label for="gen-curso">Curso</label>
+                            <select id="gen-curso" required>
+                                <option value="">Seleccione un curso...</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label for="gen-mes">Mes</label>
+                            <select id="gen-mes" onchange="actualizarVencimientoSugerido()">
+                                <option value="1">Enero</option>
+                                <option value="2">Febrero</option>
+                                <option value="3">Marzo</option>
+                                <option value="4">Abril</option>
+                                <option value="5">Mayo</option>
+                                <option value="6">Junio</option>
+                                <option value="7">Julio</option>
+                                <option value="8">Agosto</option>
+                                <option value="9">Septiembre</option>
+                                <option value="10">Octubre</option>
+                                <option value="11">Noviembre</option>
+                                <option value="12">Diciembre</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label for="gen-anio">Año</label>
+                            <input type="number" id="gen-anio" min="2000" max="2100" required onchange="actualizarVencimientoSugerido()">
+                        </div>
+                        <div class="field">
+                            <label for="gen-monto">Monto por alumno</label>
+                            <input type="number" id="gen-monto" min="0.01" step="0.01" placeholder="15000" required>
+                        </div>
+                        <div class="field">
+                            <label for="gen-vencimiento">Vencimiento</label>
+                            <input type="date" id="gen-vencimiento" required>
+                        </div>
+                    </div>
+                    <p class="nota">Se genera una cuota por cada alumno activo inscripto en el curso. Si la cuota del período ya existe, se omite.</p>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-ghost" onclick="cerrarModalGenerar()">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" id="btn-generar">Generar cuotas</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: registrar pago -->
+    <div class="modal-overlay hidden" id="modal-pago" onclick="if (event.target === this) cerrarModalPago()">
+        <div class="modal" role="dialog" aria-labelledby="titulo-pago">
+            <div class="modal-head">
+                <h3 id="titulo-pago">Registrar pago</h3>
+                <button type="button" class="icon-btn" aria-label="Cerrar" onclick="cerrarModalPago()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="detalle-pago" id="detalle-pago"></div>
+                <div class="field">
+                    <label for="pago-fecha">Fecha de pago</label>
+                    <input type="date" id="pago-fecha">
+                </div>
+                <div class="field">
+                    <label for="pago-metodo">Método de pago</label>
+                    <select id="pago-metodo">
+                        <option value="EFECTIVO" selected>Efectivo</option>
+                        <option value="TRANSFERENCIA">Transferencia</option>
+                        <option value="TARJETA_DEBITO">Tarjeta de débito</option>
+                        <option value="TARJETA_CREDITO">Tarjeta de crédito</option>
+                        <option value="MERCADO_PAGO">Mercado Pago</option>
+                        <option value="CHEQUE">Cheque</option>
+                        <option value="OTRO">Otro</option>
+                    </select>
+                </div>
+                <p class="nota">Al confirmar, la cuota se marca como pagada y se registra automáticamente un ingreso con categoría Cuotas en Finanzas.</p>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-ghost" onclick="cerrarModalPago()">Cancelar</button>
+                <button type="button" class="btn btn-success" id="btn-confirmar-pago" onclick="confirmarPago()">Confirmar pago</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: eliminar cuota -->
+    <div class="modal-overlay hidden" id="modal-eliminar-cuota" onclick="if (event.target === this) cerrarModalEliminarCuota()">
+        <div class="modal" role="dialog" aria-labelledby="titulo-eliminar-cuota">
+            <div class="modal-head">
+                <h3 id="titulo-eliminar-cuota">Eliminar cuota</h3>
+                <button type="button" class="icon-btn" aria-label="Cerrar" onclick="cerrarModalEliminarCuota()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="detalle-pago" id="detalle-eliminar-cuota"></div>
+                <p class="nota">Esta operación no se puede deshacer. Si la cuota ya fue pagada, también se eliminará el ingreso asociado en Finanzas.</p>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-ghost" onclick="cerrarModalEliminarCuota()">Cancelar</button>
+                <button type="button" class="btn btn-danger" id="btn-confirmar-eliminar" onclick="confirmarEliminarCuota()">Eliminar cuota</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toasts" id="toasts" aria-live="polite"></div>
+
+    <script>
+        const API = 'http://localhost:8080/api';
+
+        const state = {
+            tab: 'estado',
+            busqueda: '',
+            cuotas: [],
+            morosos: [],
+            estadoCuenta: [],
+            totalMorosos: 0,
+            pagoPendiente: null,
+            cuotaAEliminar: null,
+            timerBusqueda: null
+        };
+
+        const ETIQUETAS_ESTADO = {
+            PENDIENTE: 'Pendiente',
+            PAGADO: 'Pagada',
+            VENCIDO: 'Vencida',
+            AL_DIA: 'Al día',
+            CON_DEUDA: 'Con deuda',
+            MOROSO: 'Moroso'
+        };
+
+        // ------------------------------------------------------------------
+        // Inicialización
+        // ------------------------------------------------------------------
+        document.addEventListener('DOMContentLoaded', iniciar);
+
+        function iniciar() {
+            const hoy = new Date();
+            document.getElementById('gen-anio').value = hoy.getFullYear();
+            document.getElementById('gen-mes').value = hoy.getMonth() + 1;
+            document.getElementById('pago-fecha').value = hoyISO();
+            document.getElementById('pago-fecha').max = hoyISO();
+            actualizarVencimientoSugerido();
+
+            const parametros = new URLSearchParams(window.location.search);
+            const busquedaInicial = parametros.get('busqueda') || parametros.get('alumno') || '';
+            if (busquedaInicial) {
+                state.busqueda = busquedaInicial;
+                document.getElementById('buscador').value = busquedaInicial;
+            }
+
+            document.getElementById('buscador').addEventListener('keydown', event => {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    ejecutarBusqueda();
+                }
+            });
+
+            cargarCursos();
+            cargarTodo();
+        }
+
+        function cargarTodo() {
+            Promise.allSettled([
+                cargarResumen(),
+                cargarEstadoCuenta(),
+                cargarCuotas(),
+                cargarMorosos()
+            ]);
+        }
+
+        // ------------------------------------------------------------------
+        // Utilidades
+        // ------------------------------------------------------------------
+        async function apiFetch(url, options) {
+            const response = await fetch(url, options);
+            if (!response.ok) {
+                let mensaje = 'Error ' + response.status;
+                try {
+                    const data = await response.json();
+                    mensaje = data.mensaje || data.message || data.error || mensaje;
+                } catch (e) {
+                    // La respuesta de error no era JSON.
+                }
+                throw new Error(mensaje);
+            }
+            const tipo = response.headers.get('content-type') || '';
+            return tipo.includes('application/json') ? response.json() : response.text();
+        }
+
+        function hoyISO() {
+            const hoy = new Date();
+            return new Date(hoy.getTime() - hoy.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+        }
+
+        function formatearMoneda(valor) {
+            return '$ ' + Number(valor || 0).toLocaleString('es-AR', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        }
+
+        function escapeHtml(texto) {
+            if (texto === null || texto === undefined) return '';
+            return String(texto).replace(/[&<>"']/g, caracter => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;'
+            }[caracter]));
+        }
+
+        function etiquetaEstado(estado) {
+            return ETIQUETAS_ESTADO[estado] || estado;
+        }
+
+        function filaVacia(columnas, mensaje) {
+            return '<tr><td colspan="' + columnas + '" class="empty">' + mensaje + '</td></tr>';
+        }
+
+        function mostrarToast(mensaje, tipo) {
+            const contenedor = document.getElementById('toasts');
+            const toast = document.createElement('div');
+            toast.className = 'toast' + (tipo === 'error' ? ' error' : '');
+            toast.textContent = mensaje;
+            contenedor.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.add('salir');
+                setTimeout(() => toast.remove(), 260);
+            }, 4200);
+        }
+
+        // ------------------------------------------------------------------
+        // Pestañas y búsqueda
+        // ------------------------------------------------------------------
+        function cambiarTab(tab) {
+            state.tab = tab;
+
+            document.querySelectorAll('.tab').forEach(boton => {
+                const activo = boton.dataset.tab === tab;
+                boton.classList.toggle('active', activo);
+                boton.setAttribute('aria-selected', activo ? 'true' : 'false');
+            });
+            document.querySelectorAll('.tab-panel').forEach(panel => {
+                panel.classList.toggle('hidden', panel.id !== 'panel-' + tab);
+            });
+
+            document.getElementById('resultados-info').textContent = 'Cargando...';
+            cargarTabActiva();
+        }
+
+        function cargarTabActiva() {
+            if (state.tab === 'estado') return cargarEstadoCuenta();
+            if (state.tab === 'cuotas') return cargarCuotas();
+            return cargarMorosos();
+        }
+
+        function actualizarInfo(tab, texto) {
+            if (state.tab === tab) {
+                document.getElementById('resultados-info').textContent = texto;
+            }
+        }
+
+        function programarBusqueda() {
+            clearTimeout(state.timerBusqueda);
+            state.timerBusqueda = setTimeout(ejecutarBusqueda, 350);
+        }
+
+        function ejecutarBusqueda() {
+            clearTimeout(state.timerBusqueda);
+            state.busqueda = document.getElementById('buscador').value.trim();
+            cargarTabActiva();
+        }
+
+        function verCuotasDe(alumnoId) {
+            const cuenta = state.estadoCuenta.find(item => item.alumnoId === alumnoId);
+            if (!cuenta) return;
+
+            state.busqueda = cuenta.nya;
+            document.getElementById('buscador').value = cuenta.nya;
+            cambiarTab('cuotas');
+        }
+
+        // ------------------------------------------------------------------
+        // Cursos
+        // ------------------------------------------------------------------
+        function cargarCursos() {
+            apiFetch(API + '/cursos')
+                .then(cursos => {
+                    const select = document.getElementById('gen-curso');
+                    const opciones = (cursos || []).map(curso => {
+                        const turno = curso.turno ? ' — ' + escapeHtml(curso.turno) : '';
+                        return '<option value="' + curso.id + '">' + escapeHtml(curso.nombre) + turno + '</option>';
+                    }).join('');
+                    select.innerHTML = '<option value="">Seleccione un curso...</option>' + opciones;
+                })
+                .catch(error => console.error('Error al cargar cursos:', error));
+        }
+
+        function actualizarVencimientoSugerido() {
+            const mes = parseInt(document.getElementById('gen-mes').value, 10);
+            const anio = parseInt(document.getElementById('gen-anio').value, 10);
+            if (!mes || !anio) return;
+            document.getElementById('gen-vencimiento').value =
+                anio + '-' + String(mes).padStart(2, '0') + '-10';
+        }
+
+        // ------------------------------------------------------------------
+        // Indicadores y resumen
+        // ------------------------------------------------------------------
+        function cargarResumen() {
+            return apiFetch(API + '/cuotas/resumen')
+                .then(resumen => {
+                    document.getElementById('kpi-pendientes').textContent = resumen.pendientes;
+                    document.getElementById('kpi-pendientes-monto').textContent =
+                        formatearMoneda(resumen.totalPendiente);
+                    document.getElementById('kpi-vencidas').textContent = resumen.vencidas;
+                    document.getElementById('kpi-vencidas-monto').textContent =
+                        formatearMoneda(resumen.totalVencido);
+                    document.getElementById('kpi-pagadas').textContent = resumen.pagadas;
+                    document.getElementById('kpi-pagadas-monto').textContent =
+                        formatearMoneda(resumen.totalPagado);
+
+                    state.totalMorosos = Number(resumen.alumnosMorosos || 0);
+                    document.getElementById('kpi-morosos').textContent = state.totalMorosos;
+                    document.getElementById('kpi-morosos-monto').textContent =
+                        'Deuda: ' + formatearMoneda(resumen.totalVencido);
+                    document.getElementById('badge-morosos').textContent = state.totalMorosos;
+                })
+                .catch(error => console.error('Error al cargar el resumen:', error));
+        }
+
+        // ------------------------------------------------------------------
+        // Estado de cuenta
+        // ------------------------------------------------------------------
+        function cargarEstadoCuenta() {
+            const params = new URLSearchParams();
+            if (state.busqueda) params.append('busqueda', state.busqueda);
+
+            return apiFetch(API + '/cuotas/estado-cuenta?' + params.toString())
+                .then(cuentas => {
+                    state.estadoCuenta = Array.isArray(cuentas) ? cuentas : [];
+                    renderEstadoCuenta();
+                })
+                .catch(error => {
+                    document.getElementById('cuerpo-estado').innerHTML =
+                        filaVacia(7, 'No se pudo cargar el estado de cuenta.');
+                    actualizarInfo('estado', 'Error de conexión');
+                    console.error('Error al cargar estado de cuenta:', error);
+                });
+        }
+
+        function renderEstadoCuenta() {
+            const cuerpo = document.getElementById('cuerpo-estado');
+            actualizarInfo('estado', state.estadoCuenta.length + ' cuenta(s) encontrada(s)');
+
+            if (!state.estadoCuenta.length) {
+                cuerpo.innerHTML = filaVacia(7, 'No se encontraron cuentas para la búsqueda.');
+                return;
+            }
+
+            cuerpo.innerHTML = state.estadoCuenta.map(cuenta => {
+                const legajo = cuenta.legajo
+                    ? ' · Leg. ' + escapeHtml(cuenta.legajo)
+                    : '';
+
+                return '<tr>' +
+                    '<td>' +
+                        '<div class="cell-main">' + escapeHtml(cuenta.nya) + '</div>' +
+                        '<div class="cell-sub">DNI ' + escapeHtml(cuenta.dni) + legajo +
+                            ' · ' + escapeHtml(cuenta.cursoNombre) + '</div>' +
+                    '</td>' +
+                    '<td class="num">' +
+                        '<div class="cell-main">' + cuenta.cuotasTotales + '</div>' +
+                        '<div class="cell-sub ' + (cuenta.vencidas > 0 ? 'text-danger' : '') + '">' +
+                            cuenta.pagadas + ' pag. · ' + cuenta.vencidas + ' venc.</div>' +
+                    '</td>' +
+                    '<td class="num">' + formatearMoneda(cuenta.totalFacturado) + '</td>' +
+                    '<td class="num">' + formatearMoneda(cuenta.totalPagado) + '</td>' +
+                    '<td class="num ' + (cuenta.saldo > 0 ? 'text-danger' : '') + '"><strong>' +
+                        formatearMoneda(cuenta.saldo) + '</strong></td>' +
+                    '<td><span class="badge ' + cuenta.estado + '">' + etiquetaEstado(cuenta.estado) + '</span></td>' +
+                    '<td class="acciones">' +
+                        '<button type="button" class="btn-link" onclick="verCuotasDe(' + cuenta.alumnoId + ')">Ver cuotas</button>' +
+                    '</td>' +
+                    '</tr>';
+            }).join('');
+        }
+
+        // ------------------------------------------------------------------
+        // Cuotas
+        // ------------------------------------------------------------------
+        function cargarCuotas() {
+            const params = new URLSearchParams();
+            if (state.busqueda) params.append('busqueda', state.busqueda);
+
+            const estado = document.getElementById('filtro-estado').value;
+            const mes = document.getElementById('filtro-mes').value;
+            const anio = document.getElementById('filtro-anio').value;
+
+            if (estado) params.append('estado', estado);
+            if (mes) params.append('mes', mes);
+            if (anio) params.append('anio', anio);
+
+            return apiFetch(API + '/cuotas?' + params.toString())
+                .then(cuotas => {
+                    state.cuotas = Array.isArray(cuotas) ? cuotas : [];
+                    renderCuotas();
+                })
+                .catch(error => {
+                    document.getElementById('cuerpo-cuotas').innerHTML =
+                        filaVacia(6, 'No se pudieron cargar las cuotas.');
+                    actualizarInfo('cuotas', 'Error de conexión');
+                    console.error('Error al cargar cuotas:', error);
+                });
+        }
+
+        function renderCuotas() {
+            const cuerpo = document.getElementById('cuerpo-cuotas');
+            actualizarInfo('cuotas', state.cuotas.length + ' cuota(s) encontrada(s)');
+
+            if (!state.cuotas.length) {
+                cuerpo.innerHTML = filaVacia(6, 'No hay cuotas para los filtros seleccionados.');
+                return;
+            }
+
+            cuerpo.innerHTML = state.cuotas.map(cuota => {
+                const alumno = cuota.alumno && cuota.alumno.nya ? cuota.alumno.nya : 'Desconocido';
+                const curso = cuota.curso && cuota.curso.nombre ? cuota.curso.nombre : 'Desconocido';
+                const periodo = cuota.periodo || (cuota.periodoMes + '/' + cuota.periodoAnio);
+                const fechaPago = cuota.fechaPago || '—';
+
+                const accionPago = cuota.estado === 'PAGADO'
+                    ? '<span class="cell-sub" title="Ingreso acreditado automáticamente en Finanzas">Pago registrado · Finanzas</span>'
+                    : '<button type="button" class="btn btn-success btn-sm" onclick="abrirModalPago(' + cuota.id + ')">Marcar pagada</button>';
+
+                return '<tr>' +
+                    '<td>' +
+                        '<div class="cell-main">' + escapeHtml(alumno) + '</div>' +
+                        '<div class="cell-sub">' + escapeHtml(curso) + '</div>' +
+                    '</td>' +
+                    '<td>' +
+                        '<div class="cell-main">' + escapeHtml(periodo) + '</div>' +
+                        '<div class="cell-sub">Vence ' + escapeHtml(cuota.fechaVencimiento || '—') + '</div>' +
+                    '</td>' +
+                    '<td class="num">' + formatearMoneda(cuota.monto) + '</td>' +
+                    '<td>' + fechaPago + '</td>' +
+                    '<td><span class="badge ' + cuota.estado + '">' + etiquetaEstado(cuota.estado) + '</span></td>' +
+                    '<td class="acciones">' + accionPago +
+                        '<button type="button" class="btn-danger-link" onclick="abrirModalEliminarCuota(' + cuota.id + ')">Eliminar</button>' +
+                    '</td>' +
+                    '</tr>';
+            }).join('');
+        }
+
+        function limpiarFiltros() {
+            document.getElementById('filtro-estado').value = '';
+            document.getElementById('filtro-mes').value = '';
+            document.getElementById('filtro-anio').value = '';
+            cargarCuotas();
+        }
+
+        // ------------------------------------------------------------------
+        // Morosos
+        // ------------------------------------------------------------------
+        function cargarMorosos() {
+            const params = new URLSearchParams();
+            if (state.busqueda) params.append('busqueda', state.busqueda);
+
+            return apiFetch(API + '/cuotas/morosos?' + params.toString())
+                .then(morosos => {
+                    state.morosos = Array.isArray(morosos) ? morosos : [];
+                    renderMorosos();
+                })
+                .catch(error => {
+                    document.getElementById('cuerpo-morosos').innerHTML =
+                        filaVacia(5, 'No se pudieron cargar los alumnos morosos.');
+                    actualizarInfo('morosos', 'Error de conexión');
+                    console.error('Error al cargar morosos:', error);
+                });
+        }
+
+        function renderMorosos() {
+            const cuerpo = document.getElementById('cuerpo-morosos');
+
+            if (!state.morosos.length) {
+                cuerpo.innerHTML = filaVacia(5, 'No hay alumnos con deudas vencidas.');
+                actualizarInfo('morosos', '0 alumno(s) moroso(s)');
+                return;
+            }
+
+            actualizarInfo('morosos', state.morosos.length + ' alumno(s) moroso(s)');
+
+            cuerpo.innerHTML = state.morosos.map(moroso => {
+                const chips = moroso.cuotas.map(cuota =>
+                    '<button type="button" class="chip" title="Registrar pago de la cuota ' +
+                    escapeHtml(cuota.periodo) + '" onclick="abrirModalPago(' + cuota.id + ')">' +
+                    escapeHtml(cuota.periodo) + ' · ' + formatearMoneda(cuota.monto) +
+                    '</button>'
+                ).join('');
+
+                const legajo = moroso.legajo
+                    ? ' · Leg. ' + escapeHtml(moroso.legajo)
+                    : '';
+
+                return '<tr>' +
+                    '<td>' +
+                        '<div class="cell-main">' + escapeHtml(moroso.nya) + '</div>' +
+                        '<div class="cell-sub">DNI ' + escapeHtml(moroso.dni) + legajo + '</div>' +
+                    '</td>' +
+                    '<td class="num">' + moroso.cuotasVencidas + '</td>' +
+                    '<td class="num">' + moroso.diasMoraMaximo + '</td>' +
+                    '<td class="num text-danger"><strong>' + formatearMoneda(moroso.totalAdeudado) + '</strong></td>' +
+                    '<td>' + chips + '</td>' +
+                    '</tr>';
+            }).join('');
+        }
+
+        // ------------------------------------------------------------------
+        // Generación de cuotas
+        // ------------------------------------------------------------------
+        function abrirModalGenerar() {
+            document.getElementById('modal-generar').classList.remove('hidden');
+            document.getElementById('gen-curso').focus();
+        }
+
+        function cerrarModalGenerar() {
+            document.getElementById('modal-generar').classList.add('hidden');
+        }
+
+        function generarCuotas(event) {
+            event.preventDefault();
+
+            const cursoId = document.getElementById('gen-curso').value;
+            const mes = parseInt(document.getElementById('gen-mes').value, 10);
+            const anio = parseInt(document.getElementById('gen-anio').value, 10);
+            const monto = parseFloat(document.getElementById('gen-monto').value);
+            const fechaVencimiento = document.getElementById('gen-vencimiento').value;
+
+            if (!cursoId) {
+                mostrarToast('Seleccioná un curso.', 'error');
+                return;
+            }
+            if (!monto || monto <= 0) {
+                mostrarToast('Ingresá un monto mayor a cero.', 'error');
+                return;
+            }
+            if (!fechaVencimiento) {
+                mostrarToast('Indicá la fecha de vencimiento.', 'error');
+                return;
+            }
+
+            const boton = document.getElementById('btn-generar');
+            boton.disabled = true;
+            boton.textContent = 'Generando...';
+
+            apiFetch(API + '/cuotas/generar', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    cursoId: Number(cursoId),
+                    mes: mes,
+                    anio: anio,
+                    monto: monto,
+                    fechaVencimiento: fechaVencimiento
+                })
+            })
+            .then(data => {
+                cerrarModalGenerar();
+                document.getElementById('gen-monto').value = '';
+                mostrarToast(data.mensaje);
+                cargarTodo();
+            })
+            .catch(error => mostrarToast(error.message, 'error'))
+            .finally(() => {
+                boton.disabled = false;
+                boton.textContent = 'Generar cuotas';
+            });
+        }
+
+        // ------------------------------------------------------------------
+        // Registro de pagos (actualización en vivo)
+        // ------------------------------------------------------------------
+        function abrirModalPago(cuotaId) {
+            const datos = obtenerDatosCuota(cuotaId);
+            if (!datos) {
+                mostrarToast('No se encontró la cuota seleccionada.', 'error');
+                return;
+            }
+
+            state.pagoPendiente = cuotaId;
+
+            document.getElementById('detalle-pago').innerHTML = '<div class="detalle-row">' +
+                '<span>Alumno</span><strong>' + escapeHtml(datos.alumno) + '</strong></div>' +
+                '<div class="detalle-row"><span>Curso</span><strong>' + escapeHtml(datos.curso) + '</strong></div>' +
+                '<div class="detalle-row"><span>Período</span><strong>' + escapeHtml(datos.periodo) + '</strong></div>' +
+                '<div class="detalle-row"><span>Monto</span><strong>' + formatearMoneda(datos.monto) + '</strong></div>';
+
+            document.getElementById('pago-fecha').value = hoyISO();
+            document.getElementById('pago-metodo').value = 'EFECTIVO';
+            document.getElementById('modal-pago').classList.remove('hidden');
+            document.getElementById('pago-fecha').focus();
+        }
+
+        function cerrarModalPago() {
+            state.pagoPendiente = null;
+            document.getElementById('modal-pago').classList.add('hidden');
+        }
+
+        function obtenerDatosCuota(cuotaId) {
+            const cuota = state.cuotas.find(item => item.id === cuotaId);
+            if (cuota) {
+                return {
+                    alumno: cuota.alumno && cuota.alumno.nya ? cuota.alumno.nya : 'Desconocido',
+                    curso: cuota.curso && cuota.curso.nombre ? cuota.curso.nombre : 'Desconocido',
+                    periodo: cuota.periodo || (cuota.periodoMes + '/' + cuota.periodoAnio),
+                    monto: cuota.monto
+                };
+            }
+
+            for (const moroso of state.morosos) {
+                const cuotaVencida = moroso.cuotas.find(item => item.id === cuotaId);
+                if (cuotaVencida) {
+                    return {
+                        alumno: moroso.nya,
+                        curso: cuotaVencida.cursoNombre,
+                        periodo: cuotaVencida.periodo,
+                        monto: cuotaVencida.monto
+                    };
+                }
+            }
+
+            return null;
+        }
+
+        function confirmarPago() {
+            const cuotaId = state.pagoPendiente;
+            if (!cuotaId) return;
+
+            const fechaPago = document.getElementById('pago-fecha').value;
+            const metodoPago = document.getElementById('pago-metodo').value;
+            if (!fechaPago) {
+                mostrarToast('Seleccioná la fecha de pago.', 'error');
+                return;
+            }
+            if (fechaPago > hoyISO()) {
+                mostrarToast('La fecha de pago no puede ser futura.', 'error');
+                return;
+            }
+            if (!metodoPago) {
+                mostrarToast('Seleccioná el método de pago.', 'error');
+                return;
+            }
+
+            const boton = document.getElementById('btn-confirmar-pago');
+            boton.disabled = true;
+            boton.textContent = 'Registrando...';
+
+            apiFetch(API + '/cuotas/' + cuotaId + '/pagar', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ fechaPago: fechaPago, metodoPago: metodoPago })
+            })
+            .then(() => {
+                actualizarCuotaEnMemoria(cuotaId, fechaPago);
+                cerrarModalPago();
+                mostrarToast('Pago registrado y acreditado en Finanzas.');
+                renderCuotas();
+                cargarResumen();
+                cargarEstadoCuenta();
+                cargarMorosos();
+            })
+            .catch(error => mostrarToast(error.message, 'error'))
+            .finally(() => {
+                boton.disabled = false;
+                boton.textContent = 'Confirmar pago';
+            });
+        }
+
+        function actualizarCuotaEnMemoria(cuotaId, fechaPago) {
+            const cuota = state.cuotas.find(item => item.id === cuotaId);
+            if (cuota) {
+                cuota.estado = 'PAGADO';
+                cuota.fechaPago = fechaPago;
+            }
+
+            // Quita la cuota de la pestaña de morosos sin esperar la recarga.
+            state.morosos = state.morosos
+                .map(moroso => {
+                    const restantes = moroso.cuotas.filter(item => item.id !== cuotaId);
+                    if (restantes.length === moroso.cuotas.length) return moroso;
+
+                    return {
+                        ...moroso,
+                        cuotas: restantes,
+                        cuotasVencidas: restantes.length,
+                        totalAdeudado: restantes.reduce((total, item) => total + Number(item.monto || 0), 0),
+                        diasMoraMaximo: restantes.reduce((maximo, item) => Math.max(maximo, item.diasMora), 0)
+                    };
+                })
+                .filter(moroso => moroso.cuotas.length > 0);
+
+            renderMorosos();
+        }
+
+        // ------------------------------------------------------------------
+        // Eliminación
+        // ------------------------------------------------------------------
+        function abrirModalEliminarCuota(cuotaId) {
+            const datos = obtenerDatosCuota(cuotaId);
+            if (!datos) {
+                mostrarToast('No se encontró la cuota seleccionada.', 'error');
+                return;
+            }
+
+            state.cuotaAEliminar = cuotaId;
+
+            document.getElementById('detalle-eliminar-cuota').innerHTML = '<div class="detalle-row">' +
+                '<span>Alumno</span><strong>' + escapeHtml(datos.alumno) + '</strong></div>' +
+                '<div class="detalle-row"><span>Curso</span><strong>' + escapeHtml(datos.curso) + '</strong></div>' +
+                '<div class="detalle-row"><span>Período</span><strong>' + escapeHtml(datos.periodo) + '</strong></div>' +
+                '<div class="detalle-row"><span>Monto</span><strong>' + formatearMoneda(datos.monto) + '</strong></div>';
+
+            document.getElementById('modal-eliminar-cuota').classList.remove('hidden');
+        }
+
+        function cerrarModalEliminarCuota() {
+            state.cuotaAEliminar = null;
+            document.getElementById('modal-eliminar-cuota').classList.add('hidden');
+        }
+
+        function confirmarEliminarCuota() {
+            const cuotaId = state.cuotaAEliminar;
+            if (!cuotaId) return;
+
+            const boton = document.getElementById('btn-confirmar-eliminar');
+            boton.disabled = true;
+            boton.textContent = 'Eliminando...';
+
+            apiFetch(API + '/cuotas/' + cuotaId, { method: 'DELETE' })
+                .then(() => {
+                    state.cuotas = state.cuotas.filter(cuota => cuota.id !== cuotaId);
+                    cerrarModalEliminarCuota();
+                    renderCuotas();
+                    mostrarToast('Cuota eliminada correctamente.');
+                    cargarTodo();
+                })
+                .catch(error => mostrarToast(error.message, 'error'))
+                .finally(() => {
+                    boton.disabled = false;
+                    boton.textContent = 'Eliminar cuota';
+                });
+        }
+    </script>
+</body>
+</html>

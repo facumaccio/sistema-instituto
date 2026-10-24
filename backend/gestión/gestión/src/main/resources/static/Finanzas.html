@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finanzas - Instituto</title>
+    <link rel="stylesheet" href="css/instituto.css?v=20261024">
+</head>
+<body>
+
+    <header class="topbar">
+        <div class="brand">Instituto <span>Gestión Académica</span></div>
+        <nav>
+            <a href="Dashboard.html">Dashboard</a>
+            <a href="index.html">Inscripciones</a>
+            <a href="Alumnos.html">Alumnos</a>
+            <a href="Curso.html">Cursos</a>
+            <a href="Profesores.html">Profesores</a>
+            <a href="Pagos.html">Pagos y Cuotas</a>
+            <a href="Calendario.html">Calendario</a>
+            <a href="Finanzas.html" class="active">Finanzas</a>
+        </nav>
+    </header>
+
+    <main class="page">
+
+        <div class="page-head">
+            <div>
+                <h1>Finanzas y Caja</h1>
+                <p class="subtitle">Control de ingresos, egresos y balance del instituto.</p>
+            </div>
+            <div class="page-actions">
+                <span class="last-update" id="ultima-actualizacion">Cargando...</span>
+                <button type="button" class="btn btn-ghost" onclick="cargarTodo()">Actualizar</button>
+            </div>
+        </div>
+
+        <section class="kpis kpis-3" aria-label="Resumen financiero">
+            <article class="kpi">
+                <p class="kpi-label">Total ingresos</p>
+                <div class="kpi-value success" id="kpi-ingresos">—</div>
+                <div class="kpi-detail">Acreditado en el período</div>
+            </article>
+            <article class="kpi">
+                <p class="kpi-label">Total egresos</p>
+                <div class="kpi-value danger" id="kpi-egresos">—</div>
+                <div class="kpi-detail">Debitado en el período</div>
+            </article>
+            <article class="kpi">
+                <p class="kpi-label">Balance neto</p>
+                <div class="kpi-value" id="kpi-balance">—</div>
+                <div class="kpi-detail" id="kpi-balance-detalle">Ingresos menos egresos</div>
+            </article>
+        </section>
+
+        <section class="finanzas-top">
+            <article class="panel">
+                <div class="panel-head">
+                    <h2 id="form-titulo">Registrar movimiento</h2>
+                    <span class="panel-hint">Los campos con * son obligatorios</span>
+                </div>
+                <div class="panel-body">
+                    <form id="form-movimiento" onsubmit="guardarMovimiento(event)" autocomplete="off">
+                        <div class="form-grid">
+                            <div class="field">
+                                <label for="mov-tipo">Tipo *</label>
+                                <select id="mov-tipo" onchange="actualizarCategoriasFormulario()" required>
+                                    <option value="INGRESO">Ingreso</option>
+                                    <option value="EGRESO">Egreso</option>
+                                </select>
+                            </div>
+                            <div class="field">
+                                <label for="mov-categoria">Categoría *</label>
+                                <select id="mov-categoria" required>
+                                    <option value="">Cargando categorías...</option>
+                                </select>
+                            </div>
+                            <div class="field">
+                                <label for="mov-monto">Monto *</label>
+                                <input type="number" id="mov-monto" min="0.01" step="0.01" placeholder="0,00" required>
+                            </div>
+                            <div class="field">
+                                <label for="mov-fecha">Fecha *</label>
+                                <input type="date" id="mov-fecha" required>
+                            </div>
+                            <div class="field">
+                                <label for="mov-metodo">Método de pago *</label>
+                                <select id="mov-metodo" required>
+                                    <option value="EFECTIVO">Efectivo</option>
+                                </select>
+                            </div>
+                            <div class="field">
+                                <label for="mov-descripcion">Descripción / concepto *</label>
+                                <input type="text" id="mov-descripcion" maxlength="255" placeholder="Ej: Cuota de octubre - Inglés" required>
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-ghost hidden" id="btn-cancelar-edicion" onclick="cancelarEdicion()">Cancelar edición</button>
+                            <button type="submit" class="btn btn-primary" id="btn-guardar-movimiento">Registrar movimiento</button>
+                        </div>
+                    </form>
+                </div>
+            </article>
+
+            <article class="panel">
+                <div class="panel-head">
+                    <h2>Gastos por categoría</h2>
+                    <span class="panel-hint">Con los filtros activos</span>
+                </div>
+                <div class="panel-body">
+                    <div id="resumen-categorias" class="resumen-categorias">
+                        <div class="empty-state">Cargando resumen...</div>
+                    </div>
+                </div>
+            </article>
+        </section>
+
+        <section class="panel">
+            <div class="panel-head">
+                <h2>Historial de movimientos</h2>
+                <span class="panel-hint" id="contador-movimientos">—</span>
+            </div>
+            <div class="panel-body filters-panel">
+                <div class="filters-grid">
+                    <div class="field">
+                        <label for="filtro-periodo">Período</label>
+                        <select id="filtro-periodo" onchange="aplicarPeriodoRapido()">
+                            <option value="todo">Todo</option>
+                            <option value="mes-actual">Este mes</option>
+                            <option value="mes-anterior">Mes anterior</option>
+                            <option value="ultimos-3">Últimos 3 meses</option>
+                            <option value="anio-actual">Este año</option>
+                            <option value="personalizado">Personalizado</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label for="filtro-desde">Desde</label>
+                        <input type="date" id="filtro-desde" onchange="marcarPeriodoPersonalizado()">
+                    </div>
+                    <div class="field">
+                        <label for="filtro-hasta">Hasta</label>
+                        <input type="date" id="filtro-hasta" onchange="marcarPeriodoPersonalizado()">
+                    </div>
+                    <div class="field">
+                        <label for="filtro-tipo">Tipo</label>
+                        <select id="filtro-tipo" onchange="actualizarFiltroCategorias()">
+                            <option value="">Todos</option>
+                            <option value="INGRESO">Ingresos</option>
+                            <option value="EGRESO">Egresos</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label for="filtro-categoria">Categoría</label>
+                        <select id="filtro-categoria" onchange="cargarTodo()">
+                            <option value="">Todas</option>
+                        </select>
+                    </div>
+                    <div class="filters-actions">
+                        <button type="button" class="btn btn-ghost btn-sm" onclick="limpiarFiltros()">Limpiar filtros</button>
+                    </div>
+                </div>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Tipo</th>
+                            <th>Categoría</th>
+                            <th>Descripción</th>
+                            <th>Método</th>
+                            <th class="num">Monto</th>
+                            <th class="acciones">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cuerpo-movimientos">
+                        <tr>
+                            <td colspan="7" class="empty">Cargando movimientos...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </main>
+
+    <div class="toasts" id="toasts" aria-live="polite"></div>
+
+    <script src="js/instituto.js"></script>
+    <script>
+        const state = {
+            categorias: [],
+            movimientos: [],
+            resumen: null,
+            editandoId: null
+        };
+
+        let secuenciaMovimientos = 0;
+        let secuenciaResumen = 0;
+
+        const METODOS_PAGO = [
+            { valor: 'EFECTIVO', texto: 'Efectivo' },
+            { valor: 'TRANSFERENCIA', texto: 'Transferencia' },
+            { valor: 'TARJETA_DEBITO', texto: 'Tarjeta de débito' },
+            { valor: 'TARJETA_CREDITO', texto: 'Tarjeta de crédito' },
+            { valor: 'MERCADO_PAGO', texto: 'Mercado Pago' },
+            { valor: 'CHEQUE', texto: 'Cheque' },
+            { valor: 'OTRO', texto: 'Otro' }
+        ];
+
+        document.addEventListener('DOMContentLoaded', iniciarFinanzas);
+
+        async function iniciarFinanzas() {
+            document.getElementById('mov-fecha').value = hoyISO();
+            llenarMetodosPago();
+
+            try {
+                await cargarCategorias();
+            } catch (error) {
+                mostrarToast(error.message || 'No se pudieron cargar las categorías.', 'error');
+            }
+
+            await cargarTodo();
+        }
+
+        async function cargarCategorias() {
+            const categorias = await apiFetch(API + '/finanzas/categorias');
+            state.categorias = Array.isArray(categorias) ? categorias : [];
+            actualizarCategoriasFormulario();
+            llenarFiltroCategorias();
+        }
+
+        function llenarMetodosPago() {
+            const select = document.getElementById('mov-metodo');
+            select.innerHTML = METODOS_PAGO
+                .map(metodo => '<option value="' + metodo.valor + '">' + metodo.texto + '</option>')
+                .join('');
+        }
+
+        function actualizarCategoriasFormulario(categoriaId = null) {
+            const tipo = document.getElementById('mov-tipo').value;
+            const select = document.getElementById('mov-categoria');
+            const anterior = categoriaId !== null ? String(categoriaId) : select.value;
+            const categorias = state.categorias.filter(categoria => categoria.tipo === tipo);
+
+            select.innerHTML = '<option value="">Seleccioná una categoría...</option>' +
+                categorias.map(categoria =>
+                    '<option value="' + categoria.id + '">' + escapeHtml(categoria.nombre) + '</option>'
+                ).join('');
+
+            select.disabled = categorias.length === 0;
+
+            if (anterior && categorias.some(categoria => String(categoria.id) === anterior)) {
+                select.value = anterior;
+            }
+        }
+
+        function llenarFiltroCategorias() {
+            const select = document.getElementById('filtro-categoria');
+            const tipo = document.getElementById('filtro-tipo').value;
+            const anterior = select.value;
+            const categorias = state.categorias.filter(categoria => !tipo || categoria.tipo === tipo);
+
+            select.innerHTML = '<option value="">Todas</option>' +
+                categorias.map(categoria =>
+                    '<option value="' + categoria.id + '">' + escapeHtml(categoria.nombre) + '</option>'
+                ).join('');
+
+            if (anterior && categorias.some(categoria => String(categoria.id) === anterior)) {
+                select.value = anterior;
+            }
+        }
+
+        function actualizarFiltroCategorias() {
+            llenarFiltroCategorias();
+            cargarTodo();
+        }
+
+        function construirQuery() {
+            const parametros = new URLSearchParams();
+            const desde = document.getElementById('filtro-desde').value;
+            const hasta = document.getElementById('filtro-hasta').value;
+            const tipo = document.getElementById('filtro-tipo').value;
+            const categoriaId = document.getElementById('filtro-categoria').value;
+
+            if (desde) parametros.set('desde', desde);
+            if (hasta) parametros.set('hasta', hasta);
+            if (tipo) parametros.set('tipo', tipo);
+            if (categoriaId) parametros.set('categoriaId', categoriaId);
+
+            return parametros.toString();
+        }
+
+        async function cargarTodo() {
+            const query = construirQuery();
+            await Promise.allSettled([
+                cargarMovimientos(query),
+                cargarResumen(query)
+            ]);
+            actualizarUltimaActualizacion();
+        }
+
+        async function cargarMovimientos(query) {
+            const secuencia = ++secuenciaMovimientos;
+            const cuerpo = document.getElementById('cuerpo-movimientos');
+            cuerpo.innerHTML = '<tr><td colspan="7" class="empty">Cargando movimientos...</td></tr>';
+
+            try {
+                const url = API + '/movimientos' + (query ? '?' + query : '');
+                const movimientos = await apiFetch(url);
+                if (secuencia !== secuenciaMovimientos) return;
+
+                state.movimientos = Array.isArray(movimientos) ? movimientos : [];
+                renderTabla();
+
+                const cantidad = state.movimientos.length;
+                document.getElementById('contador-movimientos').textContent =
+                    cantidad + ' ' + pluralizar(cantidad, 'movimiento', 'movimientos');
+            } catch (error) {
+                if (secuencia !== secuenciaMovimientos) return;
+                cuerpo.innerHTML = '<tr><td colspan="7" class="empty text-danger">' +
+                    escapeHtml(error.message || 'No se pudieron cargar los movimientos.') + '</td></tr>';
+                document.getElementById('contador-movimientos').textContent = 'No disponible';
+                mostrarToast(error.message || 'No se pudieron cargar los movimientos.', 'error');
+            }
+        }
+
+        async function cargarResumen(query) {
+            const secuencia = ++secuenciaResumen;
+
+            try {
+                const url = API + '/finanzas/resumen' + (query ? '?' + query : '');
+                const resumen = await apiFetch(url);
+                if (secuencia !== secuenciaResumen) return;
+
+                state.resumen = resumen;
+                renderKpis(resumen);
+                renderResumenCategorias(resumen);
+            } catch (error) {
+                if (secuencia !== secuenciaResumen) return;
+                mostrarToast(error.message || 'No se pudo cargar el resumen financiero.', 'error');
+            }
+        }
+
+        function renderKpis(resumen) {
+            const ingresos = Number(resumen.totalIngresos || 0);
+            const egresos = Number(resumen.totalEgresos || 0);
+            const balance = Number(resumen.balanceNeto || 0);
+
+            document.getElementById('kpi-ingresos').textContent = formatearMoneda(ingresos);
+            document.getElementById('kpi-egresos').textContent = formatearMoneda(egresos);
+            document.getElementById('kpi-balance').textContent = formatearMoneda(balance);
+
+            const detalle = document.getElementById('kpi-balance-detalle');
+            detalle.className = 'kpi-detail';
+            if (balance > 0) {
+                detalle.textContent = 'Superávit del período';
+                detalle.classList.add('text-success');
+            } else if (balance < 0) {
+                detalle.textContent = 'Déficit del período';
+                detalle.classList.add('text-danger');
+            } else {
+                detalle.textContent = 'Sin diferencias en el período';
+            }
+        }
+
+        function renderResumenCategorias(resumen) {
+            const contenedor = document.getElementById('resumen-categorias');
+            const gastos = Array.isArray(resumen.gastosPorCategoria) ? resumen.gastosPorCategoria : [];
+            const totalEgresos = Number(resumen.totalEgresos || 0);
+
+            if (gastos.length === 0) {
+                contenedor.innerHTML = '<div class="empty-state">No hay egresos registrados con los filtros actuales.</div>';
+                return;
+            }
+
+            const items = gastos.map(gasto => {
+                const total = Number(gasto.total || 0);
+                const cantidad = Number(gasto.cantidad || 0);
+                const porcentaje = totalEgresos > 0 ? (total / totalEgresos) * 100 : 0;
+
+                return '<div class="categoria-resumen-item">' +
+                    '<div class="categoria-resumen-head">' +
+                        '<span class="badge ' + claseCategoria(gasto.categoriaId) + '">' + escapeHtml(gasto.nombre) + '</span>' +
+                        '<strong class="money-negative">' + formatearMoneda(total) + '</strong>' +
+                    '</div>' +
+                    '<div class="categoria-resumen-meta">' +
+                        porcentaje.toFixed(0) + '% de los egresos · ' +
+                        cantidad + ' ' + pluralizar(cantidad, 'movimiento', 'movimientos') +
+                    '</div>' +
+                    '<div class="progress">' +
+                        '<div class="progress-bar danger" style="width: ' +
+                            Math.min(100, Math.max(0, porcentaje)).toFixed(1) + '%"></div>' +
+                    '</div>' +
+                '</div>';
+            }).join('');
+
+            contenedor.innerHTML =
+                '<div class="resumen-total">' +
+                    '<span>Total egresos del período</span>' +
+                    '<strong class="money-negative">' + formatearMoneda(totalEgresos) + '</strong>' +
+                '</div>' + items;
+        }
+
+        function renderTabla() {
+            const cuerpo = document.getElementById('cuerpo-movimientos');
+
+            if (state.movimientos.length === 0) {
+                const mensaje = tieneFiltros()
+                    ? 'No hay movimientos que coincidan con los filtros seleccionados.'
+                    : 'Todavía no hay movimientos registrados.';
+                cuerpo.innerHTML = '<tr><td colspan="7" class="empty">' + mensaje + '</td></tr>';
+                return;
+            }
+
+            cuerpo.innerHTML = state.movimientos.map(movimiento => {
+                const esIngreso = movimiento.tipo === 'INGRESO';
+                const signo = esIngreso ? '+' : '-';
+                const claseMonto = esIngreso ? 'money-positive' : 'money-negative';
+
+                return '<tr>' +
+                    '<td>' +
+                        '<div class="cell-main">' + formatearFecha(movimiento.fecha) + '</div>' +
+                        '<div class="cell-sub">#' + movimiento.id + '</div>' +
+                    '</td>' +
+                    '<td><span class="badge ' + movimiento.tipo + '">' +
+                        (esIngreso ? 'Ingreso' : 'Egreso') +
+                    '</span></td>' +
+                    '<td><span class="badge ' + claseCategoria(movimiento.categoriaId) + '">' +
+                        escapeHtml(movimiento.categoriaNombre) +
+                    '</span></td>' +
+                    '<td><div class="cell-main">' + escapeHtml(movimiento.descripcion) + '</div></td>' +
+                    '<td>' + escapeHtml(etiquetaMetodo(movimiento.metodoPago)) + '</td>' +
+                    '<td class="num ' + claseMonto + '">' + signo + ' ' + formatearMoneda(movimiento.monto) + '</td>' +
+                    '<td class="acciones">' +
+                        '<button type="button" class="action-link" onclick="editarMovimiento(' + movimiento.id + ')">Editar</button>' +
+                        '<button type="button" class="btn-danger-link" onclick="eliminarMovimiento(' + movimiento.id + ')">Eliminar</button>' +
+                    '</td>' +
+                '</tr>';
+            }).join('');
+        }
+
+        function editarMovimiento(id) {
+            const movimiento = state.movimientos.find(item => Number(item.id) === Number(id));
+            if (!movimiento) return;
+
+            state.editandoId = Number(id);
+            document.getElementById('mov-tipo').value = movimiento.tipo;
+            actualizarCategoriasFormulario(movimiento.categoriaId);
+            document.getElementById('mov-monto').value = Number(movimiento.monto || 0).toFixed(2);
+            document.getElementById('mov-fecha').value = String(movimiento.fecha).slice(0, 10);
+            document.getElementById('mov-metodo').value = movimiento.metodoPago;
+            document.getElementById('mov-descripcion').value = movimiento.descripcion;
+
+            document.getElementById('form-titulo').textContent = 'Editar movimiento #' + id;
+            document.getElementById('btn-guardar-movimiento').textContent = 'Guardar cambios';
+            document.getElementById('btn-cancelar-edicion').classList.remove('hidden');
+
+            document.querySelector('.finanzas-top').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            setTimeout(() => {
+                document.getElementById('mov-descripcion').focus({ preventScroll: true });
+            }, 350);
+        }
+
+        function cancelarEdicion() {
+            resetFormulario();
+        }
+
+        function resetFormulario() {
+            state.editandoId = null;
+            document.getElementById('form-movimiento').reset();
+            document.getElementById('mov-tipo').value = 'INGRESO';
+            document.getElementById('mov-fecha').value = hoyISO();
+            llenarMetodosPago();
+            actualizarCategoriasFormulario();
+            document.getElementById('form-titulo').textContent = 'Registrar movimiento';
+            document.getElementById('btn-guardar-movimiento').textContent = 'Registrar movimiento';
+            document.getElementById('btn-cancelar-edicion').classList.add('hidden');
+        }
+
+        async function guardarMovimiento(event) {
+            event.preventDefault();
+
+            const id = state.editandoId;
+            const tipo = document.getElementById('mov-tipo').value;
+            const categoriaId = Number(document.getElementById('mov-categoria').value);
+            const monto = Number(document.getElementById('mov-monto').value);
+            const fecha = document.getElementById('mov-fecha').value;
+            const metodoPago = document.getElementById('mov-metodo').value;
+            const descripcion = document.getElementById('mov-descripcion').value.trim();
+
+            if (!tipo) {
+                mostrarToast('Seleccioná el tipo de movimiento.', 'error');
+                return;
+            }
+            if (!categoriaId) {
+                mostrarToast('Seleccioná una categoría.', 'error');
+                return;
+            }
+            if (!Number.isFinite(monto) || monto <= 0) {
+                mostrarToast('Ingresá un monto mayor que cero.', 'error');
+                return;
+            }
+            if (!fecha) {
+                mostrarToast('Indicá la fecha del movimiento.', 'error');
+                return;
+            }
+            if (!metodoPago) {
+                mostrarToast('Seleccioná el método de pago.', 'error');
+                return;
+            }
+            if (!descripcion) {
+                mostrarToast('Ingresá una descripción o concepto.', 'error');
+                return;
+            }
+
+            const boton = document.getElementById('btn-guardar-movimiento');
+            const textoOriginal = boton.textContent;
+            boton.disabled = true;
+            boton.textContent = id ? 'Guardando...' : 'Registrando...';
+
+            try {
+                await apiFetch(API + '/movimientos' + (id ? '/' + id : ''), {
+                    method: id ? 'PUT' : 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        tipo,
+                        categoriaId,
+                        monto: Number(monto.toFixed(2)),
+                        fecha,
+                        descripcion,
+                        metodoPago
+                    })
+                });
+
+                mostrarToast(
+                    id ? 'Movimiento actualizado correctamente.' : 'Movimiento registrado correctamente.',
+                    'success'
+                );
+                resetFormulario();
+                await cargarTodo();
+            } catch (error) {
+                mostrarToast(error.message || 'No se pudo guardar el movimiento.', 'error');
+                boton.textContent = textoOriginal;
+            } finally {
+                boton.disabled = false;
+            }
+        }
+
+        async function eliminarMovimiento(id) {
+            const movimiento = state.movimientos.find(item => Number(item.id) === Number(id));
+            if (!movimiento) return;
+
+            const confirmado = await confirmarAccion({
+                titulo: 'Eliminar movimiento',
+                mensaje: '¿Eliminar el movimiento "' + movimiento.descripcion + '" del ' +
+                    formatearFecha(movimiento.fecha) + ' por ' + formatearMoneda(movimiento.monto) + '?',
+                textoConfirmar: 'Eliminar movimiento'
+            });
+
+            if (!confirmado) return;
+
+            try {
+                await apiFetch(API + '/movimientos/' + id, { method: 'DELETE' });
+                mostrarToast('Movimiento eliminado correctamente.', 'success');
+
+                if (Number(state.editandoId) === Number(id)) {
+                    resetFormulario();
+                }
+
+                await cargarTodo();
+            } catch (error) {
+                mostrarToast(error.message || 'No se pudo eliminar el movimiento.', 'error');
+            }
+        }
+
+        function aplicarPeriodoRapido() {
+            const periodo = document.getElementById('filtro-periodo').value;
+            const desdeInput = document.getElementById('filtro-desde');
+            const hastaInput = document.getElementById('filtro-hasta');
+            const hoy = new Date();
+            const anio = hoy.getFullYear();
+            const mes = hoy.getMonth();
+
+            if (periodo === 'todo') {
+                desdeInput.value = '';
+                hastaInput.value = '';
+            } else if (periodo === 'mes-actual') {
+                desdeInput.value = fechaAISO(new Date(anio, mes, 1));
+                hastaInput.value = fechaAISO(new Date(anio, mes + 1, 0));
+            } else if (periodo === 'mes-anterior') {
+                desdeInput.value = fechaAISO(new Date(anio, mes - 1, 1));
+                hastaInput.value = fechaAISO(new Date(anio, mes, 0));
+            } else if (periodo === 'ultimos-3') {
+                desdeInput.value = fechaAISO(new Date(anio, mes - 2, 1));
+                hastaInput.value = fechaAISO(new Date(anio, mes + 1, 0));
+            } else if (periodo === 'anio-actual') {
+                desdeInput.value = fechaAISO(new Date(anio, 0, 1));
+                hastaInput.value = fechaAISO(new Date(anio, 11, 31));
+            }
+
+            cargarTodo();
+        }
+
+        function marcarPeriodoPersonalizado() {
+            document.getElementById('filtro-periodo').value = 'personalizado';
+            cargarTodo();
+        }
+
+        function limpiarFiltros() {
+            document.getElementById('filtro-periodo').value = 'todo';
+            document.getElementById('filtro-desde').value = '';
+            document.getElementById('filtro-hasta').value = '';
+            document.getElementById('filtro-tipo').value = '';
+            llenarFiltroCategorias();
+            document.getElementById('filtro-categoria').value = '';
+            cargarTodo();
+        }
+
+        function tieneFiltros() {
+            return Boolean(
+                document.getElementById('filtro-desde').value ||
+                document.getElementById('filtro-hasta').value ||
+                document.getElementById('filtro-tipo').value ||
+                document.getElementById('filtro-categoria').value
+            );
+        }
+
+        function fechaAISO(fecha) {
+            const anio = fecha.getFullYear();
+            const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+            const dia = String(fecha.getDate()).padStart(2, '0');
+            return anio + '-' + mes + '-' + dia;
+        }
+
+        function claseCategoria(categoriaId) {
+            const numero = Number(categoriaId);
+            return 'cat-' + (Number.isFinite(numero) ? Math.abs(numero) % 6 : 0);
+        }
+
+        function etiquetaMetodo(metodo) {
+            const encontrado = METODOS_PAGO.find(item => item.valor === metodo);
+            return encontrado ? encontrado.texto : String(metodo || '—');
+        }
+
+        function actualizarUltimaActualizacion() {
+            const hora = new Date().toLocaleTimeString('es-AR', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            document.getElementById('ultima-actualizacion').textContent = 'Actualizado ' + hora;
+        }
+    </script>
+</body>
+</html>

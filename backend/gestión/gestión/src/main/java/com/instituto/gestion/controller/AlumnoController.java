@@ -24,17 +24,12 @@ public class AlumnoController {
         return service.guardarAlumno(alumno);
     }
 
-    // Endpoint para Eliminar (DELETE)
     @DeleteMapping("/{id}")
     public String eliminar(@PathVariable Long id) {
-        boolean eliminado = service.eliminarAlumno(id);
-        if (eliminado) {
-            return "Alumno con ID " + id + " eliminado correctamente.";
-        }
-        return "No se encontró el alumno con ID " + id;
+        service.eliminarAlumno(id);
+        return "Alumno con ID " + id + " eliminado correctamente.";
     }
 
-    // Endpoint para Modificar (PUT)
     @PutMapping("/{id}")
     public Alumno actualizar(@PathVariable Long id, @RequestBody Alumno alumno) {
         return service.actualizarAlumno(id, alumno);

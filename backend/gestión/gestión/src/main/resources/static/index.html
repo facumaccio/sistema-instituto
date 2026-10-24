@@ -2,158 +2,479 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Sistema del Instituto</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 40px; background-color: #f4f4f9; }
-        h1 { color: #333; text-align: center; }
-        .menu { text-align: center; margin-bottom: 30px; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .menu a { text-decoration: none; padding: 12px 25px; background-color: #17a2b8; color: white; border-radius: 5px; margin: 0 10px; font-weight: bold; font-size: 16px; display: inline-block; }
-        .menu a:hover { background-color: #138496; }
-        table { width: 100%; margin-top: 20px; border-collapse: collapse; background: white; }
-        th, td { padding: 12px; border: 1px solid #ddd; text-align: left; }
-        th { background-color: #17a2b8; color: white; }
-        .form-container { margin-top: 20px; margin-bottom: 20px; padding: 15px; background: #e9ecef; border-radius: 5px; }
-        select, button { padding: 8px; margin-right: 10px; }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inscripciones - Instituto</title>
+    <link rel="stylesheet" href="css/instituto.css?v=20261024">
 </head>
 <body>
 
-    <h1>Panel Principal - Inscripciones</h1>
-    
-    <div class="menu">
-        <a href="Alumnos.html">Gestión de Alumnos</a>
-        <a href="Cursos.html">Gestión de Cursos</a>
+    <header class="topbar">
+        <div class="brand">Instituto <span>Gestión Académica</span></div>
+        <nav>
+            <a href="Dashboard.html">Dashboard</a>
+            <a href="index.html" class="active">Inscripciones</a>
+            <a href="Alumnos.html">Alumnos</a>
+            <a href="Curso.html">Cursos</a>
+            <a href="Profesores.html">Profesores</a>
+            <a href="Pagos.html">Pagos y Cuotas</a>
+            <a href="Calendario.html">Calendario</a>
+            <a href="Finanzas.html">Finanzas</a>
+        </nav>
+    </header>
+
+    <main class="page">
+
+        <div class="page-head">
+            <div>
+                <h1>Inscripciones</h1>
+                <p class="subtitle">Alta y baja de alumnos en los cursos del instituto.</p>
+            </div>
+            <button type="button" class="btn btn-primary" id="btn-nueva-inscripcion" onclick="abrirModalInscripcion()" disabled>Nueva inscripción</button>
+        </div>
+
+        <section class="kpis" aria-label="Indicadores de inscripciones">
+            <article class="kpi">
+                <p class="kpi-label">Inscripciones activas</p>
+                <div class="kpi-value" id="kpi-total">—</div>
+                <div class="kpi-detail" id="kpi-total-detalle">—</div>
+            </article>
+            <article class="kpi">
+                <p class="kpi-label">Alumnos inscriptos</p>
+                <div class="kpi-value" id="kpi-alumnos">—</div>
+                <div class="kpi-detail" id="kpi-alumnos-detalle">—</div>
+            </article>
+            <article class="kpi">
+                <p class="kpi-label">Cursos con alumnos</p>
+                <div class="kpi-value" id="kpi-cursos">—</div>
+                <div class="kpi-detail" id="kpi-cursos-detalle">—</div>
+            </article>
+            <article class="kpi">
+                <p class="kpi-label">Altas este mes</p>
+                <div class="kpi-value success" id="kpi-mes">—</div>
+                <div class="kpi-detail" id="kpi-mes-detalle">—</div>
+            </article>
+        </section>
+
+        <section class="toolbar" aria-label="Búsqueda y filtros">
+            <div class="toolbar-main">
+                <div class="search-field">
+                    <label class="field-label" for="buscador">Buscar inscripción</label>
+                    <input type="search" id="buscador" placeholder="Alumno, DNI, legajo o curso..." autocomplete="off" oninput="programarBusqueda()">
+                </div>
+            </div>
+            <div class="filters">
+                <div class="filter-field">
+                    <label for="filtro-curso">Curso</label>
+                    <select id="filtro-curso" onchange="cambiarFiltroCurso()">
+                        <option value="">Todos los cursos</option>
+                    </select>
+                </div>
+            </div>
+            <div class="toolbar-meta">
+                <div class="filter-note hidden" id="filtro-activo"></div>
+                <div class="results-info" id="resultados-info">—</div>
+                <button type="button" class="btn btn-ghost btn-sm" id="btn-limpiar" onclick="quitarFiltros()">Limpiar</button>
+            </div>
+        </section>
+
+        <section class="panel">
+            <div class="panel-head">
+                <h2>Inscripciones activas</h2>
+                <span class="panel-hint">Una inscripción por alumno y curso</span>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Alumno</th>
+                            <th>Curso</th>
+                            <th>Fecha de alta</th>
+                            <th>Estado</th>
+                            <th class="acciones">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cuerpo-inscripciones">
+                        <tr><td colspan="5" class="empty">Cargando inscripciones...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Modal: nueva inscripción -->
+    <div class="modal-overlay hidden" id="modal-inscripcion" onclick="cerrarModalPorOverlay(event, 'modal-inscripcion')">
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="titulo-inscripcion">
+            <div class="modal-head">
+                <h3 id="titulo-inscripcion">Nueva inscripción</h3>
+                <button type="button" class="icon-btn" aria-label="Cerrar" onclick="cerrarModal('modal-inscripcion')">&times;</button>
+            </div>
+            <form id="form-inscripcion" onsubmit="guardarInscripcion(event)">
+                <div class="modal-body">
+                    <div class="form-grid">
+                        <div class="field full">
+                            <label for="ins-alumno">Alumno</label>
+                            <select id="ins-alumno" required>
+                                <option value="">Seleccione un alumno...</option>
+                            </select>
+                        </div>
+                        <div class="field full">
+                            <label for="ins-curso">Curso</label>
+                            <select id="ins-curso" required>
+                                <option value="">Seleccione un curso...</option>
+                            </select>
+                        </div>
+                    </div>
+                    <p class="nota">La fecha de alta se registra automáticamente. No se permite inscribir dos veces al mismo alumno en el mismo curso.</p>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-ghost" onclick="cerrarModal('modal-inscripcion')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" id="btn-inscribir">Inscribir alumno</button>
+                </div>
+            </form>
+        </div>
     </div>
 
-    <div class="form-container">
-        <h3>Nueva Inscripción</h3>
-        <form id="form-inscripcion">
-            <label>Alumno: 
-                <select id="select-alumno">
-                    <option value="">Seleccione un alumno...</option>
-                </select>
-            </label>
+    <div class="toasts" id="toasts" aria-live="polite"></div>
 
-            <label>Curso de Idioma: 
-                <select id="select-curso">
-                    <option value="">Seleccione un idioma...</option>
-                    <option value="1">Español</option>
-                    <option value="2">Inglés</option>
-                    <option value="3">Italiano</option>
-                    <option value="4">Francés</option>
-                    <option value="5">Portugués</option>
-                </select>
-            </label>
-            
-            <button type="button" onclick="guardarInscripcion()" style="background-color: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">Inscribir</button>
-        </form>
-    </div>
-
-    <h3>Inscripciones Activas</h3>
-    <table>
-        <thead>
-            <tr>
-                <th>ID Inscripción</th>
-                <th>Alumno</th>
-                <th>Curso</th>
-                <th>Fecha</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-        <tbody id="cuerpo-tabla-inscripciones">
-        </tbody>
-    </table>
-
+    <script src="js/instituto.js"></script>
     <script>
-        window.onload = function() {
-            cargarInscripciones();
-            cargarAlumnosEnSelect();
+        const state = {
+            inscripciones: [],
+            alumnos: [],
+            cursos: [],
+            busqueda: '',
+            filtroCursoId: null,
+            filtroAlumnoId: null,
+            timerBusqueda: null
         };
 
-        function cargarAlumnosEnSelect() {
-            fetch('http://localhost:8080/api/alumnos')
-                .then(response => response.json())
-                .then(data => {
-                    let select = document.getElementById('select-alumno');
-                    data.forEach(alumno => {
-                        let opcion = document.createElement('option');
-                        opcion.value = alumno.id; 
-                        opcion.text = `${alumno.nya} (DNI: ${alumno.dni})`;
-                        select.appendChild(opcion);
-                    });
-                })
-                .catch(error => console.error('Error:', error));
+        document.addEventListener('DOMContentLoaded', iniciar);
+
+        async function iniciar() {
+            const parametros = new URLSearchParams(window.location.search);
+            const cursoId = Number(parametros.get('cursoId'));
+            const alumnoId = Number(parametros.get('alumnoId'));
+
+            state.filtroCursoId = Number.isInteger(cursoId) && cursoId > 0 ? cursoId : null;
+            state.filtroAlumnoId = Number.isInteger(alumnoId) && alumnoId > 0 ? alumnoId : null;
+
+            document.getElementById('buscador').addEventListener('keydown', event => {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    ejecutarBusqueda();
+                }
+            });
+
+            document.addEventListener('keydown', event => {
+                if (event.key === 'Escape' && !document.getElementById('modal-inscripcion').classList.contains('hidden')) {
+                    cerrarModal('modal-inscripcion');
+                }
+            });
+
+            await cargarTodo();
+            document.getElementById('btn-nueva-inscripcion').disabled = false;
+
+            if (parametros.get('nuevo') === '1') {
+                abrirModalInscripcion(state.filtroAlumnoId);
+            }
         }
 
-        function cargarInscripciones() {
-            fetch('http://localhost:8080/api/inscripciones')
-                .then(response => response.json())
-                .then(data => {
-                    let cuerpo = document.getElementById('cuerpo-tabla-inscripciones');
-                    cuerpo.innerHTML = '';
+        async function cargarTodo() {
+            try {
+                const [inscripciones, alumnos, cursos] = await Promise.all([
+                    apiFetch(API + '/inscripciones'),
+                    apiFetch(API + '/alumnos'),
+                    apiFetch(API + '/cursos')
+                ]);
 
-                    data.forEach(insc => {
-                        let nombreAlumno = insc.alumno ? insc.alumno.nya : 'Desconocido';
-                        let nombreCurso = insc.curso ? insc.curso.nombre : 'Desconocido'; 
-                        let fecha = insc.fechaInscripcion ? insc.fechaInscripcion : '-';
-                        
-                        let fila = `<tr>
-                            <td>${insc.id}</td>
-                            <td>${nombreAlumno}</td>
-                            <td>${nombreCurso}</td>
-                            <td>${fecha}</td>
-                            <td>
-                                <button onclick="borrarInscripcion(${insc.id})" style="background-color: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer;">Dar de baja</button>
-                            </td>
-                        </tr>`;
-                        cuerpo.innerHTML += fila;
-                    });
-                })
-                .catch(error => console.error('Error:', error));
+                state.inscripciones = Array.isArray(inscripciones) ? inscripciones : [];
+                state.alumnos = Array.isArray(alumnos) ? alumnos : [];
+                state.cursos = Array.isArray(cursos) ? cursos : [];
+
+                actualizarSelects();
+                renderTodo();
+            } catch (error) {
+                document.getElementById('cuerpo-inscripciones').innerHTML = filaVacia(5, 'No se pudieron cargar las inscripciones.');
+                document.getElementById('resultados-info').textContent = 'Error de conexión';
+                mostrarToast('No se pudieron cargar los datos: ' + error.message, 'error');
+            }
         }
 
-        function guardarInscripcion() {
-            let idAlumno = document.getElementById('select-alumno').value;
-            let idCurso = document.getElementById('select-curso').value;
+        function actualizarSelects() {
+            llenarSelect(document.getElementById('ins-alumno'), state.alumnos, {
+                placeholder: 'Seleccione un alumno...',
+                texto: alumno => alumno.nya + ' — DNI ' + alumno.dni
+            });
 
-            if (idAlumno === '' || idCurso === '') {
-                alert('Por favor, seleccione un alumno y un curso.');
+            llenarSelect(document.getElementById('ins-curso'), state.cursos, {
+                placeholder: 'Seleccione un curso...',
+                texto: curso => curso.nombre + (curso.turno ? ' — ' + curso.turno : '')
+            });
+
+            llenarSelect(document.getElementById('filtro-curso'), state.cursos, {
+                placeholder: 'Todos los cursos',
+                texto: curso => curso.nombre + (curso.turno ? ' — ' + curso.turno : '')
+            });
+
+            if (state.filtroCursoId) {
+                document.getElementById('filtro-curso').value = String(state.filtroCursoId);
+            }
+        }
+
+        function programarBusqueda() {
+            clearTimeout(state.timerBusqueda);
+            state.timerBusqueda = setTimeout(ejecutarBusqueda, 280);
+        }
+
+        function ejecutarBusqueda() {
+            clearTimeout(state.timerBusqueda);
+            state.busqueda = document.getElementById('buscador').value.trim();
+            renderTodo();
+        }
+
+        function cambiarFiltroCurso() {
+            const valor = document.getElementById('filtro-curso').value;
+            state.filtroCursoId = valor ? Number(valor) : null;
+            actualizarUrl();
+            renderTodo();
+        }
+
+        function quitarFiltros() {
+            state.busqueda = '';
+            state.filtroCursoId = null;
+            state.filtroAlumnoId = null;
+            document.getElementById('buscador').value = '';
+            document.getElementById('filtro-curso').value = '';
+            actualizarUrl();
+            renderTodo();
+        }
+
+        function actualizarUrl() {
+            const parametros = new URLSearchParams();
+            if (state.filtroCursoId) parametros.set('cursoId', state.filtroCursoId);
+            if (state.filtroAlumnoId) parametros.set('alumnoId', state.filtroAlumnoId);
+            const query = parametros.toString();
+            history.replaceState(null, '', 'index.html' + (query ? '?' + query : ''));
+        }
+
+        function obtenerInscripcionesFiltradas() {
+            const busqueda = normalizarTexto(state.busqueda);
+
+            return state.inscripciones
+                .filter(inscripcion => {
+                    if (state.filtroCursoId && inscripcion.curso?.id !== state.filtroCursoId) return false;
+                    if (state.filtroAlumnoId && inscripcion.alumno?.id !== state.filtroAlumnoId) return false;
+                    if (!busqueda) return true;
+
+                    const alumno = inscripcion.alumno || {};
+                    const curso = inscripcion.curso || {};
+                    const profesor = curso.profesor || {};
+                    const texto = [
+                        alumno.nya, alumno.dni, alumno.legajo,
+                        curso.nombre, curso.turno, profesor.nya
+                    ].join(' ');
+
+                    return normalizarTexto(texto).includes(busqueda);
+                })
+                .sort((a, b) => {
+                    const fecha = String(b.fechaInscripcion || '').localeCompare(String(a.fechaInscripcion || ''));
+                    if (fecha !== 0) return fecha;
+                    return String(a.alumno?.nya || '').localeCompare(String(b.alumno?.nya || ''), 'es');
+                });
+        }
+
+        function renderTodo() {
+            const filtradas = obtenerInscripcionesFiltradas();
+            renderKpis();
+            renderFiltroActivo();
+            renderTabla(filtradas);
+        }
+
+        function renderKpis() {
+            const alumnosInscriptos = new Set(state.inscripciones.map(inscripcion => inscripcion.alumno?.id).filter(Boolean));
+            const cursosConAlumnos = new Set(state.inscripciones.map(inscripcion => inscripcion.curso?.id).filter(Boolean));
+            const alumnosSinInscripcion = state.alumnos.filter(alumno => !alumnosInscriptos.has(alumno.id)).length;
+
+            const hoy = new Date();
+            const periodoActual = hoy.getFullYear() + '-' + String(hoy.getMonth() + 1).padStart(2, '0');
+            const altasDelMes = state.inscripciones.filter(inscripcion =>
+                String(inscripcion.fechaInscripcion || '').startsWith(periodoActual)
+            ).length;
+
+            const nombreMes = new Intl.DateTimeFormat('es-AR', { month: 'long', year: 'numeric' }).format(hoy);
+
+            document.getElementById('kpi-total').textContent = state.inscripciones.length;
+            document.getElementById('kpi-total-detalle').textContent =
+                alumnosInscriptos.size + ' ' + pluralizar(alumnosInscriptos.size, 'alumno', 'alumnos') +
+                ' · ' + cursosConAlumnos.size + ' ' + pluralizar(cursosConAlumnos.size, 'curso', 'cursos');
+
+            document.getElementById('kpi-alumnos').textContent = alumnosInscriptos.size;
+            document.getElementById('kpi-alumnos-detalle').textContent = alumnosSinInscripcion
+                ? alumnosSinInscripcion + ' ' + pluralizar(alumnosSinInscripcion, 'alumno sin inscripción', 'alumnos sin inscripción')
+                : 'Todos los alumnos tienen curso';
+
+            document.getElementById('kpi-cursos').textContent = cursosConAlumnos.size;
+            document.getElementById('kpi-cursos-detalle').textContent =
+                state.cursos.length + ' ' + pluralizar(state.cursos.length, 'curso registrado', 'cursos registrados');
+
+            document.getElementById('kpi-mes').textContent = altasDelMes;
+            document.getElementById('kpi-mes-detalle').textContent =
+                nombreMes.charAt(0).toUpperCase() + nombreMes.slice(1);
+        }
+
+        function renderFiltroActivo() {
+            const contenedor = document.getElementById('filtro-activo');
+            const partes = [];
+
+            if (state.filtroCursoId) {
+                const curso = state.cursos.find(item => item.id === state.filtroCursoId);
+                partes.push('Curso: <strong>' + escapeHtml(curso?.nombre || ('#' + state.filtroCursoId)) + '</strong>');
+            }
+
+            if (state.filtroAlumnoId) {
+                const alumno = state.alumnos.find(item => item.id === state.filtroAlumnoId);
+                partes.push('Alumno: <strong>' + escapeHtml(alumno?.nya || ('#' + state.filtroAlumnoId)) + '</strong>');
+            }
+
+            if (partes.length) {
+                contenedor.innerHTML = partes.join(' · ');
+                contenedor.classList.remove('hidden');
+            } else {
+                contenedor.innerHTML = '';
+                contenedor.classList.add('hidden');
+            }
+
+            const hayFiltros = Boolean(state.busqueda || state.filtroCursoId || state.filtroAlumnoId);
+            document.getElementById('btn-limpiar').classList.toggle('hidden', !hayFiltros);
+        }
+
+        function renderTabla(filtradas) {
+            const cuerpo = document.getElementById('cuerpo-inscripciones');
+            const total = state.inscripciones.length;
+            let info = filtradas.length + ' ' + pluralizar(filtradas.length, 'inscripción', 'inscripciones');
+            if (filtradas.length !== total) info += ' de ' + total;
+            document.getElementById('resultados-info').textContent = info;
+
+            if (!filtradas.length) {
+                const mensaje = total
+                    ? 'No se encontraron inscripciones con los filtros seleccionados.'
+                    : 'Todavía no hay inscripciones. Usá “Nueva inscripción” para dar de alta la primera.';
+                cuerpo.innerHTML = filaVacia(5, mensaje);
                 return;
             }
 
-            let inscripcionData = {
-                alumno: { id: idAlumno },
-                curso: { id: idCurso }
-            };
+            cuerpo.innerHTML = filtradas.map(inscripcion => {
+                const alumno = inscripcion.alumno || {};
+                const curso = inscripcion.curso || {};
+                const profesor = curso.profesor || {};
+                const legajo = alumno.legajo ? ' · Leg. ' + escapeHtml(alumno.legajo) : '';
+                const detalleCurso = [
+                    curso.turno ? 'Turno ' + curso.turno : 'Turno a confirmar',
+                    profesor.nya ? 'Prof. ' + profesor.nya : null
+                ].filter(Boolean).join(' · ');
+                const urlPagos = 'Pagos.html?busqueda=' + encodeURIComponent(alumno.nya || '');
 
-            fetch('http://localhost:8080/api/inscripciones', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(inscripcionData)
-            })
-            .then(response => {
-                if (response.ok) {
-                    alert('¡Inscripción guardada exitosamente!');
-                    document.getElementById('form-inscripcion').reset();
-                    cargarInscripciones();
-                } else {
-                    alert('Error al guardar. ¿Existe el curso en la base de datos?');
-                }
-            })
-            .catch(error => console.error('Error:', error));
+                return '<tr>' +
+                    '<td>' +
+                        '<div class="cell-main">' + escapeHtml(alumno.nya || 'Alumno desconocido') + '</div>' +
+                        '<div class="cell-sub">DNI ' + escapeHtml(alumno.dni || '—') + legajo + '</div>' +
+                    '</td>' +
+                    '<td>' +
+                        '<div class="cell-main">' + escapeHtml(curso.nombre || 'Curso desconocido') + '</div>' +
+                        '<div class="cell-sub">' + escapeHtml(detalleCurso) + '</div>' +
+                    '</td>' +
+                    '<td>' + formatearFecha(inscripcion.fechaInscripcion) + '</td>' +
+                    '<td><span class="badge ACTIVA">Activa</span></td>' +
+                    '<td class="acciones">' +
+                        '<a class="action-link" href="' + urlPagos + '">Ver cuotas</a>' +
+                        '<button type="button" class="btn-danger-link" onclick="darDeBaja(' + inscripcion.id + ')">Dar de baja</button>' +
+                    '</td>' +
+                    '</tr>';
+            }).join('');
         }
 
-        function borrarInscripcion(id) {
-            if (!confirm('¿Seguro que querés dar de baja esta inscripción?')) return;
+        function filaVacia(columnas, mensaje) {
+            return '<tr><td colspan="' + columnas + '" class="empty">' + escapeHtml(mensaje) + '</td></tr>';
+        }
 
-            fetch('http://localhost:8080/api/inscripciones/' + id, { method: 'DELETE' })
-                .then(response => {
-                    if(response.ok) {
-                        alert('Inscripción dada de baja');
-                        cargarInscripciones();
-                    }
-                })
-                .catch(error => console.error('Error:', error));
+        function abrirModalInscripcion(alumnoId) {
+            if (!state.alumnos.length) {
+                mostrarToast('No hay alumnos registrados. Creá uno desde la sección Alumnos.', 'error');
+                return;
+            }
+            if (!state.cursos.length) {
+                mostrarToast('No hay cursos registrados. Creá uno desde la sección Cursos.', 'error');
+                return;
+            }
+
+            document.getElementById('form-inscripcion').reset();
+            actualizarSelects();
+
+            if (alumnoId) {
+                const selectAlumno = document.getElementById('ins-alumno');
+                selectAlumno.value = String(alumnoId);
+            }
+
+            abrirModal('modal-inscripcion');
+        }
+
+        async function guardarInscripcion(event) {
+            event.preventDefault();
+
+            const alumnoId = document.getElementById('ins-alumno').value;
+            const cursoId = document.getElementById('ins-curso').value;
+
+            if (!alumnoId || !cursoId) {
+                mostrarToast('Seleccioná un alumno y un curso.', 'error');
+                return;
+            }
+
+            const boton = document.getElementById('btn-inscribir');
+            setBotonCargando(boton, true, 'Inscribiendo...');
+
+            try {
+                await apiFetch(API + '/inscripciones', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        alumno: { id: Number(alumnoId) },
+                        curso: { id: Number(cursoId) }
+                    })
+                });
+
+                cerrarModal('modal-inscripcion');
+                document.getElementById('form-inscripcion').reset();
+                mostrarToast('Inscripción registrada correctamente.', 'success');
+                await cargarTodo();
+            } catch (error) {
+                mostrarToast(error.message, 'error');
+            } finally {
+                setBotonCargando(boton, false);
+            }
+        }
+
+        async function darDeBaja(id) {
+            const inscripcion = state.inscripciones.find(item => item.id === id);
+            if (!inscripcion) return;
+
+            const alumno = inscripcion.alumno?.nya || 'el alumno';
+            const curso = inscripcion.curso?.nombre || 'el curso';
+            const confirmado = await confirmarAccion({
+                titulo: 'Dar de baja inscripción',
+                mensaje: '¿Dar de baja la inscripción de ' + alumno + ' en ' + curso + '? Las cuotas ya generadas no se eliminan.',
+                textoConfirmar: 'Dar de baja'
+            });
+
+            if (!confirmado) return;
+
+            try {
+                await apiFetch(API + '/inscripciones/' + id, { method: 'DELETE' });
+                mostrarToast('Inscripción dada de baja correctamente.', 'success');
+                await cargarTodo();
+            } catch (error) {
+                mostrarToast(error.message, 'error');
+            }
         }
     </script>
 </body>

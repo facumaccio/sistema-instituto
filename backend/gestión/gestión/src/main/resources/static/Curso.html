@@ -2,143 +2,502 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Gestión de Cursos</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 40px; background-color: #f4f4f9; }
-        h1 { color: #333; }
-        button { padding: 10px 15px; background-color: #007bff; color: white; border: none; cursor: pointer; border-radius: 4px; }
-        button:hover { background-color: #0056b3; }
-        table { width: 100%; margin-top: 20px; border-collapse: collapse; background: white; }
-        th, td { padding: 12px; border: 1px solid #ddd; text-align: left; }
-        th { background-color: #28a745; color: white; }
-        .form-container { margin-top: 20px; margin-bottom: 20px; padding: 15px; background: #e9ecef; border-radius: 5px; }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cursos - Instituto</title>
+    <link rel="stylesheet" href="css/instituto.css?v=20261024">
 </head>
 <body>
 
-    <h1>Gestión de Cursos</h1>
-    <a href="index.html" style="margin-bottom: 20px; display: inline-block;">Volver a Inscripciones</a>
-    
-    <div class="form-container">
-        <h3 id="titulo-formulario">Nuevo Curso</h3>
-        <form id="form-curso">
-            <input type="hidden" id="curso-id">
-            
-            <label>Nombre del Idioma: <input type="text" id="nombre" placeholder="Ej: Alemán"></label>
-            <label style="margin-left: 10px;">Turno: <input type="text" id="turno" placeholder="Ej: Mañana"></label>
-            
-            <button type="button" id="btn-guardar" onclick="guardarCurso()" style="margin-left: 10px; background-color: #28a745;">Guardar</button>
-            <button type="button" id="btn-cancelar" onclick="cancelarEdicion()" style="margin-left: 5px; background-color: #6c757d; display: none;">Cancelar</button>
-        </form>
+    <header class="topbar">
+        <div class="brand">Instituto <span>Gestión Académica</span></div>
+        <nav>
+            <a href="Dashboard.html">Dashboard</a>
+            <a href="index.html">Inscripciones</a>
+            <a href="Alumnos.html">Alumnos</a>
+            <a href="Curso.html" class="active">Cursos</a>
+            <a href="Profesores.html">Profesores</a>
+            <a href="Pagos.html">Pagos y Cuotas</a>
+            <a href="Calendario.html">Calendario</a>
+            <a href="Finanzas.html">Finanzas</a>
+        </nav>
+    </header>
+
+    <main class="page">
+
+        <div class="page-head">
+            <div>
+                <h1>Cursos</h1>
+                <p class="subtitle">Oferta académica, turnos, profesores y alumnos inscriptos.</p>
+            </div>
+            <button type="button" class="btn btn-primary" onclick="abrirModalNuevo()">Nuevo curso</button>
+        </div>
+
+        <section class="kpis" aria-label="Indicadores de cursos">
+            <article class="kpi">
+                <p class="kpi-label">Total de cursos</p>
+                <div class="kpi-value" id="kpi-total">—</div>
+                <div class="kpi-detail" id="kpi-total-detalle">—</div>
+            </article>
+            <article class="kpi">
+                <p class="kpi-label">Cursos con inscriptos</p>
+                <div class="kpi-value success" id="kpi-con-alumnos">—</div>
+                <div class="kpi-detail" id="kpi-con-alumnos-detalle">—</div>
+            </article>
+            <article class="kpi">
+                <p class="kpi-label">Alumnos inscriptos</p>
+                <div class="kpi-value" id="kpi-inscriptos">—</div>
+                <div class="kpi-detail" id="kpi-inscriptos-detalle">—</div>
+            </article>
+            <article class="kpi">
+                <p class="kpi-label">Cursos con profesor</p>
+                <div class="kpi-value" id="kpi-profesores">—</div>
+                <div class="kpi-detail" id="kpi-profesores-detalle">—</div>
+            </article>
+        </section>
+
+        <section class="toolbar" aria-label="Búsqueda y filtros">
+            <div class="toolbar-main">
+                <div class="search-field">
+                    <label class="field-label" for="buscador">Buscar curso</label>
+                    <input type="search" id="buscador" placeholder="Idioma, turno o profesor..." autocomplete="off" oninput="programarBusqueda()">
+                </div>
+            </div>
+            <div class="filters">
+                <div class="filter-field">
+                    <label for="filtro-turno">Turno</label>
+                    <select id="filtro-turno" onchange="cambiarFiltroTurno()">
+                        <option value="">Todos los turnos</option>
+                    </select>
+                </div>
+            </div>
+            <div class="toolbar-meta">
+                <div class="filter-note hidden" id="filtro-activo"></div>
+                <div class="results-info" id="resultados-info">—</div>
+                <button type="button" class="btn btn-ghost btn-sm" id="btn-limpiar" onclick="quitarFiltros()">Limpiar</button>
+            </div>
+        </section>
+
+        <section class="panel">
+            <div class="panel-head">
+                <h2>Oferta de cursos</h2>
+                <span class="panel-hint">Los cursos con inscriptos o cuotas no se pueden eliminar</span>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Curso</th>
+                            <th>Turno</th>
+                            <th>Profesor</th>
+                            <th class="num">Inscriptos</th>
+                            <th class="acciones">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cuerpo-cursos">
+                        <tr><td colspan="5" class="empty">Cargando cursos...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Modal: alta / edición de curso -->
+    <div class="modal-overlay hidden" id="modal-curso" onclick="cerrarModalPorOverlay(event, 'modal-curso')">
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="titulo-curso">
+            <div class="modal-head">
+                <h3 id="titulo-curso">Nuevo curso</h3>
+                <button type="button" class="icon-btn" aria-label="Cerrar" onclick="cerrarModal('modal-curso')">&times;</button>
+            </div>
+            <form id="form-curso" onsubmit="guardarCurso(event)">
+                <div class="modal-body">
+                    <input type="hidden" id="curso-id">
+
+                    <div class="form-grid">
+                        <div class="field full">
+                            <label for="curso-nombre">Nombre del curso</label>
+                            <input type="text" id="curso-nombre" maxlength="80" placeholder="Ej: Alemán" required autocomplete="off">
+                        </div>
+                        <div class="field">
+                            <label for="curso-turno">Turno</label>
+                            <input type="text" id="curso-turno" maxlength="40" placeholder="Ej: Mañana" list="turnos-existentes" autocomplete="off">
+                            <datalist id="turnos-existentes"></datalist>
+                        </div>
+                        <div class="field">
+                            <label for="curso-cupo">Cupo máximo (opcional)</label>
+                            <input type="number" id="curso-cupo" min="1" max="9999" step="1" placeholder="Ej: 20">
+                            <span class="field-hint">Dejalo vacío si el curso no tiene límite.</span>
+                        </div>
+                        <div class="field full">
+                            <label for="curso-profesor">Profesor</label>
+                            <select id="curso-profesor">
+                                <option value="">Sin profesor asignado</option>
+                            </select>
+                            <span class="field-hint">¿No aparece? <a href="Profesores.html">Gestionar profesores</a>.</span>
+                        </div>
+                    </div>
+
+                    <p class="nota">El profesor y el cupo son opcionales. El cupo permite detectar cursos casi llenos en el dashboard. Si el curso ya tiene alumnos inscriptos o cuotas asociadas, primero deberás resolver esas relaciones para eliminarlo.</p>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-ghost" onclick="cerrarModal('modal-curso')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" id="btn-guardar-curso">Guardar curso</button>
+                </div>
+            </form>
+        </div>
     </div>
 
-    <table>
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Nombre</th>
-                <th>Turno</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-        <tbody id="cuerpo-tabla">
-        </tbody>
-    </table>
+    <div class="toasts" id="toasts" aria-live="polite"></div>
 
+    <script src="js/instituto.js"></script>
     <script>
-        window.onload = cargarCursos;
+        const state = {
+            cursos: [],
+            inscripciones: [],
+            profesores: [],
+            busqueda: '',
+            filtroTurno: '',
+            timerBusqueda: null
+        };
 
-        function cargarCursos() {
-            fetch('http://localhost:8080/api/cursos')
-                .then(response => response.json())
-                .then(data => {
-                    let cuerpoTabla = document.getElementById('cuerpo-tabla');
-                    cuerpoTabla.innerHTML = '';
+        document.addEventListener('DOMContentLoaded', iniciar);
 
-                    data.forEach(curso => {
-                        let turno = curso.turno ? curso.turno : '-';
-                        let fila = `<tr>
-                            <td>${curso.id}</td>
-                            <td>${curso.nombre}</td>
-                            <td>${turno}</td>
-                            <td>
-                                <button onclick="prepararEdicion(${curso.id}, '${curso.nombre}', '${turno}')" style="background-color: #ffc107; color: black; padding: 5px 10px; margin-right: 5px;">Editar</button>
-                                <button onclick="eliminarCurso(${curso.id})" style="background-color: #dc3545; padding: 5px 10px;">Borrar</button>
-                            </td>
-                        </tr>`;
-                        cuerpoTabla.innerHTML += fila;
-                    });
+        async function iniciar() {
+            const parametros = new URLSearchParams(window.location.search);
+            state.filtroTurno = parametros.get('turno') || '';
+
+            document.getElementById('buscador').addEventListener('keydown', event => {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    ejecutarBusqueda();
+                }
+            });
+
+            document.addEventListener('keydown', event => {
+                if (event.key === 'Escape' && !document.getElementById('modal-curso').classList.contains('hidden')) {
+                    cerrarModal('modal-curso');
+                }
+            });
+
+            await cargarTodo();
+        }
+
+        async function cargarTodo() {
+            try {
+                const [cursos, inscripciones, profesores] = await Promise.all([
+                    apiFetch(API + '/cursos'),
+                    apiFetch(API + '/inscripciones'),
+                    apiFetch(API + '/profesores')
+                ]);
+
+                state.cursos = Array.isArray(cursos) ? cursos : [];
+                state.inscripciones = Array.isArray(inscripciones) ? inscripciones : [];
+                state.profesores = Array.isArray(profesores) ? profesores : [];
+
+                actualizarFiltrosYCombos();
+                renderTodo();
+            } catch (error) {
+                document.getElementById('cuerpo-cursos').innerHTML = filaVacia(5, 'No se pudieron cargar los cursos.');
+                document.getElementById('resultados-info').textContent = 'Error de conexión';
+                mostrarToast('No se pudieron cargar los datos: ' + error.message, 'error');
+            }
+        }
+
+        function obtenerTurnos() {
+            return Array.from(new Set(
+                state.cursos.map(curso => curso.turno).filter(Boolean)
+            )).sort((a, b) => a.localeCompare(b, 'es'));
+        }
+
+        function nombreProfesor(profesor) {
+            if (!profesor) return '';
+            return [profesor.nombre, profesor.apellido]
+                .filter(Boolean)
+                .join(' ')
+                .trim() || profesor.nya || '';
+        }
+
+        function actualizarFiltrosYCombos() {
+            const turnos = obtenerTurnos();
+
+            llenarSelect(document.getElementById('filtro-turno'), turnos.map(turno => ({ id: turno, nombre: turno })), {
+                placeholder: 'Todos los turnos'
+            });
+
+            if (state.filtroTurno && !turnos.includes(state.filtroTurno)) {
+                state.filtroTurno = '';
+                actualizarUrl();
+            }
+
+            llenarSelect(document.getElementById('curso-profesor'), state.profesores, {
+                placeholder: 'Sin profesor asignado',
+                texto: profesor => nombreProfesor(profesor) + (profesor.especialidad ? ' — ' + profesor.especialidad : '')
+            });
+
+            document.getElementById('turnos-existentes').innerHTML = turnos
+                .map(turno => '<option value="' + escapeHtml(turno) + '"></option>')
+                .join('');
+
+            if (state.filtroTurno) {
+                document.getElementById('filtro-turno').value = state.filtroTurno;
+            }
+        }
+
+        function programarBusqueda() {
+            clearTimeout(state.timerBusqueda);
+            state.timerBusqueda = setTimeout(ejecutarBusqueda, 280);
+        }
+
+        function ejecutarBusqueda() {
+            clearTimeout(state.timerBusqueda);
+            state.busqueda = document.getElementById('buscador').value.trim();
+            renderTodo();
+        }
+
+        function cambiarFiltroTurno() {
+            state.filtroTurno = document.getElementById('filtro-turno').value;
+            actualizarUrl();
+            renderTodo();
+        }
+
+        function quitarFiltros() {
+            state.busqueda = '';
+            state.filtroTurno = '';
+            document.getElementById('buscador').value = '';
+            document.getElementById('filtro-turno').value = '';
+            actualizarUrl();
+            renderTodo();
+        }
+
+        function actualizarUrl() {
+            const parametros = new URLSearchParams();
+            if (state.filtroTurno) parametros.set('turno', state.filtroTurno);
+            const query = parametros.toString();
+            history.replaceState(null, '', 'Curso.html' + (query ? '?' + query : ''));
+        }
+
+        function inscriptosDeCurso(cursoId) {
+            return state.inscripciones.filter(inscripcion => inscripcion.curso?.id === cursoId);
+        }
+
+        function obtenerCursosFiltrados() {
+            const busqueda = normalizarTexto(state.busqueda);
+
+            return state.cursos
+                .filter(curso => {
+                    if (state.filtroTurno && curso.turno !== state.filtroTurno) return false;
+                    if (!busqueda) return true;
+
+                    const profesor = curso.profesor || {};
+                    const texto = [curso.nombre, curso.turno, nombreProfesor(profesor), profesor.especialidad].join(' ');
+                    return normalizarTexto(texto).includes(busqueda);
                 })
-                .catch(error => console.error('Error:', error));
+                .sort((a, b) => String(a.nombre || '').localeCompare(String(b.nombre || ''), 'es'));
         }
 
-        function prepararEdicion(id, nombre, turno) {
-            document.getElementById('curso-id').value = id;
-            document.getElementById('nombre').value = nombre;
-            document.getElementById('turno').value = turno !== '-' ? turno : '';
-            
-            document.getElementById('titulo-formulario').innerText = "Modificar Curso ID: " + id;
-            document.getElementById('btn-guardar').innerText = "Actualizar";
-            document.getElementById('btn-cancelar').style.display = "inline-block";
+        function renderTodo() {
+            renderKpis();
+            renderFiltroActivo();
+            renderTabla(obtenerCursosFiltrados());
         }
 
-        function cancelarEdicion() {
+        function renderKpis() {
+            const cursosConAlumnos = state.cursos.filter(curso => inscriptosDeCurso(curso.id).length > 0).length;
+            const alumnosInscriptos = new Set(
+                state.inscripciones.map(inscripcion => inscripcion.alumno?.id).filter(Boolean)
+            );
+            const conProfesor = state.cursos.filter(curso => curso.profesor?.id).length;
+            const turnos = obtenerTurnos().length;
+
+            document.getElementById('kpi-total').textContent = state.cursos.length;
+            document.getElementById('kpi-total-detalle').textContent =
+                turnos + ' ' + pluralizar(turnos, 'turno registrado', 'turnos registrados');
+
+            document.getElementById('kpi-con-alumnos').textContent = cursosConAlumnos;
+            document.getElementById('kpi-con-alumnos-detalle').textContent =
+                (state.cursos.length - cursosConAlumnos) + ' ' +
+                pluralizar(state.cursos.length - cursosConAlumnos, 'curso sin inscriptos', 'cursos sin inscriptos');
+
+            document.getElementById('kpi-inscriptos').textContent = alumnosInscriptos.size;
+            document.getElementById('kpi-inscriptos-detalle').textContent =
+                state.inscripciones.length + ' ' + pluralizar(state.inscripciones.length, 'inscripción registrada', 'inscripciones registradas');
+
+            document.getElementById('kpi-profesores').textContent = conProfesor;
+            document.getElementById('kpi-profesores-detalle').textContent =
+                (state.cursos.length - conProfesor) + ' ' +
+                pluralizar(state.cursos.length - conProfesor, 'curso sin profesor', 'cursos sin profesor');
+        }
+
+        function renderFiltroActivo() {
+            const contenedor = document.getElementById('filtro-activo');
+
+            if (state.filtroTurno) {
+                contenedor.innerHTML = 'Turno: <strong>' + escapeHtml(state.filtroTurno) + '</strong>';
+                contenedor.classList.remove('hidden');
+            } else {
+                contenedor.innerHTML = '';
+                contenedor.classList.add('hidden');
+            }
+
+            const hayFiltros = Boolean(state.busqueda || state.filtroTurno);
+            document.getElementById('btn-limpiar').classList.toggle('hidden', !hayFiltros);
+        }
+
+        function renderTabla(cursos) {
+            const cuerpo = document.getElementById('cuerpo-cursos');
+            let info = cursos.length + ' ' + pluralizar(cursos.length, 'curso', 'cursos');
+            if (cursos.length !== state.cursos.length) info += ' de ' + state.cursos.length;
+            document.getElementById('resultados-info').textContent = info;
+
+            if (!cursos.length) {
+                const mensaje = state.cursos.length
+                    ? 'No se encontraron cursos con los filtros seleccionados.'
+                    : 'Todavía no hay cursos. Usá “Nuevo curso” para crear el primero.';
+                cuerpo.innerHTML = filaVacia(5, mensaje);
+                return;
+            }
+
+            cuerpo.innerHTML = cursos.map(curso => {
+                const profesor = curso.profesor || {};
+                const inscriptos = inscriptosDeCurso(curso.id);
+                const cupo = Number(curso.cupo) > 0 ? Number(curso.cupo) : null;
+                const ocupacion = cupo ? Math.round(inscriptos.length * 100 / cupo) : null;
+                const claseOcupacion = ocupacion !== null && ocupacion >= 100
+                    ? 'text-danger'
+                    : (ocupacion !== null && ocupacion >= 80 ? 'text-warning' : 'cell-sub');
+                const badgeCasiLleno = ocupacion !== null && ocupacion >= 80
+                    ? ' <span class="badge CASI_LLENO">Casi lleno</span>'
+                    : '';
+                const urlInscripciones = 'index.html?cursoId=' + curso.id;
+                const urlAlumnos = 'Alumnos.html?cursoId=' + curso.id;
+
+                return '<tr>' +
+                    '<td>' +
+                        '<div class="cell-main">' + escapeHtml(curso.nombre) + badgeCasiLleno + '</div>' +
+                        '<div class="cell-sub">Curso #' + curso.id + '</div>' +
+                    '</td>' +
+                    '<td>' + (curso.turno
+                        ? escapeHtml(curso.turno)
+                        : '<span class="cell-sub">Sin turno</span>') + '</td>' +
+                    '<td>' + (nombreProfesor(profesor)
+                        ? '<div class="cell-main">' + escapeHtml(nombreProfesor(profesor)) + '</div>' +
+                          (profesor.especialidad ? '<div class="cell-sub">' + escapeHtml(profesor.especialidad) + '</div>' : '')
+                        : '<span class="cell-sub">Sin asignar</span>') + '</td>' +
+                    '<td class="num">' +
+                        '<div class="cell-main">' + inscriptos.length + (cupo ? ' / ' + cupo : '') + '</div>' +
+                        '<div class="' + claseOcupacion + '">' +
+                            (cupo
+                                ? ocupacion + '% de ocupación'
+                                : pluralizar(inscriptos.length, 'alumno', 'alumnos')) +
+                        '</div>' +
+                    '</td>' +
+                    '<td class="acciones">' +
+                        '<a class="action-link" href="' + urlInscripciones + '">Inscripciones</a>' +
+                        '<a class="action-link" href="' + urlAlumnos + '">Alumnos</a>' +
+                        '<button type="button" class="action-link" onclick="abrirModalEditar(' + curso.id + ')">Editar</button>' +
+                        '<button type="button" class="btn-danger-link" onclick="eliminarCurso(' + curso.id + ')">Eliminar</button>' +
+                    '</td>' +
+                    '</tr>';
+            }).join('');
+        }
+
+        function filaVacia(columnas, mensaje) {
+            return '<tr><td colspan="' + columnas + '" class="empty">' + escapeHtml(mensaje) + '</td></tr>';
+        }
+
+        function abrirModalNuevo() {
             document.getElementById('form-curso').reset();
             document.getElementById('curso-id').value = '';
-            document.getElementById('titulo-formulario').innerText = "Nuevo Curso";
-            document.getElementById('btn-guardar').innerText = "Guardar";
-            document.getElementById('btn-cancelar').style.display = "none";
+            document.getElementById('titulo-curso').textContent = 'Nuevo curso';
+            document.getElementById('btn-guardar-curso').textContent = 'Guardar curso';
+            actualizarFiltrosYCombos();
+            abrirModal('modal-curso');
         }
 
-        function guardarCurso() {
-            let idValor = document.getElementById('curso-id').value;
-            let nombreValor = document.getElementById('nombre').value;
-            let turnoValor = document.getElementById('turno').value;
-
-            if (nombreValor.trim() === '') {
-                alert('Error: El nombre del curso es obligatorio.');
-                return; 
+        function abrirModalEditar(id) {
+            const curso = state.cursos.find(item => item.id === id);
+            if (!curso) {
+                mostrarToast('No se encontró el curso seleccionado.', 'error');
+                return;
             }
 
-            let cursoData = { nombre: nombreValor, turno: turnoValor };
-            let url = 'http://localhost:8080/api/cursos';
-            let metodo = 'POST';
-
-            if (idValor !== '') {
-                url = url + '/' + idValor;
-                metodo = 'PUT';
-            }
-
-            fetch(url, {
-                method: metodo,
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(cursoData)
-            })
-            .then(response => {
-                if(response.ok) {
-                    alert('¡Operación exitosa!');
-                    cancelarEdicion(); 
-                    cargarCursos(); 
-                } else {
-                    alert('Error al guardar el curso.');
-                }
-            })
-            .catch(error => console.error('Error:', error));
+            actualizarFiltrosYCombos();
+            document.getElementById('curso-id').value = curso.id;
+            document.getElementById('curso-nombre').value = curso.nombre || '';
+            document.getElementById('curso-turno').value = curso.turno || '';
+            document.getElementById('curso-cupo').value = curso.cupo || '';
+            document.getElementById('curso-profesor').value = curso.profesor?.id ? String(curso.profesor.id) : '';
+            document.getElementById('titulo-curso').textContent = 'Editar curso';
+            document.getElementById('btn-guardar-curso').textContent = 'Guardar cambios';
+            abrirModal('modal-curso');
         }
 
-        function eliminarCurso(id) {
-            if (!confirm('¿Estás seguro de que querés eliminar el curso con ID ' + id + '?')) return; 
+        async function guardarCurso(event) {
+            event.preventDefault();
 
-            fetch('http://localhost:8080/api/cursos/' + id, { method: 'DELETE' })
-            .then(response => {
-                if (response.ok) {
-                    alert('Curso eliminado correctamente');
-                    cargarCursos(); 
-                } else {
-                    alert('Error al eliminar. ¿Quizás tiene alumnos inscriptos?');
-                }
-            })
-            .catch(error => console.error('Error al eliminar:', error));
+            const id = document.getElementById('curso-id').value;
+            const nombre = document.getElementById('curso-nombre').value.trim();
+            const turno = document.getElementById('curso-turno').value.trim();
+            const cupoTexto = document.getElementById('curso-cupo').value.trim();
+            const cupo = cupoTexto ? Number(cupoTexto) : null;
+            const profesorId = document.getElementById('curso-profesor').value;
+
+            if (!nombre) {
+                mostrarToast('El nombre del curso es obligatorio.', 'error');
+                return;
+            }
+
+            if (cupo !== null && (!Number.isInteger(cupo) || cupo < 1)) {
+                mostrarToast('El cupo debe ser un número entero mayor a cero.', 'error');
+                return;
+            }
+
+            const datos = {
+                nombre: nombre,
+                turno: turno || null,
+                cupo: cupo,
+                profesor: profesorId ? { id: Number(profesorId) } : null
+            };
+
+            const boton = document.getElementById('btn-guardar-curso');
+            setBotonCargando(boton, true, id ? 'Guardando cambios...' : 'Guardando...');
+
+            try {
+                await apiFetch(API + '/cursos' + (id ? '/' + id : ''), {
+                    method: id ? 'PUT' : 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(datos)
+                });
+
+                cerrarModal('modal-curso');
+                mostrarToast(id ? 'Curso actualizado correctamente.' : 'Curso creado correctamente.', 'success');
+                await cargarTodo();
+            } catch (error) {
+                mostrarToast(error.message, 'error');
+            } finally {
+                setBotonCargando(boton, false);
+            }
+        }
+
+        async function eliminarCurso(id) {
+            const curso = state.cursos.find(item => item.id === id);
+            if (!curso) return;
+
+            const confirmado = await confirmarAccion({
+                titulo: 'Eliminar curso',
+                mensaje: '¿Eliminar el curso ' + curso.nombre + '? Solo es posible si no tiene alumnos inscriptos ni cuotas asociadas.',
+                textoConfirmar: 'Eliminar curso'
+            });
+
+            if (!confirmado) return;
+
+            try {
+                await apiFetch(API + '/cursos/' + id, { method: 'DELETE' });
+                mostrarToast('Curso eliminado correctamente.', 'success');
+                await cargarTodo();
+            } catch (error) {
+                mostrarToast(error.message, 'error');
+            }
         }
     </script>
 </body>

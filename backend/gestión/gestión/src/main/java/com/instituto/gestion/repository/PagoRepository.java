@@ -6,4 +6,6 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface PagoRepository extends JpaRepository<Pago, Long> {
+
+    boolean existsByAlumno_Id(Long alumnoId);
 }

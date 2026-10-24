@@ -1,12 +1,18 @@
 package com.instituto.gestion.service;
 
+import com.instituto.gestion.model.Alumno;
+import com.instituto.gestion.model.Curso;
 import com.instituto.gestion.model.Inscripcion;
+import com.instituto.gestion.repository.AlumnoRepository;
+import com.instituto.gestion.repository.CursoRepository;
 import com.instituto.gestion.repository.InscripcionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
+
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class InscripcionService {
@@ -14,13 +20,29 @@ public class InscripcionService {
     @Autowired
     private InscripcionRepository repository;
 
+    @Autowired
+    private AlumnoRepository alumnoRepository;
+
+    @Autowired
+    private CursoRepository cursoRepository;
+
     public List<Inscripcion> obtenerTodas() {
         return repository.findAll();
     }
 
     public Inscripcion guardarInscripcion(Inscripcion inscripcion) {
-        // Setea la fecha de hoy automáticamente al crear la inscripción
-        inscripcion.setFechaInscripcion(LocalDate.now()); 
+        Alumno alumno = resolverAlumno(inscripcion);
+        Curso curso = resolverCurso(inscripcion);
+
+        if (repository.existsByAlumnoAndCursoIds(alumno.getId(), curso.getId())) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "El alumno ya se encuentra inscripto en este curso.");
+        }
+
+        inscripcion.setAlumno(alumno);
+        inscripcion.setCurso(curso);
+        inscripcion.setFechaInscripcion(LocalDate.now());
         return repository.save(inscripcion);
     }
 
@@ -28,25 +50,53 @@ public class InscripcionService {
         return repository.findByCurso_Id(cursoId);
     }
 
-    // Método de Baja
-    public boolean eliminarInscripcion(Long id) {
-        if (repository.existsById(id)) {
-            repository.deleteById(id);
-            return true;
+    public void eliminarInscripcion(Long id) {
+        if (!repository.existsById(id)) {
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "No se encontró la inscripción con ID " + id + ".");
         }
-        return false;
+        repository.deleteById(id);
     }
 
-    // Método de Modificación / Actualización
     public Inscripcion actualizarInscripcion(Long id, Inscripcion inscripcionNueva) {
-        Optional<Inscripcion> inscripcionExistente = repository.findById(id);
-        if (inscripcionExistente.isPresent()) {
-            Inscripcion inscripcionAModificar = inscripcionExistente.get();
-            inscripcionAModificar.setFechaInscripcion(inscripcionNueva.getFechaInscripcion());
-            inscripcionAModificar.setAlumno(inscripcionNueva.getAlumno());
-            inscripcionAModificar.setCurso(inscripcionNueva.getCurso());
-            return repository.save(inscripcionAModificar);
+        Inscripcion inscripcion = repository.findById(id).orElseThrow(() ->
+                new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "No se encontró la inscripción con ID " + id + "."));
+
+        Alumno alumno = resolverAlumno(inscripcionNueva);
+        Curso curso = resolverCurso(inscripcionNueva);
+
+        if (repository.existsByAlumno_IdAndCurso_IdAndIdNot(alumno.getId(), curso.getId(), id)) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "El alumno ya se encuentra inscripto en este curso.");
         }
-        return null; // O lanzar excepción si no existe
+
+        inscripcion.setAlumno(alumno);
+        inscripcion.setCurso(curso);
+        if (inscripcionNueva.getFechaInscripcion() != null) {
+            inscripcion.setFechaInscripcion(inscripcionNueva.getFechaInscripcion());
+        }
+        return repository.save(inscripcion);
+    }
+
+    private Alumno resolverAlumno(Inscripcion inscripcion) {
+        if (inscripcion == null || inscripcion.getAlumno() == null || inscripcion.getAlumno().getId() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Seleccioná un alumno.");
+        }
+
+        return alumnoRepository.findById(inscripcion.getAlumno().getId()).orElseThrow(() ->
+                new ResponseStatusException(HttpStatus.BAD_REQUEST, "El alumno seleccionado no existe."));
+    }
+
+    private Curso resolverCurso(Inscripcion inscripcion) {
+        if (inscripcion == null || inscripcion.getCurso() == null || inscripcion.getCurso().getId() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Seleccioná un curso.");
+        }
+
+        return cursoRepository.findById(inscripcion.getCurso().getId()).orElseThrow(() ->
+                new ResponseStatusException(HttpStatus.BAD_REQUEST, "El curso seleccionado no existe."));
     }
 }
