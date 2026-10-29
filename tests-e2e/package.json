@@ -1,0 +1,19 @@
+{
+  "name": "instituto-e2e",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Pruebas E2E y generación de reportes PDF para el frontend del Instituto.",
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:ui": "playwright test --ui",
+    "instalar-navegador": "playwright install chromium",
+    "reporte": "node generar-reporte.js"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.64.1"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

@@ -3,18 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Gestión de cursos del instituto: oferta académica, turnos, profesores, cupos y alumnos inscriptos.">
+    <script src="js/auth-guard.js?v=20261028-2"></script>
     <title>Cursos - Instituto</title>
-    <link rel="stylesheet" href="css/instituto.css?v=20261024">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/instituto.css?v=20261028-2">
+    <link rel="stylesheet" href="css/cursos.css?v=20261028-1">
 </head>
-<body>
+<body class="cursos-page">
 
     <header class="topbar">
         <div class="brand">Instituto <span>Gestión Académica</span></div>
-        <nav>
-            <a href="Dashboard.html">Dashboard</a>
+        <nav aria-label="Navegación principal">
+            <a href="Dashboard.html">Inicio</a>
+            <a href="Estadisticas.html" class="nav-highlight">Estadísticas</a>
             <a href="index.html">Inscripciones</a>
             <a href="Alumnos.html">Alumnos</a>
-            <a href="Curso.html" class="active">Cursos</a>
+            <a href="Curso.html" class="active" aria-current="page">Cursos</a>
             <a href="Profesores.html">Profesores</a>
             <a href="Pagos.html">Pagos y Cuotas</a>
             <a href="Calendario.html">Calendario</a>
@@ -24,77 +31,65 @@
 
     <main class="page">
 
-        <div class="page-head">
-            <div>
+        <div class="cursos-head">
+            <div class="cursos-head__copy">
                 <h1>Cursos</h1>
-                <p class="subtitle">Oferta académica, turnos, profesores y alumnos inscriptos.</p>
+                <p class="cursos-head__sub">Oferta académica, turnos, profesores y alumnos inscriptos.</p>
             </div>
-            <button type="button" class="btn btn-primary" onclick="abrirModalNuevo()">Nuevo curso</button>
+            <div class="cursos-head__actions">
+                <button type="button" class="mds-btn mds-btn--secondary" id="btn-actualizar" onclick="actualizarCursos()">Actualizar</button>
+                <button type="button" class="mds-btn mds-btn--primary" onclick="abrirModalNuevo()">Nuevo curso</button>
+            </div>
         </div>
 
-        <section class="kpis" aria-label="Indicadores de cursos">
-            <article class="kpi">
-                <p class="kpi-label">Total de cursos</p>
-                <div class="kpi-value" id="kpi-total">—</div>
-                <div class="kpi-detail" id="kpi-total-detalle">—</div>
-            </article>
-            <article class="kpi">
-                <p class="kpi-label">Cursos con inscriptos</p>
-                <div class="kpi-value success" id="kpi-con-alumnos">—</div>
-                <div class="kpi-detail" id="kpi-con-alumnos-detalle">—</div>
-            </article>
-            <article class="kpi">
-                <p class="kpi-label">Alumnos inscriptos</p>
-                <div class="kpi-value" id="kpi-inscriptos">—</div>
-                <div class="kpi-detail" id="kpi-inscriptos-detalle">—</div>
-            </article>
-            <article class="kpi">
-                <p class="kpi-label">Cursos con profesor</p>
-                <div class="kpi-value" id="kpi-profesores">—</div>
-                <div class="kpi-detail" id="kpi-profesores-detalle">—</div>
-            </article>
+        <section class="cursos-filters" aria-label="Búsqueda y filtros">
+            <div class="cursos-search">
+                <span class="cursos-search__icon" aria-hidden="true">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+                        <circle cx="7" cy="7" r="4.5"></circle>
+                        <path d="m10.5 10.5 3 3"></path>
+                    </svg>
+                </span>
+                <label class="sr-only" for="buscador">Buscar curso</label>
+                <input class="mds-input" type="search" id="buscador" placeholder="Idioma, turno o profesor..." autocomplete="off" oninput="programarBusqueda()">
+            </div>
+            <div class="cursos-select">
+                <label class="sr-only" for="filtro-turno">Turno</label>
+                <select class="mds-select" id="filtro-turno" onchange="cambiarFiltroTurno()">
+                    <option value="">Todos los turnos</option>
+                </select>
+            </div>
+            <span class="cursos-filters__spacer"></span>
+            <div class="filter-note hidden" id="filtro-activo"></div>
+            <button type="button" class="mds-btn mds-btn--transparent mds-btn--small hidden" id="btn-limpiar" onclick="quitarFiltros()">Limpiar</button>
         </section>
 
-        <section class="toolbar" aria-label="Búsqueda y filtros">
-            <div class="toolbar-main">
-                <div class="search-field">
-                    <label class="field-label" for="buscador">Buscar curso</label>
-                    <input type="search" id="buscador" placeholder="Idioma, turno o profesor..." autocomplete="off" oninput="programarBusqueda()">
+        <section class="cursos-panel" aria-label="Listado de cursos">
+            <div class="cursos-panel__head">
+                <div>
+                    <h2>Oferta de cursos</h2>
+                    <p class="cursos-panel__sub">Abrí “Gestionar curso” para ver alumnos, exámenes y notas.</p>
                 </div>
-            </div>
-            <div class="filters">
-                <div class="filter-field">
-                    <label for="filtro-turno">Turno</label>
-                    <select id="filtro-turno" onchange="cambiarFiltroTurno()">
-                        <option value="">Todos los turnos</option>
-                    </select>
-                </div>
-            </div>
-            <div class="toolbar-meta">
-                <div class="filter-note hidden" id="filtro-activo"></div>
-                <div class="results-info" id="resultados-info">—</div>
-                <button type="button" class="btn btn-ghost btn-sm" id="btn-limpiar" onclick="quitarFiltros()">Limpiar</button>
-            </div>
-        </section>
-
-        <section class="panel">
-            <div class="panel-head">
-                <h2>Oferta de cursos</h2>
-                <span class="panel-hint">Los cursos con inscriptos o cuotas no se pueden eliminar</span>
+                <div class="results-info" id="resultados-info" aria-live="polite">—</div>
             </div>
             <div class="table-wrap">
-                <table>
+                <table class="mds-table">
+                    <caption class="sr-only">Cursos del instituto</caption>
                     <thead>
                         <tr>
-                            <th>Curso</th>
-                            <th>Turno</th>
-                            <th>Profesor</th>
-                            <th class="num">Inscriptos</th>
-                            <th class="acciones">Acciones</th>
+                            <th scope="col" class="col-curso">Curso</th>
+                            <th scope="col" class="col-turno">Turno</th>
+                            <th scope="col" class="col-profesor">Profesor</th>
+                            <th scope="col" class="col-inscriptos">Inscriptos</th>
+                            <th scope="col" class="col-acciones">Acciones</th>
                         </tr>
                     </thead>
                     <tbody id="cuerpo-cursos">
-                        <tr><td colspan="5" class="empty">Cargando cursos...</td></tr>
+                        <tr>
+                            <td colspan="5" class="cursos-empty-cell">
+                                <div class="cursos-empty">Cargando cursos...</div>
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -102,46 +97,47 @@
 
     </main>
 
-    <!-- Modal: alta / edición de curso -->
+    <!-- Modal: alta de curso -->
     <div class="modal-overlay hidden" id="modal-curso" onclick="cerrarModalPorOverlay(event, 'modal-curso')">
-        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="titulo-curso">
+        <div class="modal mds-modal" role="dialog" aria-modal="true" aria-labelledby="titulo-curso" aria-describedby="curso-modal-desc">
             <div class="modal-head">
-                <h3 id="titulo-curso">Nuevo curso</h3>
-                <button type="button" class="icon-btn" aria-label="Cerrar" onclick="cerrarModal('modal-curso')">&times;</button>
+                <div>
+                    <h3 id="titulo-curso">Nuevo curso</h3>
+                    <p class="mds-modal__sub" id="curso-modal-desc">Definí el nombre, el turno y, si corresponde, el cupo y el docente.</p>
+                </div>
+                <button type="button" class="mds-icon-btn" aria-label="Cerrar" onclick="cerrarModal('modal-curso')">&times;</button>
             </div>
-            <form id="form-curso" onsubmit="guardarCurso(event)">
+            <form id="form-curso" onsubmit="guardarCurso(event)" autocomplete="off">
                 <div class="modal-body">
-                    <input type="hidden" id="curso-id">
-
-                    <div class="form-grid">
-                        <div class="field full">
-                            <label for="curso-nombre">Nombre del curso</label>
-                            <input type="text" id="curso-nombre" maxlength="80" placeholder="Ej: Alemán" required autocomplete="off">
+                    <div class="mds-form-grid">
+                        <div class="mds-field mds-field--full">
+                            <label for="curso-nombre">Nombre del curso <span class="mds-required" aria-hidden="true">*</span></label>
+                            <input class="mds-input" type="text" id="curso-nombre" maxlength="80" placeholder="Ej: Alemán" required autocomplete="off">
                         </div>
-                        <div class="field">
+                        <div class="mds-field">
                             <label for="curso-turno">Turno</label>
-                            <input type="text" id="curso-turno" maxlength="40" placeholder="Ej: Mañana" list="turnos-existentes" autocomplete="off">
+                            <input class="mds-input" type="text" id="curso-turno" maxlength="40" placeholder="Ej: Mañana" list="turnos-existentes" autocomplete="off">
                             <datalist id="turnos-existentes"></datalist>
                         </div>
-                        <div class="field">
+                        <div class="mds-field">
                             <label for="curso-cupo">Cupo máximo (opcional)</label>
-                            <input type="number" id="curso-cupo" min="1" max="9999" step="1" placeholder="Ej: 20">
-                            <span class="field-hint">Dejalo vacío si el curso no tiene límite.</span>
+                            <input class="mds-input" type="number" id="curso-cupo" min="1" max="9999" step="1" placeholder="Ej: 20" aria-describedby="curso-cupo-hint">
+                            <span class="mds-field-hint" id="curso-cupo-hint">Dejalo vacío si el curso no tiene límite.</span>
                         </div>
-                        <div class="field full">
+                        <div class="mds-field mds-field--full">
                             <label for="curso-profesor">Profesor</label>
-                            <select id="curso-profesor">
+                            <select class="mds-select" id="curso-profesor" aria-describedby="curso-profesor-hint">
                                 <option value="">Sin profesor asignado</option>
                             </select>
-                            <span class="field-hint">¿No aparece? <a href="Profesores.html">Gestionar profesores</a>.</span>
+                            <span class="mds-field-hint" id="curso-profesor-hint">¿No aparece? <a href="Profesores.html">Gestionar profesores</a>.</span>
                         </div>
                     </div>
 
-                    <p class="nota">El profesor y el cupo son opcionales. El cupo permite detectar cursos casi llenos en el dashboard. Si el curso ya tiene alumnos inscriptos o cuotas asociadas, primero deberás resolver esas relaciones para eliminarlo.</p>
+                    <p class="mds-note">El profesor y el cupo son opcionales. El cupo permite detectar cursos casi llenos en el dashboard. Si el curso ya tiene alumnos inscriptos o cuotas asociadas, primero deberás resolver esas relaciones para eliminarlo.</p>
                 </div>
                 <div class="modal-actions">
-                    <button type="button" class="btn btn-ghost" onclick="cerrarModal('modal-curso')">Cancelar</button>
-                    <button type="submit" class="btn btn-primary" id="btn-guardar-curso">Guardar curso</button>
+                    <button type="button" class="mds-btn mds-btn--secondary" onclick="cerrarModal('modal-curso')">Cancelar</button>
+                    <button type="submit" class="mds-btn mds-btn--primary" id="btn-guardar-curso">Guardar curso</button>
                 </div>
             </form>
         </div>
@@ -180,6 +176,17 @@
             });
 
             await cargarTodo();
+        }
+
+        async function actualizarCursos() {
+            const boton = document.getElementById('btn-actualizar');
+            setBotonCargando(boton, true, 'Actualizando...');
+
+            try {
+                await cargarTodo();
+            } finally {
+                setBotonCargando(boton, false);
+            }
         }
 
         async function cargarTodo() {
@@ -295,37 +302,57 @@
                 .sort((a, b) => String(a.nombre || '').localeCompare(String(b.nombre || ''), 'es'));
         }
 
-        function renderTodo() {
-            renderKpis();
-            renderFiltroActivo();
-            renderTabla(obtenerCursosFiltrados());
+        function calcularOcupacion(curso, cantidadInscriptos) {
+            const cupo = Number(curso.cupo) > 0 ? Number(curso.cupo) : null;
+
+            if (!cupo) {
+                return {
+                    cupo: null,
+                    porcentaje: null,
+                    estado: 'Sin cupo',
+                    variante: 'secondary',
+                    relleno: null,
+                    barra: 0
+                };
+            }
+
+            const porcentaje = Math.round(cantidadInscriptos * 100 / cupo);
+
+            if (porcentaje >= 100) {
+                return {
+                    cupo: cupo,
+                    porcentaje: porcentaje,
+                    estado: 'Cupo completo',
+                    variante: 'alert',
+                    relleno: 'alert',
+                    barra: 100
+                };
+            }
+
+            if (porcentaje >= 80) {
+                return {
+                    cupo: cupo,
+                    porcentaje: porcentaje,
+                    estado: 'Casi lleno',
+                    variante: 'warning',
+                    relleno: 'warning',
+                    barra: porcentaje
+                };
+            }
+
+            return {
+                cupo: cupo,
+                porcentaje: porcentaje,
+                estado: 'Disponible',
+                variante: 'success',
+                relleno: 'success',
+                barra: porcentaje
+            };
         }
 
-        function renderKpis() {
-            const cursosConAlumnos = state.cursos.filter(curso => inscriptosDeCurso(curso.id).length > 0).length;
-            const alumnosInscriptos = new Set(
-                state.inscripciones.map(inscripcion => inscripcion.alumno?.id).filter(Boolean)
-            );
-            const conProfesor = state.cursos.filter(curso => curso.profesor?.id).length;
-            const turnos = obtenerTurnos().length;
-
-            document.getElementById('kpi-total').textContent = state.cursos.length;
-            document.getElementById('kpi-total-detalle').textContent =
-                turnos + ' ' + pluralizar(turnos, 'turno registrado', 'turnos registrados');
-
-            document.getElementById('kpi-con-alumnos').textContent = cursosConAlumnos;
-            document.getElementById('kpi-con-alumnos-detalle').textContent =
-                (state.cursos.length - cursosConAlumnos) + ' ' +
-                pluralizar(state.cursos.length - cursosConAlumnos, 'curso sin inscriptos', 'cursos sin inscriptos');
-
-            document.getElementById('kpi-inscriptos').textContent = alumnosInscriptos.size;
-            document.getElementById('kpi-inscriptos-detalle').textContent =
-                state.inscripciones.length + ' ' + pluralizar(state.inscripciones.length, 'inscripción registrada', 'inscripciones registradas');
-
-            document.getElementById('kpi-profesores').textContent = conProfesor;
-            document.getElementById('kpi-profesores-detalle').textContent =
-                (state.cursos.length - conProfesor) + ' ' +
-                pluralizar(state.cursos.length - conProfesor, 'curso sin profesor', 'cursos sin profesor');
+        function renderTodo() {
+            renderFiltroActivo();
+            renderTabla(obtenerCursosFiltrados());
         }
 
         function renderFiltroActivo() {
@@ -360,82 +387,77 @@
             cuerpo.innerHTML = cursos.map(curso => {
                 const profesor = curso.profesor || {};
                 const inscriptos = inscriptosDeCurso(curso.id);
-                const cupo = Number(curso.cupo) > 0 ? Number(curso.cupo) : null;
-                const ocupacion = cupo ? Math.round(inscriptos.length * 100 / cupo) : null;
-                const claseOcupacion = ocupacion !== null && ocupacion >= 100
-                    ? 'text-danger'
-                    : (ocupacion !== null && ocupacion >= 80 ? 'text-warning' : 'cell-sub');
-                const badgeCasiLleno = ocupacion !== null && ocupacion >= 80
-                    ? ' <span class="badge CASI_LLENO">Casi lleno</span>'
+                const ocupacion = calcularOcupacion(curso, inscriptos.length);
+                const nombre = escapeHtml(curso.nombre || 'Curso sin nombre');
+                const profesorNombre = nombreProfesor(profesor);
+                const urlDetalle = 'CursoDetalle.html?id=' + encodeURIComponent(curso.id);
+                const badge = '<span class="mds-badge mds-badge--subtle-' + ocupacion.variante + '">' + ocupacion.estado + '</span>';
+
+                const turno = curso.turno
+                    ? '<span class="cell-main">' + escapeHtml(curso.turno) + '</span>'
+                    : '<span class="mds-status-hint mds-status-hint--default"><span class="mds-status-hint__dot" aria-hidden="true"></span>Sin turno</span>';
+
+                const profesorCelda = profesorNombre
+                    ? '<div class="cell-main">' + escapeHtml(profesorNombre) + '</div>' +
+                      (profesor.especialidad ? '<div class="cell-sub">' + escapeHtml(profesor.especialidad) + '</div>' : '')
+                    : '<span class="mds-status-hint mds-status-hint--warning"><span class="mds-status-hint__dot" aria-hidden="true"></span>Sin asignar</span>';
+
+                const valorInscriptos = '<div class="enrollment__value">' +
+                    '<strong>' + inscriptos.length + '</strong>' +
+                    (ocupacion.cupo
+                        ? '<span>/ ' + ocupacion.cupo + '</span>'
+                        : '<span>' + pluralizar(inscriptos.length, 'inscripto', 'inscriptos') + '</span>') +
+                    '</div>';
+
+                const barra = ocupacion.cupo
+                    ? '<div class="enrollment__bar" role="progressbar" aria-valuenow="' + Math.min(ocupacion.porcentaje, 100) + '" aria-valuemin="0" aria-valuemax="100" aria-label="Ocupación de ' + nombre + ': ' + ocupacion.porcentaje + '%">' +
+                      '<span class="enrollment__fill enrollment__fill--' + ocupacion.relleno + '" style="width:' + ocupacion.barra + '%"></span>' +
+                      '</div>'
                     : '';
-                const urlInscripciones = 'index.html?cursoId=' + curso.id;
-                const urlAlumnos = 'Alumnos.html?cursoId=' + curso.id;
+
+                const caption = ocupacion.cupo
+                    ? ocupacion.porcentaje + '% de ocupación'
+                    : 'Sin cupo definido';
+
+                const inscriptosCelda = '<div class="enrollment">' + valorInscriptos + barra +
+                    '<div class="enrollment__caption">' + caption + '</div></div>';
 
                 return '<tr>' +
-                    '<td>' +
-                        '<div class="cell-main">' + escapeHtml(curso.nombre) + badgeCasiLleno + '</div>' +
-                        '<div class="cell-sub">Curso #' + curso.id + '</div>' +
-                    '</td>' +
-                    '<td>' + (curso.turno
-                        ? escapeHtml(curso.turno)
-                        : '<span class="cell-sub">Sin turno</span>') + '</td>' +
-                    '<td>' + (nombreProfesor(profesor)
-                        ? '<div class="cell-main">' + escapeHtml(nombreProfesor(profesor)) + '</div>' +
-                          (profesor.especialidad ? '<div class="cell-sub">' + escapeHtml(profesor.especialidad) + '</div>' : '')
-                        : '<span class="cell-sub">Sin asignar</span>') + '</td>' +
-                    '<td class="num">' +
-                        '<div class="cell-main">' + inscriptos.length + (cupo ? ' / ' + cupo : '') + '</div>' +
-                        '<div class="' + claseOcupacion + '">' +
-                            (cupo
-                                ? ocupacion + '% de ocupación'
-                                : pluralizar(inscriptos.length, 'alumno', 'alumnos')) +
+                    '<td class="col-curso">' +
+                        '<div class="course-cell">' +
+                            '<div class="course-cell__title">' +
+                                '<a class="course-link" href="' + urlDetalle + '">' + nombre + '</a>' +
+                                badge +
+                            '</div>' +
+                            '<div class="course-cell__meta">Curso #' + escapeHtml(curso.id || '—') + '</div>' +
                         '</div>' +
                     '</td>' +
-                    '<td class="acciones">' +
-                        '<a class="action-link" href="' + urlInscripciones + '">Inscripciones</a>' +
-                        '<a class="action-link" href="' + urlAlumnos + '">Alumnos</a>' +
-                        '<button type="button" class="action-link" onclick="abrirModalEditar(' + curso.id + ')">Editar</button>' +
-                        '<button type="button" class="btn-danger-link" onclick="eliminarCurso(' + curso.id + ')">Eliminar</button>' +
+                    '<td class="col-turno">' + turno + '</td>' +
+                    '<td class="col-profesor">' + profesorCelda + '</td>' +
+                    '<td class="col-inscriptos">' + inscriptosCelda + '</td>' +
+                    '<td class="col-acciones">' +
+                        '<a class="mds-btn mds-btn--secondary mds-btn--small" href="' + urlDetalle + '" aria-label="Gestionar curso: ' + nombre + '">' +
+                            '<span>Gestionar curso</span>' +
+                            '<svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 2.5 8 6l-3.5 3.5"></path></svg>' +
+                        '</a>' +
                     '</td>' +
                     '</tr>';
             }).join('');
         }
 
         function filaVacia(columnas, mensaje) {
-            return '<tr><td colspan="' + columnas + '" class="empty">' + escapeHtml(mensaje) + '</td></tr>';
+            return '<tr><td colspan="' + columnas + '" class="cursos-empty-cell"><div class="cursos-empty">' + escapeHtml(mensaje) + '</div></td></tr>';
         }
 
         function abrirModalNuevo() {
             document.getElementById('form-curso').reset();
-            document.getElementById('curso-id').value = '';
-            document.getElementById('titulo-curso').textContent = 'Nuevo curso';
-            document.getElementById('btn-guardar-curso').textContent = 'Guardar curso';
             actualizarFiltrosYCombos();
-            abrirModal('modal-curso');
-        }
-
-        function abrirModalEditar(id) {
-            const curso = state.cursos.find(item => item.id === id);
-            if (!curso) {
-                mostrarToast('No se encontró el curso seleccionado.', 'error');
-                return;
-            }
-
-            actualizarFiltrosYCombos();
-            document.getElementById('curso-id').value = curso.id;
-            document.getElementById('curso-nombre').value = curso.nombre || '';
-            document.getElementById('curso-turno').value = curso.turno || '';
-            document.getElementById('curso-cupo').value = curso.cupo || '';
-            document.getElementById('curso-profesor').value = curso.profesor?.id ? String(curso.profesor.id) : '';
-            document.getElementById('titulo-curso').textContent = 'Editar curso';
-            document.getElementById('btn-guardar-curso').textContent = 'Guardar cambios';
             abrirModal('modal-curso');
         }
 
         async function guardarCurso(event) {
             event.preventDefault();
 
-            const id = document.getElementById('curso-id').value;
             const nombre = document.getElementById('curso-nombre').value.trim();
             const turno = document.getElementById('curso-turno').value.trim();
             const cupoTexto = document.getElementById('curso-cupo').value.trim();
@@ -460,17 +482,17 @@
             };
 
             const boton = document.getElementById('btn-guardar-curso');
-            setBotonCargando(boton, true, id ? 'Guardando cambios...' : 'Guardando...');
+            setBotonCargando(boton, true, 'Guardando...');
 
             try {
-                await apiFetch(API + '/cursos' + (id ? '/' + id : ''), {
-                    method: id ? 'PUT' : 'POST',
+                await apiFetch(API + '/cursos', {
+                    method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(datos)
                 });
 
                 cerrarModal('modal-curso');
-                mostrarToast(id ? 'Curso actualizado correctamente.' : 'Curso creado correctamente.', 'success');
+                mostrarToast('Curso creado correctamente.', 'success');
                 await cargarTodo();
             } catch (error) {
                 mostrarToast(error.message, 'error');
@@ -479,26 +501,6 @@
             }
         }
 
-        async function eliminarCurso(id) {
-            const curso = state.cursos.find(item => item.id === id);
-            if (!curso) return;
-
-            const confirmado = await confirmarAccion({
-                titulo: 'Eliminar curso',
-                mensaje: '¿Eliminar el curso ' + curso.nombre + '? Solo es posible si no tiene alumnos inscriptos ni cuotas asociadas.',
-                textoConfirmar: 'Eliminar curso'
-            });
-
-            if (!confirmado) return;
-
-            try {
-                await apiFetch(API + '/cursos/' + id, { method: 'DELETE' });
-                mostrarToast('Curso eliminado correctamente.', 'success');
-                await cargarTodo();
-            } catch (error) {
-                mostrarToast(error.message, 'error');
-            }
-        }
     </script>
 </body>
 </html>

@@ -1,0 +1,1574 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="js/auth-guard.js?v=20261028-2"></script>
+    <title>Detalle de curso - Instituto</title>
+    <link rel="stylesheet" href="css/instituto.css?v=20261028-2">
+</head>
+<body>
+
+    <header class="topbar">
+        <div class="brand">Instituto <span>Gestión Académica</span></div>
+        <nav>
+            <a href="Dashboard.html">Inicio</a>
+            <a href="Estadisticas.html" class="nav-highlight">Estadísticas</a>
+            <a href="index.html">Inscripciones</a>
+            <a href="Alumnos.html">Alumnos</a>
+            <a href="Curso.html" class="active">Cursos</a>
+            <a href="Profesores.html">Profesores</a>
+            <a href="Pagos.html">Pagos y Cuotas</a>
+            <a href="Calendario.html">Calendario</a>
+            <a href="Finanzas.html">Finanzas</a>
+        </nav>
+    </header>
+
+    <main class="page">
+
+        <div class="page-head detail-head">
+            <div>
+                <a class="back-link" href="Curso.html">← Volver a Cursos</a>
+                <h1 id="curso-nombre">Cargando curso...</h1>
+                <p class="subtitle" id="curso-subtitulo">Cargando información del curso...</p>
+            </div>
+            <div class="page-actions detail-actions">
+                <button type="button" class="btn btn-primary" onclick="abrirModalNuevaInscripcion()">Nueva inscripción</button>
+                <button type="button" class="btn btn-ghost" onclick="descargarReporteCurso('csv')">Exportar CSV</button>
+                <button type="button" class="btn btn-ghost" onclick="descargarReporteCurso('pdf')">Exportar PDF</button>
+                <button type="button" class="btn btn-ghost" onclick="abrirModalEditarCurso()">Editar curso</button>
+                <button type="button" class="btn btn-danger" onclick="eliminarCurso()">Eliminar curso</button>
+            </div>
+        </div>
+
+        <section class="panel detail-hero" aria-label="Información del curso">
+            <div class="detail-facts">
+                <div class="detail-fact">
+                    <p class="detail-fact-label">Profesor asignado</p>
+                    <div class="detail-fact-value" id="dato-profesor">—</div>
+                </div>
+                <div class="detail-fact">
+                    <p class="detail-fact-label">Horario / Turno</p>
+                    <div class="detail-fact-value" id="dato-horario">—</div>
+                </div>
+                <div class="detail-fact">
+                    <p class="detail-fact-label">Cupo máximo</p>
+                    <div class="detail-fact-value" id="dato-cupo">—</div>
+                </div>
+                <div class="detail-fact">
+                    <p class="detail-fact-label">Alumnos inscriptos</p>
+                    <div class="detail-fact-value" id="dato-inscriptos">—</div>
+                </div>
+                <div class="detail-fact">
+                    <p class="detail-fact-label">Promedio del curso</p>
+                    <div class="detail-fact-value" id="dato-promedio">—</div>
+                </div>
+                <div class="detail-fact">
+                    <p class="detail-fact-label">Estado</p>
+                    <div class="detail-fact-value"><span class="badge SIN_DEFINIR" id="dato-estado">Cargando</span></div>
+                </div>
+            </div>
+        </section>
+
+        <div class="tabs" role="tablist" aria-label="Secciones del curso">
+            <button type="button" class="tab active" id="tab-alumnos" role="tab" aria-selected="true" onclick="cambiarTab('alumnos')">
+                Alumnos <span class="tab-count" id="count-alumnos">0</span>
+            </button>
+            <button type="button" class="tab" id="tab-examenes" role="tab" aria-selected="false" onclick="cambiarTab('examenes')">
+                Exámenes y Notas <span class="tab-count" id="count-examenes">0</span>
+            </button>
+            <button type="button" class="tab" id="tab-materiales" role="tab" aria-selected="false" onclick="cambiarTab('materiales')">
+                Material de Clase <span class="tab-count" id="count-materiales">0</span>
+            </button>
+        </div>
+
+        <section id="panel-alumnos" class="tab-panel" role="tabpanel" aria-labelledby="tab-alumnos">
+            <div class="panel">
+                <div class="panel-head">
+                    <h2>Alumnos inscriptos</h2>
+                    <span class="panel-hint" id="promedio-curso-hint">Promedio del curso: —</span>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Alumno</th>
+                                <th>Estado</th>
+                                <th>Regularidad</th>
+                                <th>Asistencia</th>
+                                <th class="num">Promedio</th>
+                                <th class="acciones">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cuerpo-alumnos">
+                            <tr><td colspan="6" class="empty">Cargando alumnos...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <section id="panel-examenes" class="tab-panel hidden" role="tabpanel" aria-labelledby="tab-examenes">
+            <div class="examen-layout">
+                <aside class="panel examen-sidebar">
+                    <div class="panel-head">
+                        <div>
+                            <h2>Exámenes del curso</h2>
+                            <span class="panel-hint">Vinculados al calendario</span>
+                        </div>
+                        <button type="button" class="btn btn-primary btn-sm" onclick="abrirModalExamen()">+ Agendar nuevo examen</button>
+                    </div>
+                    <div class="panel-body">
+                        <div class="examen-list" id="lista-examenes">
+                            <div class="empty-state">Cargando exámenes...</div>
+                        </div>
+                    </div>
+                </aside>
+
+                <section class="panel examen-detalle">
+                    <div class="panel-head">
+                        <div>
+                            <h2 id="examen-titulo">Seleccioná un examen</h2>
+                            <span class="panel-hint" id="examen-meta">Elegí un examen de la lista para cargar notas.</span>
+                        </div>
+                        <span class="badge hidden" id="examen-badge"></span>
+                    </div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Alumno</th>
+                                    <th>Nota</th>
+                                    <th>Observación</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody id="cuerpo-notas">
+                                <tr><td colspan="4" class="empty">Seleccioná un examen para cargar notas.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="examen-footer">
+                        <span class="panel-hint">Aprobado desde 6.0 · Notas en pasos de 0.5 · Dejá la nota vacía para quitarla.</span>
+                        <button type="button" class="btn btn-primary" id="btn-guardar-notas" onclick="guardarNotasExamen()" disabled>Guardar notas del examen</button>
+                    </div>
+                </section>
+            </div>
+        </section>
+
+        <section id="panel-materiales" class="tab-panel hidden" role="tabpanel" aria-labelledby="tab-materiales">
+            <div class="panel material-panel">
+                <div class="panel-head material-panel-head">
+                    <div>
+                        <h2>Material de estudio y recursos</h2>
+                        <span class="panel-hint">Enlaces externos a PDFs, videos, carpetas de Drive y otros recursos.</span>
+                    </div>
+                    <button type="button" class="btn btn-primary btn-sm" onclick="abrirModalMaterial()">+ Agregar Material</button>
+                </div>
+                <div class="material-toolbar">
+                    <div class="material-search">
+                        <label class="sr-only" for="material-buscador">Buscar material</label>
+                        <input type="search" id="material-buscador" placeholder="Buscar por clase, título o descripción..." autocomplete="off" oninput="filtrarMateriales()">
+                    </div>
+                    <div class="material-type-filter">
+                        <label class="sr-only" for="material-filtro-tipo">Filtrar por tipo de recurso</label>
+                        <select id="material-filtro-tipo" onchange="filtrarMateriales()">
+                            <option value="">Todos los tipos</option>
+                            <option value="PDF_DOCUMENTO">PDF / Documento</option>
+                            <option value="VIDEO">Video</option>
+                            <option value="CARPETA_DRIVE">Carpeta Drive</option>
+                            <option value="IMAGEN">Imagen</option>
+                            <option value="LINK_WEB">Link web</option>
+                            <option value="OTRO">Otro</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="material-content" id="lista-materiales">
+                    <div class="empty-state material-empty">Cargando material de clase...</div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <div id="tooltip-historial" class="historial-tooltip hidden" role="tooltip" aria-hidden="true"></div>
+
+    <!-- Modal: nueva inscripción -->
+    <div class="modal-overlay hidden" id="modal-inscripcion" onclick="cerrarModalPorOverlay(event, 'modal-inscripcion')">
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="titulo-inscripcion">
+            <div class="modal-head">
+                <h3 id="titulo-inscripcion">Nueva inscripción</h3>
+                <button type="button" class="icon-btn" aria-label="Cerrar" onclick="cerrarModal('modal-inscripcion')">&times;</button>
+            </div>
+            <form id="form-inscripcion" onsubmit="guardarInscripcion(event)">
+                <div class="modal-body">
+                    <div class="form-grid">
+                        <div class="field full">
+                            <label for="insc-curso">Curso</label>
+                            <input type="text" id="insc-curso" disabled>
+                        </div>
+                        <div class="field full">
+                            <label for="insc-alumno">Alumno</label>
+                            <select id="insc-alumno" required>
+                                <option value="">Seleccione un alumno...</option>
+                            </select>
+                        </div>
+                    </div>
+                    <p class="nota">Solo se muestran alumnos activos que todavía no están inscriptos en este curso. La fecha de alta se registra automáticamente.</p>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-ghost" onclick="cerrarModal('modal-inscripcion')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" id="btn-inscribir">Inscribir alumno</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: editar curso -->
+    <div class="modal-overlay hidden" id="modal-curso" onclick="cerrarModalPorOverlay(event, 'modal-curso')">
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="titulo-curso">
+            <div class="modal-head">
+                <h3 id="titulo-curso">Editar curso</h3>
+                <button type="button" class="icon-btn" aria-label="Cerrar" onclick="cerrarModal('modal-curso')">&times;</button>
+            </div>
+            <form id="form-curso" onsubmit="guardarCurso(event)">
+                <div class="modal-body">
+                    <div class="form-grid">
+                        <div class="field full">
+                            <label for="editar-curso-nombre">Nombre del curso</label>
+                            <input type="text" id="editar-curso-nombre" maxlength="80" required autocomplete="off">
+                        </div>
+                        <div class="field">
+                            <label for="editar-curso-turno">Turno / Horario</label>
+                            <input type="text" id="editar-curso-turno" maxlength="40" placeholder="Ej: Mañana" autocomplete="off">
+                        </div>
+                        <div class="field">
+                            <label for="editar-curso-cupo">Cupo máximo (opcional)</label>
+                            <input type="number" id="editar-curso-cupo" min="1" max="9999" step="1" placeholder="Ej: 20">
+                        </div>
+                        <div class="field full">
+                            <label for="editar-curso-profesor">Profesor</label>
+                            <select id="editar-curso-profesor">
+                                <option value="">Sin profesor asignado</option>
+                            </select>
+                        </div>
+                    </div>
+                    <p class="nota">El cupo se usa para mostrar la ocupación y el estado del curso. Si el curso tiene alumnos, cuotas o calificaciones, no se puede eliminar.</p>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-ghost" onclick="cerrarModal('modal-curso')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" id="btn-guardar-curso">Guardar cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: agendar examen -->
+    <div class="modal-overlay hidden" id="modal-examen" onclick="cerrarModalPorOverlay(event, 'modal-examen')">
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="titulo-examen">
+            <div class="modal-head">
+                <h3 id="titulo-examen">Agendar nuevo examen</h3>
+                <button type="button" class="icon-btn" aria-label="Cerrar" onclick="cerrarModal('modal-examen')">&times;</button>
+            </div>
+            <form id="form-examen" onsubmit="guardarExamen(event)">
+                <div class="modal-body">
+                    <div class="form-grid">
+                        <div class="field full">
+                            <label for="examen-curso">Curso</label>
+                            <input type="text" id="examen-curso" disabled>
+                        </div>
+                        <div class="field full">
+                            <label for="examen-titulo-input">Título del examen</label>
+                            <input type="text" id="examen-titulo-input" maxlength="160" placeholder="Ej: Parcial 1" required autocomplete="off">
+                        </div>
+                        <div class="field">
+                            <label for="examen-fecha">Fecha</label>
+                            <input type="date" id="examen-fecha" required>
+                        </div>
+                        <div class="field">
+                            <label for="examen-hora">Hora (opcional)</label>
+                            <input type="time" id="examen-hora">
+                        </div>
+                        <div class="field full">
+                            <label for="examen-descripcion">Descripción (opcional)</label>
+                            <textarea id="examen-descripcion" maxlength="2000" placeholder="Temas, modalidad o indicaciones para los alumnos."></textarea>
+                        </div>
+                    </div>
+                    <p class="nota">Se creará un evento de tipo Examen en el Calendario, asociado a este curso. Después podés cargar las notas desde esta pantalla.</p>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-ghost" onclick="cerrarModal('modal-examen')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" id="btn-guardar-examen">Agendar examen</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: material de clase -->
+    <div class="modal-overlay hidden" id="modal-material" onclick="cerrarModalPorOverlay(event, 'modal-material')">
+        <div class="modal modal-lg" role="dialog" aria-modal="true" aria-labelledby="titulo-modal-material">
+            <div class="modal-head">
+                <h3 id="titulo-modal-material">Agregar Material</h3>
+                <button type="button" class="icon-btn" aria-label="Cerrar" onclick="cerrarModal('modal-material')">&times;</button>
+            </div>
+            <form id="form-material" onsubmit="guardarMaterial(event)">
+                <input type="hidden" id="material-id">
+                <div class="modal-body">
+                    <div class="form-grid">
+                        <div class="field">
+                            <label for="material-unidad">Unidad o N° de clase (opcional)</label>
+                            <input type="text" id="material-unidad" maxlength="120" placeholder="Ej: Clase 3 / Unidad 2 - Gramática" autocomplete="off">
+                        </div>
+                        <div class="field">
+                            <label for="material-tipo">Tipo de recurso</label>
+                            <select id="material-tipo" required>
+                                <option value="PDF_DOCUMENTO">PDF / Documento</option>
+                                <option value="VIDEO">Video</option>
+                                <option value="CARPETA_DRIVE">Carpeta Drive</option>
+                                <option value="IMAGEN">Imagen</option>
+                                <option value="LINK_WEB">Link web</option>
+                                <option value="OTRO">Otro</option>
+                            </select>
+                        </div>
+                        <div class="field full">
+                            <label for="material-titulo">Título del material</label>
+                            <input type="text" id="material-titulo" maxlength="160" placeholder="Ej: Guía de ejercicios - Unidad 2" required autocomplete="off">
+                        </div>
+                        <div class="field full">
+                            <label for="material-url">URL / Enlace externo</label>
+                            <input type="url" id="material-url" maxlength="1000" placeholder="https://drive.google.com/..." required autocomplete="off">
+                        </div>
+                        <div class="field full">
+                            <label for="material-descripcion">Descripción breve (opcional)</label>
+                            <textarea id="material-descripcion" maxlength="1000" placeholder="Indicá qué contiene el recurso o cómo usarlo."></textarea>
+                        </div>
+                    </div>
+                    <p class="nota">El material se guarda como enlace externo: no se suben archivos al sistema. La fecha de publicación se registra automáticamente.</p>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-ghost" onclick="cerrarModal('modal-material')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" id="btn-guardar-material">Agregar Material</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="toasts" id="toasts" aria-live="polite"></div>
+
+    <script src="js/instituto.js"></script>
+    <script>
+        const NOTA_APROBATORIA = 6.0;
+
+        const state = {
+            cursoId: null,
+            curso: null,
+            inscripciones: [],
+            alumnos: [],
+            profesores: [],
+            examenes: [],
+            historial: [],
+            materiales: [],
+            notasExamen: [],
+            examenSeleccionadoId: null,
+            cargandoNotas: false
+        };
+
+        document.addEventListener('DOMContentLoaded', iniciar);
+
+        async function iniciar() {
+            const parametros = new URLSearchParams(window.location.search);
+            const id = Number(parametros.get('id'));
+
+            if (!Number.isInteger(id) || id <= 0) {
+                mostrarToast('El curso solicitado no es válido.', 'error');
+                setTimeout(() => { window.location.href = 'Curso.html'; }, 900);
+                return;
+            }
+
+            state.cursoId = id;
+
+            window.addEventListener('scroll', ocultarTooltipHistorial, true);
+            window.addEventListener('resize', ocultarTooltipHistorial);
+
+            document.addEventListener('keydown', event => {
+                if (event.key !== 'Escape') return;
+                ocultarTooltipHistorial();
+                ['modal-inscripcion', 'modal-curso', 'modal-examen', 'modal-material'].forEach(modalId => {
+                    const modal = document.getElementById(modalId);
+                    if (modal && !modal.classList.contains('hidden')) {
+                        cerrarModal(modalId);
+                    }
+                });
+            });
+
+            await cargarTodo();
+        }
+
+        async function cargarTodo() {
+            try {
+                const [curso, inscripciones, alumnos, profesores, examenes, historial, materiales] = await Promise.all([
+                    apiFetch(API + '/cursos/' + state.cursoId),
+                    apiFetch(API + '/inscripciones/curso/' + state.cursoId),
+                    apiFetch(API + '/alumnos'),
+                    apiFetch(API + '/profesores'),
+                    apiFetch(API + '/cursos/' + state.cursoId + '/examenes'),
+                    apiFetch(API + '/calificaciones/curso/' + state.cursoId + '/historial'),
+                    apiFetch(API + '/cursos/' + state.cursoId + '/materiales')
+                ]);
+
+                state.curso = curso || {};
+                state.inscripciones = Array.isArray(inscripciones) ? inscripciones : [];
+                state.alumnos = Array.isArray(alumnos) ? alumnos : [];
+                state.profesores = Array.isArray(profesores) ? profesores : [];
+                state.examenes = Array.isArray(examenes) ? examenes : [];
+                state.historial = Array.isArray(historial) ? historial : [];
+                state.materiales = Array.isArray(materiales) ? materiales : [];
+
+                if (!state.examenes.some(examen => examen.id === state.examenSeleccionadoId)) {
+                    state.examenSeleccionadoId = state.examenes.length ? state.examenes[0].id : null;
+                }
+
+                state.notasExamen = [];
+                state.cargandoNotas = false;
+
+                renderHeader();
+                renderAlumnos();
+                renderExamenes();
+                renderMateriales();
+
+                if (state.examenSeleccionadoId) {
+                    state.cargandoNotas = true;
+                    renderExamenSeleccionado();
+                    await cargarNotasExamen(state.examenSeleccionadoId);
+                }
+            } catch (error) {
+                mostrarErrorCarga(error);
+            }
+        }
+
+        function mostrarErrorCarga(error) {
+            document.getElementById('curso-nombre').textContent = 'No se pudo cargar el curso';
+            document.getElementById('curso-subtitulo').textContent = error.message;
+            document.getElementById('cuerpo-alumnos').innerHTML = filaVacia(6, 'No se pudo cargar la información del curso.');
+            document.getElementById('cuerpo-notas').innerHTML = filaVacia(4, 'No se pudo cargar la información del curso.');
+            document.getElementById('lista-materiales').innerHTML =
+                '<div class="empty-state material-empty">No se pudo cargar el material de clase.</div>';
+            document.getElementById('count-materiales').textContent = '0';
+            document.querySelectorAll('.detail-actions button').forEach(boton => { boton.disabled = true; });
+            mostrarToast('No se pudo cargar el curso: ' + error.message, 'error');
+        }
+
+        function renderHeader() {
+            const curso = state.curso || {};
+            const profesor = nombreProfesor(curso.profesor);
+            const inscriptos = state.inscripciones.length;
+            const cupo = Number(curso.cupo) > 0 ? Number(curso.cupo) : null;
+
+            document.title = (curso.nombre || 'Curso') + ' - Instituto';
+            document.getElementById('curso-nombre').textContent = curso.nombre || 'Curso';
+            document.getElementById('curso-subtitulo').textContent =
+                'Curso #' + curso.id + (profesor ? ' · ' + profesor : ' · Sin profesor asignado');
+
+            document.getElementById('dato-profesor').textContent = profesor || 'Sin asignar';
+            document.getElementById('dato-horario').textContent = curso.turno || 'Sin definir';
+            document.getElementById('dato-cupo').textContent = cupo
+                ? cupo + ' ' + pluralizar(cupo, 'alumno', 'alumnos')
+                : 'Sin límite';
+            document.getElementById('dato-inscriptos').textContent =
+                inscriptos + ' ' + pluralizar(inscriptos, 'alumno', 'alumnos');
+
+            const promedio = calcularPromedioCurso();
+            document.getElementById('dato-promedio').textContent =
+                promedio === null ? 'Sin notas' : formatearPromedio(promedio);
+
+            const estado = estadoCurso(curso, inscriptos);
+            const badge = document.getElementById('dato-estado');
+            badge.textContent = estado.texto;
+            badge.className = 'badge ' + estado.clase;
+        }
+
+        function renderAlumnos() {
+            ocultarTooltipHistorial();
+
+            const cuerpo = document.getElementById('cuerpo-alumnos');
+            const total = state.inscripciones.length;
+            const promedioCurso = calcularPromedioCurso();
+
+            document.getElementById('count-alumnos').textContent = total;
+            document.getElementById('promedio-curso-hint').textContent =
+                'Promedio del curso: ' + (promedioCurso === null ? '—' : formatearPromedio(promedioCurso));
+
+            if (!total) {
+                cuerpo.innerHTML = filaVacia(6,
+                    'Todavía no hay alumnos inscriptos en este curso. Usá “Nueva inscripción” para dar de alta al primero.');
+                return;
+            }
+
+            cuerpo.innerHTML = state.inscripciones.map(inscripcion => {
+                const alumno = inscripcion.alumno || {};
+                const historial = historialDeAlumno(alumno.id);
+                const promedio = historial ? historial.promedio : null;
+                const cantidadNotas = historial ? historial.cantidadNotas : 0;
+                const regularidad = alumno.esRegular === false
+                    ? 'NO_REGULAR'
+                    : (alumno.esRegular === true ? 'REGULAR' : 'SIN_DEFINIR');
+                const regularidadTexto = alumno.esRegular === false
+                    ? 'No regular'
+                    : (alumno.esRegular === true ? 'Regular' : 'Sin definir');
+                const clasePromedio = promedio !== null && Number(promedio) < NOTA_APROBATORIA
+                    ? 'text-danger'
+                    : '';
+                const legajo = alumno.legajo ? ' · Leg. ' + escapeHtml(alumno.legajo) : '';
+
+                return '<tr>' +
+                    '<td>' +
+                        '<div class="cell-main">' + escapeHtml(alumno.nya || 'Alumno desconocido') + '</div>' +
+                        '<div class="cell-sub">DNI ' + escapeHtml(alumno.dni || '—') + legajo + '</div>' +
+                    '</td>' +
+                    '<td><span class="badge ACTIVA">Activo</span></td>' +
+                    '<td><span class="badge ' + regularidad + '">' + regularidadTexto + '</span></td>' +
+                    '<td><span class="cell-sub" title="El módulo de asistencia todavía no está disponible">Sin datos</span></td>' +
+                    '<td class="num">' +
+                        '<span class="promedio-value ' + clasePromedio + '">' + formatearPromedio(promedio) + '</span>' +
+                        (cantidadNotas
+                            ? '<div class="cell-sub">' +
+                                '<button type="button" class="historial-toggle" ' +
+                                    'onclick="alternarHistorialAlumno(' + alumno.id + ', this)" ' +
+                                    'onmouseenter="mostrarTooltipHistorial(event, ' + alumno.id + ')" ' +
+                                    'onmouseleave="ocultarTooltipHistorial()" ' +
+                                    'onfocus="mostrarTooltipHistorial(event, ' + alumno.id + ')" ' +
+                                    'onblur="ocultarTooltipHistorial()" ' +
+                                    'aria-expanded="false" aria-controls="historial-alumno-' + alumno.id + '" ' +
+                                    'aria-label="Ver instancias rendidas de ' + escapeHtml(alumno.nya || 'el alumno') + '">' +
+                                    cantidadNotas + ' ' + pluralizar(cantidadNotas, 'nota', 'notas') +
+                                    ' <span class="historial-toggle-chevron" aria-hidden="true">▾</span>' +
+                                '</button>' +
+                            '</div>'
+                            : '') +
+                    '</td>' +
+                    '<td class="acciones">' +
+                        '<button type="button" class="btn-danger-link" onclick="darDeBajaInscripcion(' + inscripcion.id + ')">Dar de baja</button>' +
+                    '</td>' +
+                    '</tr>';
+            }).join('');
+        }
+
+        function renderExamenes() {
+            const lista = document.getElementById('lista-examenes');
+            document.getElementById('count-examenes').textContent = state.examenes.length;
+
+            if (!state.examenes.length) {
+                lista.innerHTML = '<div class="empty-state">Este curso todavía no tiene exámenes agendados.<br>Usá “+ Agendar nuevo examen” para crear el primero.</div>';
+            } else {
+                lista.innerHTML = state.examenes.map(examen => {
+                    const activo = examen.id === state.examenSeleccionadoId;
+                    const cantidad = contarNotasExamen(examen.id);
+                    const hora = examen.hora ? ' · ' + formatearHora(examen.hora) : '';
+
+                    return '<button type="button" class="examen-card' + (activo ? ' active' : '') + '" ' +
+                        'onclick="seleccionarExamen(' + examen.id + ')" aria-pressed="' + activo + '">' +
+                        '<span class="examen-card-title">' + escapeHtml(examen.titulo) + '</span>' +
+                        '<span class="examen-card-meta">' + escapeHtml(formatearFechaLarga(examen.fechaInicio)) + hora + '</span>' +
+                        '<span class="examen-card-notas">' +
+                            (cantidad
+                                ? cantidad + ' ' + pluralizar(cantidad, 'nota cargada', 'notas cargadas')
+                                : 'Sin notas cargadas') +
+                        '</span>' +
+                        '</button>';
+                }).join('');
+            }
+
+            renderExamenSeleccionado();
+        }
+
+        const TIPOS_MATERIAL = Object.freeze({
+            PDF_DOCUMENTO: { etiqueta: 'PDF / Documento', icono: '📄' },
+            VIDEO: { etiqueta: 'Video', icono: '▶' },
+            CARPETA_DRIVE: { etiqueta: 'Carpeta Drive', icono: '📁' },
+            IMAGEN: { etiqueta: 'Imagen', icono: '🖼' },
+            LINK_WEB: { etiqueta: 'Link web', icono: '🌐' },
+            OTRO: { etiqueta: 'Otro', icono: '🔗' }
+        });
+
+        function tipoMaterialInfo(tipo) {
+            const clave = String(tipo || '').toUpperCase();
+            const tipoSeguro = Object.prototype.hasOwnProperty.call(TIPOS_MATERIAL, clave) ? clave : 'OTRO';
+            return { clave: tipoSeguro, ...TIPOS_MATERIAL[tipoSeguro] };
+        }
+
+        function renderMateriales() {
+            const contenedor = document.getElementById('lista-materiales');
+            if (!contenedor) return;
+
+            const total = state.materiales.length;
+            document.getElementById('count-materiales').textContent = total;
+
+            const busqueda = (document.getElementById('material-buscador')?.value || '').trim().toLowerCase();
+            const tipoFiltro = document.getElementById('material-filtro-tipo')?.value || '';
+
+            const filtrados = state.materiales.filter(material => {
+                if (tipoFiltro && material.tipo !== tipoFiltro) return false;
+                if (!busqueda) return true;
+
+                return [material.unidadOClase, material.titulo, material.descripcion]
+                    .filter(Boolean)
+                    .some(valor => String(valor).toLowerCase().includes(busqueda));
+            });
+
+            if (!total) {
+                contenedor.innerHTML = '<div class="empty-state material-empty">' +
+                    'Este curso todavía no tiene material de clase.<br>' +
+                    'Usá “+ Agregar Material” para compartir el primer enlace.</div>';
+                return;
+            }
+
+            if (!filtrados.length) {
+                contenedor.innerHTML = '<div class="empty-state material-empty">' +
+                    'No hay materiales que coincidan con la búsqueda o el tipo seleccionado.</div>';
+                return;
+            }
+
+            const grupos = new Map();
+            filtrados.forEach(material => {
+                const unidad = (material.unidadOClase || '').trim() || 'Sin unidad / clase';
+                if (!grupos.has(unidad)) grupos.set(unidad, []);
+                grupos.get(unidad).push(material);
+            });
+
+            contenedor.innerHTML = Array.from(grupos.entries()).map(([unidad, materiales]) => {
+                return '<section class="material-group">' +
+                    '<div class="material-group-head">' +
+                        '<h3 class="material-group-title">' + escapeHtml(unidad) + '</h3>' +
+                        '<span class="material-group-count">' + materiales.length + ' ' +
+                            pluralizar(materiales.length, 'recurso', 'recursos') + '</span>' +
+                    '</div>' +
+                    '<div class="material-grid">' + materiales.map(renderMaterialCard).join('') + '</div>' +
+                '</section>';
+            }).join('');
+        }
+
+        function renderMaterialCard(material) {
+            const tipo = tipoMaterialInfo(material.tipo);
+            const fecha = material.fechaPublicacion ? formatearFecha(material.fechaPublicacion) : 'Sin fecha';
+            const descripcion = material.descripcion
+                ? '<p class="material-card-desc">' + escapeHtml(material.descripcion) + '</p>'
+                : '';
+
+            return '<article class="material-card tipo-' + tipo.clave + '">' +
+                '<div class="material-card-head">' +
+                    '<span class="material-type-badge material-type-' + tipo.clave + '">' +
+                        '<span class="material-type-icon" aria-hidden="true">' + tipo.icono + '</span>' +
+                        escapeHtml(tipo.etiqueta) +
+                    '</span>' +
+                '</div>' +
+                '<h3 class="material-card-title">' + escapeHtml(material.titulo || 'Material sin título') + '</h3>' +
+                descripcion +
+                '<div class="material-card-meta">' +
+                    '<span>Publicado el ' + escapeHtml(fecha) + '</span>' +
+                '</div>' +
+                '<div class="material-card-actions">' +
+                    '<a class="btn btn-primary btn-sm material-open" href="' + escapeHtml(material.url || '#') + '" ' +
+                        'target="_blank" rel="noopener noreferrer">Abrir Material ↗</a>' +
+                    '<button type="button" class="btn-link" onclick="abrirModalMaterial(' + material.id + ')">Editar</button>' +
+                    '<button type="button" class="btn-danger-link" onclick="eliminarMaterial(' + material.id + ')">Eliminar</button>' +
+                '</div>' +
+            '</article>';
+        }
+
+        async function cargarMateriales() {
+            try {
+                const materiales = await apiFetch(API + '/cursos/' + state.cursoId + '/materiales');
+                state.materiales = Array.isArray(materiales) ? materiales : [];
+                renderMateriales();
+            } catch (error) {
+                state.materiales = [];
+                document.getElementById('lista-materiales').innerHTML =
+                    '<div class="empty-state material-empty">No se pudo cargar el material de clase.</div>';
+                document.getElementById('count-materiales').textContent = '0';
+                mostrarToast('No se pudo cargar el material de clase: ' + error.message, 'error');
+            }
+        }
+
+        function filtrarMateriales() {
+            renderMateriales();
+        }
+
+        function renderExamenSeleccionado() {
+            const examen = state.examenes.find(item => item.id === state.examenSeleccionadoId);
+            const titulo = document.getElementById('examen-titulo');
+            const meta = document.getElementById('examen-meta');
+            const badge = document.getElementById('examen-badge');
+            const cuerpo = document.getElementById('cuerpo-notas');
+            const boton = document.getElementById('btn-guardar-notas');
+
+            if (!examen) {
+                titulo.textContent = 'Seleccioná un examen';
+                meta.textContent = state.examenes.length
+                    ? 'Elegí un examen de la lista para cargar notas.'
+                    : 'Agendá un examen para comenzar.';
+                badge.className = 'badge hidden';
+                badge.textContent = '';
+                cuerpo.innerHTML = filaVacia(4, 'No hay un examen seleccionado.');
+                boton.disabled = true;
+                return;
+            }
+
+            titulo.textContent = examen.titulo;
+
+            const hora = examen.hora ? ' · ' + formatearHora(examen.hora) : '';
+            meta.textContent = formatearFechaLarga(examen.fechaInicio) + hora +
+                (examen.descripcion ? ' · ' + examen.descripcion : '');
+            badge.className = 'badge ACTIVA';
+            badge.textContent = 'Examen';
+
+            if (state.cargandoNotas) {
+                cuerpo.innerHTML = filaVacia(4, 'Cargando notas del examen...');
+                boton.disabled = true;
+                return;
+            }
+
+            if (!state.notasExamen.length) {
+                cuerpo.innerHTML = filaVacia(4, 'El curso no tiene alumnos activos para calificar.');
+                boton.disabled = true;
+                return;
+            }
+
+            cuerpo.innerHTML = state.notasExamen.map(nota => {
+                const valor = valorNota(nota.nota);
+                const legajo = nota.alumnoLegajo ? ' · Leg. ' + escapeHtml(nota.alumnoLegajo) : '';
+
+                return '<tr data-alumno-id="' + nota.alumnoId + '">' +
+                    '<td>' +
+                        '<div class="cell-main">' + escapeHtml(nota.alumnoNombre || 'Alumno desconocido') + '</div>' +
+                        '<div class="cell-sub">DNI ' + escapeHtml(nota.alumnoDni || '—') + legajo + '</div>' +
+                    '</td>' +
+                    '<td>' +
+                        '<input type="number" class="nota-input" min="1" max="10" step="0.5" inputmode="decimal" ' +
+                        'value="' + valor + '" placeholder="—" oninput="actualizarIndicadorNota(this)" ' +
+                        'aria-label="Nota de ' + escapeHtml(nota.alumnoNombre || 'alumno') + '">' +
+                    '</td>' +
+                    '<td>' +
+                        '<input type="text" class="observacion-input" maxlength="500" ' +
+                        'value="' + escapeHtml(nota.observaciones || '') + '" placeholder="Observación opcional" ' +
+                        'aria-label="Observación de ' + escapeHtml(nota.alumnoNombre || 'alumno') + '">' +
+                    '</td>' +
+                    '<td class="nota-indicador">' + indicadorNotaHtml(valor) + '</td>' +
+                    '</tr>';
+            }).join('');
+
+            boton.disabled = false;
+        }
+
+        async function seleccionarExamen(eventoId) {
+            if (state.examenSeleccionadoId === eventoId) return;
+
+            state.examenSeleccionadoId = eventoId;
+            state.notasExamen = [];
+            state.cargandoNotas = true;
+            renderExamenes();
+            await cargarNotasExamen(eventoId);
+        }
+
+        async function cargarNotasExamen(eventoId) {
+            try {
+                const notas = await apiFetch(API + '/calificaciones/examen/' + eventoId);
+
+                if (state.examenSeleccionadoId !== eventoId) return;
+
+                state.notasExamen = Array.isArray(notas) ? notas : [];
+                state.cargandoNotas = false;
+                renderExamenSeleccionado();
+            } catch (error) {
+                if (state.examenSeleccionadoId === eventoId) {
+                    state.notasExamen = [];
+                    state.cargandoNotas = false;
+                    document.getElementById('cuerpo-notas').innerHTML =
+                        filaVacia(4, 'No se pudieron cargar las notas del examen.');
+                    document.getElementById('btn-guardar-notas').disabled = true;
+                }
+                mostrarToast('No se pudieron cargar las notas del examen: ' + error.message, 'error');
+            }
+        }
+
+        async function guardarNotasExamen() {
+            const examen = state.examenes.find(item => item.id === state.examenSeleccionadoId);
+
+            if (!examen) {
+                mostrarToast('Seleccioná un examen antes de guardar.', 'error');
+                return;
+            }
+
+            const filas = Array.from(document.querySelectorAll('#cuerpo-notas tr[data-alumno-id]'));
+
+            if (!filas.length) {
+                mostrarToast('No hay alumnos para calificar en este examen.', 'error');
+                return;
+            }
+
+            const calificaciones = [];
+
+            for (const fila of filas) {
+                const alumnoId = Number(fila.dataset.alumnoId);
+                const inputNota = fila.querySelector('.nota-input');
+                const inputObservacion = fila.querySelector('.observacion-input');
+                const textoNota = inputNota.value.trim();
+                let nota = null;
+
+                if (textoNota) {
+                    nota = Number(textoNota);
+
+                    if (!notaValida(nota)) {
+                        const nombre = fila.querySelector('.cell-main')?.textContent || 'el alumno';
+                        mostrarToast('La nota de ' + nombre + ' debe estar entre 1 y 10, en pasos de 0.5.', 'error');
+                        inputNota.focus();
+                        return;
+                    }
+                }
+
+                calificaciones.push({
+                    alumnoId: alumnoId,
+                    nota: nota,
+                    observaciones: inputObservacion.value.trim() || null
+                });
+            }
+
+            const boton = document.getElementById('btn-guardar-notas');
+            setBotonCargando(boton, true, 'Guardando notas...');
+
+            try {
+                await apiFetch(API + '/calificaciones/lote', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        eventoId: examen.id,
+                        calificaciones: calificaciones
+                    })
+                });
+
+                mostrarToast('Notas del examen guardadas correctamente.', 'success');
+                await cargarTodo();
+            } catch (error) {
+                mostrarToast(error.message, 'error');
+            } finally {
+                setBotonCargando(boton, false);
+            }
+        }
+
+        function actualizarIndicadorNota(input) {
+            const fila = input.closest('tr');
+            if (!fila) return;
+
+            const indicador = fila.querySelector('.nota-indicador');
+            if (indicador) {
+                indicador.innerHTML = indicadorNotaHtml(input.value);
+            }
+        }
+
+        function abrirModalNuevaInscripcion() {
+            if (!state.curso) {
+                mostrarToast('El curso todavía no está cargado.', 'error');
+                return;
+            }
+
+            const inscriptos = new Set(
+                state.inscripciones.map(inscripcion => inscripcion.alumno?.id).filter(Boolean)
+            );
+            const disponibles = state.alumnos.filter(alumno => !inscriptos.has(alumno.id));
+
+            if (!disponibles.length) {
+                mostrarToast('No hay alumnos activos disponibles para inscribir en este curso.', 'error');
+                return;
+            }
+
+            document.getElementById('form-inscripcion').reset();
+            document.getElementById('insc-curso').value =
+                state.curso.nombre + (state.curso.turno ? ' — ' + state.curso.turno : '');
+
+            llenarSelect(document.getElementById('insc-alumno'), disponibles, {
+                placeholder: 'Seleccione un alumno...',
+                texto: alumno => alumno.nya + ' — DNI ' + alumno.dni
+            });
+
+            abrirModal('modal-inscripcion');
+            setTimeout(() => document.getElementById('insc-alumno').focus(), 30);
+        }
+
+        async function guardarInscripcion(event) {
+            event.preventDefault();
+
+            const alumnoId = document.getElementById('insc-alumno').value;
+
+            if (!alumnoId) {
+                mostrarToast('Seleccioná un alumno.', 'error');
+                return;
+            }
+
+            const boton = document.getElementById('btn-inscribir');
+            setBotonCargando(boton, true, 'Inscribiendo...');
+
+            try {
+                await apiFetch(API + '/inscripciones', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        alumno: { id: Number(alumnoId) },
+                        curso: { id: state.cursoId }
+                    })
+                });
+
+                cerrarModal('modal-inscripcion');
+                mostrarToast('Inscripción registrada correctamente.', 'success');
+                await cargarTodo();
+            } catch (error) {
+                mostrarToast(error.message, 'error');
+            } finally {
+                setBotonCargando(boton, false);
+            }
+        }
+
+        function abrirModalEditarCurso() {
+            if (!state.curso) {
+                mostrarToast('El curso todavía no está cargado.', 'error');
+                return;
+            }
+
+            document.getElementById('form-curso').reset();
+            document.getElementById('editar-curso-nombre').value = state.curso.nombre || '';
+            document.getElementById('editar-curso-turno').value = state.curso.turno || '';
+            document.getElementById('editar-curso-cupo').value = state.curso.cupo || '';
+
+            llenarSelect(document.getElementById('editar-curso-profesor'), state.profesores, {
+                placeholder: 'Sin profesor asignado',
+                texto: profesor => nombreProfesor(profesor) +
+                    (profesor.especialidad ? ' — ' + profesor.especialidad : '')
+            });
+
+            document.getElementById('editar-curso-profesor').value =
+                state.curso.profesor?.id ? String(state.curso.profesor.id) : '';
+
+            abrirModal('modal-curso');
+        }
+
+        async function guardarCurso(event) {
+            event.preventDefault();
+
+            const nombre = document.getElementById('editar-curso-nombre').value.trim();
+            const turno = document.getElementById('editar-curso-turno').value.trim();
+            const cupoTexto = document.getElementById('editar-curso-cupo').value.trim();
+            const cupo = cupoTexto ? Number(cupoTexto) : null;
+            const profesorId = document.getElementById('editar-curso-profesor').value;
+
+            if (!nombre) {
+                mostrarToast('El nombre del curso es obligatorio.', 'error');
+                return;
+            }
+
+            if (cupo !== null && (!Number.isInteger(cupo) || cupo < 1)) {
+                mostrarToast('El cupo debe ser un número entero mayor a cero.', 'error');
+                return;
+            }
+
+            const boton = document.getElementById('btn-guardar-curso');
+            setBotonCargando(boton, true, 'Guardando cambios...');
+
+            try {
+                await apiFetch(API + '/cursos/' + state.cursoId, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        nombre: nombre,
+                        turno: turno || null,
+                        cupo: cupo,
+                        profesor: profesorId ? { id: Number(profesorId) } : null
+                    })
+                });
+
+                cerrarModal('modal-curso');
+                mostrarToast('Curso actualizado correctamente.', 'success');
+                await cargarTodo();
+            } catch (error) {
+                mostrarToast(error.message, 'error');
+            } finally {
+                setBotonCargando(boton, false);
+            }
+        }
+
+        function abrirModalExamen() {
+            if (!state.curso) {
+                mostrarToast('El curso todavía no está cargado.', 'error');
+                return;
+            }
+
+            document.getElementById('form-examen').reset();
+            document.getElementById('examen-curso').value = state.curso.nombre;
+            document.getElementById('examen-fecha').value = hoyISO();
+
+            abrirModal('modal-examen');
+            setTimeout(() => document.getElementById('examen-titulo-input').focus(), 30);
+        }
+
+        async function guardarExamen(event) {
+            event.preventDefault();
+
+            const titulo = document.getElementById('examen-titulo-input').value.trim();
+            const fecha = document.getElementById('examen-fecha').value;
+            const hora = document.getElementById('examen-hora').value;
+            const descripcion = document.getElementById('examen-descripcion').value.trim();
+
+            if (!titulo) {
+                mostrarToast('Ingresá un título para el examen.', 'error');
+                return;
+            }
+
+            if (!fecha) {
+                mostrarToast('Indicá la fecha del examen.', 'error');
+                return;
+            }
+
+            const boton = document.getElementById('btn-guardar-examen');
+            setBotonCargando(boton, true, 'Agendando...');
+
+            try {
+                const nuevo = await apiFetch(API + '/calendario', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        titulo: titulo,
+                        descripcion: descripcion || null,
+                        fechaInicio: fecha,
+                        fechaFin: null,
+                        hora: hora || null,
+                        tipo: 'EXAMEN',
+                        cursoId: state.cursoId
+                    })
+                });
+
+                cerrarModal('modal-examen');
+                state.examenSeleccionadoId = nuevo?.id || null;
+                mostrarToast('Examen agendado correctamente. Se están enviando las notificaciones por correo a los alumnos inscriptos.', 'success');
+                cambiarTab('examenes');
+                await cargarTodo();
+            } catch (error) {
+                mostrarToast(error.message, 'error');
+            } finally {
+                setBotonCargando(boton, false);
+            }
+        }
+
+        function abrirModalMaterial(id = null) {
+            if (!state.curso) {
+                mostrarToast('El curso todavía no está cargado.', 'error');
+                return;
+            }
+
+            const material = id !== null
+                ? state.materiales.find(item => Number(item.id) === Number(id))
+                : null;
+
+            if (id !== null && !material) {
+                mostrarToast('No se encontró el material seleccionado.', 'error');
+                return;
+            }
+
+            document.getElementById('form-material').reset();
+            document.getElementById('material-id').value = material ? material.id : '';
+            document.getElementById('material-unidad').value = material?.unidadOClase || '';
+            document.getElementById('material-titulo').value = material?.titulo || '';
+            document.getElementById('material-tipo').value = material?.tipo || 'PDF_DOCUMENTO';
+            document.getElementById('material-url').value = material?.url || '';
+            document.getElementById('material-descripcion').value = material?.descripcion || '';
+
+            document.getElementById('titulo-modal-material').textContent =
+                material ? 'Editar material' : 'Agregar Material';
+            document.getElementById('btn-guardar-material').textContent =
+                material ? 'Guardar cambios' : 'Agregar Material';
+
+            abrirModal('modal-material');
+            setTimeout(() => {
+                document.getElementById(material ? 'material-titulo' : 'material-unidad').focus();
+            }, 30);
+        }
+
+        async function guardarMaterial(event) {
+            event.preventDefault();
+
+            const id = document.getElementById('material-id').value;
+            const unidadOClase = document.getElementById('material-unidad').value.trim();
+            const titulo = document.getElementById('material-titulo').value.trim();
+            const tipo = document.getElementById('material-tipo').value;
+            const url = document.getElementById('material-url').value.trim();
+            const descripcion = document.getElementById('material-descripcion').value.trim();
+
+            if (!titulo) {
+                mostrarToast('Ingresá un título para el material.', 'error');
+                document.getElementById('material-titulo').focus();
+                return;
+            }
+
+            if (!tipo) {
+                mostrarToast('Seleccioná un tipo de recurso.', 'error');
+                document.getElementById('material-tipo').focus();
+                return;
+            }
+
+            if (!/^https?:\/\//i.test(url)) {
+                mostrarToast('La URL debe comenzar con http:// o https://.', 'error');
+                document.getElementById('material-url').focus();
+                return;
+            }
+
+            if (url.length > 1000) {
+                mostrarToast('La URL no puede superar los 1000 caracteres.', 'error');
+                document.getElementById('material-url').focus();
+                return;
+            }
+
+            if (unidadOClase.length > 120) {
+                mostrarToast('La unidad o clase no puede superar los 120 caracteres.', 'error');
+                document.getElementById('material-unidad').focus();
+                return;
+            }
+
+            if (descripcion.length > 1000) {
+                mostrarToast('La descripción no puede superar los 1000 caracteres.', 'error');
+                document.getElementById('material-descripcion').focus();
+                return;
+            }
+
+            const editando = Boolean(id);
+            const boton = document.getElementById('btn-guardar-material');
+            setBotonCargando(boton, true, editando ? 'Guardando...' : 'Agregando...');
+
+            try {
+                await apiFetch(
+                    editando
+                        ? API + '/materiales/' + id
+                        : API + '/cursos/' + state.cursoId + '/materiales',
+                    {
+                        method: editando ? 'PUT' : 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            titulo: titulo,
+                            descripcion: descripcion || null,
+                            unidadOClase: unidadOClase || null,
+                            tipo: tipo,
+                            url: url
+                        })
+                    }
+                );
+
+                cerrarModal('modal-material');
+                mostrarToast(
+                    editando ? 'Material actualizado correctamente.' : 'Material agregado correctamente.',
+                    'success'
+                );
+                await cargarMateriales();
+            } catch (error) {
+                mostrarToast(error.message, 'error');
+            } finally {
+                setBotonCargando(boton, false);
+            }
+        }
+
+        async function eliminarMaterial(id) {
+            const material = state.materiales.find(item => Number(item.id) === Number(id));
+
+            if (!material) {
+                mostrarToast('No se encontró el material seleccionado.', 'error');
+                return;
+            }
+
+            const confirmado = await confirmarAccion({
+                titulo: 'Eliminar material',
+                mensaje: '¿Eliminar “' + (material.titulo || 'este material') +
+                    '”? El enlace dejará de estar disponible en el curso.',
+                textoConfirmar: 'Eliminar material'
+            });
+
+            if (!confirmado) return;
+
+            try {
+                await apiFetch(API + '/materiales/' + id, { method: 'DELETE' });
+                mostrarToast('Material eliminado correctamente.', 'success');
+                await cargarMateriales();
+            } catch (error) {
+                mostrarToast(error.message, 'error');
+            }
+        }
+
+        async function darDeBajaInscripcion(id) {
+            const inscripcion = state.inscripciones.find(item => item.id === id);
+
+            if (!inscripcion) return;
+
+            const alumno = inscripcion.alumno?.nya || 'el alumno';
+            const confirmado = await confirmarAccion({
+                titulo: 'Dar de baja inscripción',
+                mensaje: '¿Dar de baja la inscripción de ' + alumno + ' en ' +
+                    (state.curso?.nombre || 'este curso') +
+                    '? Las notas y cuotas ya generadas se conservan.',
+                textoConfirmar: 'Dar de baja'
+            });
+
+            if (!confirmado) return;
+
+            try {
+                await apiFetch(API + '/inscripciones/' + id, { method: 'DELETE' });
+                mostrarToast('Inscripción dada de baja correctamente.', 'success');
+                await cargarTodo();
+            } catch (error) {
+                mostrarToast(error.message, 'error');
+            }
+        }
+
+        async function eliminarCurso() {
+            if (!state.curso) {
+                mostrarToast('El curso todavía no está cargado.', 'error');
+                return;
+            }
+
+            const confirmado = await confirmarAccion({
+                titulo: 'Eliminar curso',
+                mensaje: '¿Eliminar el curso ' + state.curso.nombre +
+                    '? Solo es posible si no tiene alumnos inscriptos, cuotas, calificaciones ni material de clase asociado.',
+                textoConfirmar: 'Eliminar curso'
+            });
+
+            if (!confirmado) return;
+
+            try {
+                await apiFetch(API + '/cursos/' + state.cursoId, { method: 'DELETE' });
+                mostrarToast('Curso eliminado correctamente.', 'success');
+                setTimeout(() => { window.location.href = 'Curso.html'; }, 600);
+            } catch (error) {
+                mostrarToast(error.message, 'error');
+            }
+        }
+
+        function descargarReporteCurso(formato) {
+            if (!state.cursoId) {
+                mostrarToast('El curso todavía no está cargado.', 'error');
+                return;
+            }
+
+            const formatoNormalizado = formato === 'pdf' ? 'pdf' : 'csv';
+            const url = API + '/reportes/cursos/' + state.cursoId + '/alumnos?formato=' +
+                encodeURIComponent(formatoNormalizado);
+            const enlace = document.createElement('a');
+
+            enlace.href = url;
+            enlace.download = 'alumnos-curso-' + state.cursoId + '-' +
+                hoyISO().replaceAll('-', '') + '.' + formatoNormalizado;
+            enlace.rel = 'noopener';
+            enlace.style.display = 'none';
+            document.body.appendChild(enlace);
+            enlace.click();
+            setTimeout(() => enlace.remove(), 5000);
+
+            mostrarToast('Descarga en ' + formatoNormalizado.toUpperCase() + ' iniciada.', 'success');
+        }
+
+        function cambiarTab(tab) {
+            ocultarTooltipHistorial();
+
+            const tabs = ['alumnos', 'examenes', 'materiales'];
+            const tabSeguro = tabs.includes(tab) ? tab : 'alumnos';
+
+            tabs.forEach(nombre => {
+                const boton = document.getElementById('tab-' + nombre);
+                const panel = document.getElementById('panel-' + nombre);
+                const activo = nombre === tabSeguro;
+
+                if (boton) {
+                    boton.classList.toggle('active', activo);
+                    boton.setAttribute('aria-selected', String(activo));
+                }
+
+                if (panel) {
+                    panel.classList.toggle('hidden', !activo);
+                }
+            });
+
+            if (tabSeguro === 'materiales') {
+                renderMateriales();
+            }
+        }
+
+        function nombreProfesor(profesor) {
+            if (!profesor) return '';
+            return [profesor.nombre, profesor.apellido]
+                .filter(Boolean)
+                .join(' ')
+                .trim() || profesor.nya || '';
+        }
+
+        function estadoCurso(curso, inscriptos) {
+            const cupo = Number(curso.cupo) > 0 ? Number(curso.cupo) : null;
+
+            if (cupo && inscriptos >= cupo) {
+                return { texto: 'Cupo completo', clase: 'CUPO_COMPLETO' };
+            }
+
+            if (cupo && inscriptos / cupo >= 0.8) {
+                return { texto: 'Casi lleno', clase: 'CASI_LLENO' };
+            }
+
+            return { texto: 'Activo', clase: 'ACTIVA' };
+        }
+
+        function calcularPromedioCurso() {
+            const notas = state.historial
+                .flatMap(historial => historial.calificaciones || [])
+                .map(calificacion => Number(calificacion.nota))
+                .filter(Number.isFinite);
+
+            if (!notas.length) return null;
+
+            return notas.reduce((total, nota) => total + nota, 0) / notas.length;
+        }
+
+        function historialDeAlumno(alumnoId) {
+            return state.historial.find(historial => historial.alumnoId === alumnoId) || null;
+        }
+
+        function alternarHistorialAlumno(alumnoId, boton) {
+            ocultarTooltipHistorial();
+
+            if (!boton) return;
+
+            const fila = boton.closest('tr');
+            if (!fila) return;
+
+            const idDetalle = 'historial-alumno-' + alumnoId;
+            const detalleExistente = document.getElementById(idDetalle);
+
+            if (detalleExistente) {
+                detalleExistente.remove();
+                boton.setAttribute('aria-expanded', 'false');
+                return;
+            }
+
+            document.querySelectorAll('.historial-detalle-row').forEach(filaDetalle => filaDetalle.remove());
+            document.querySelectorAll('.historial-toggle[aria-expanded="true"]').forEach(otroBoton => {
+                otroBoton.setAttribute('aria-expanded', 'false');
+            });
+
+            const historial = historialDeAlumno(alumnoId);
+            const inscripcion = state.inscripciones.find(item => item.alumno?.id === alumnoId);
+            const alumno = inscripcion?.alumno || {};
+            const detalle = document.createElement('tr');
+
+            detalle.className = 'historial-detalle-row';
+            detalle.id = idDetalle;
+            detalle.innerHTML = '<td colspan="6">' + historialDetalleHtml(alumno, historial) + '</td>';
+            fila.insertAdjacentElement('afterend', detalle);
+            boton.setAttribute('aria-expanded', 'true');
+
+            requestAnimationFrame(() => {
+                detalle.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            });
+        }
+
+        function historialDetalleHtml(alumno, historial) {
+            const calificaciones = historial?.calificaciones || [];
+            const promedio = historial ? historial.promedio : null;
+            const clasePromedio = promedio === null
+                ? 'SIN_DEFINIR'
+                : (Number(promedio) < NOTA_APROBATORIA ? 'NO_REGULAR' : 'ACTIVA');
+
+            const filas = calificaciones.length
+                ? calificaciones.map(calificacion => {
+                    const hora = calificacion.eventoHora
+                        ? formatearHora(calificacion.eventoHora) + ' hs'
+                        : '';
+                    const claseNota = Number(calificacion.nota) < NOTA_APROBATORIA
+                        ? 'text-danger'
+                        : 'text-success';
+
+                    return '<tr>' +
+                        '<td>' +
+                            '<div class="cell-main">' + escapeHtml(formatearFechaLarga(calificacion.eventoFecha)) + '</div>' +
+                            (hora ? '<div class="cell-sub">' + escapeHtml(hora) + '</div>' : '') +
+                        '</td>' +
+                        '<td><div class="cell-main">' + escapeHtml(calificacion.eventoNombre || 'Examen') + '</div></td>' +
+                        '<td class="num"><span class="promedio-value ' + claseNota + '">' +
+                            formatearPromedio(calificacion.nota) + '</span></td>' +
+                        '<td class="historial-observacion">' + escapeHtml(calificacion.observaciones || '—') + '</td>' +
+                        '<td>' + indicadorNotaHtml(calificacion.nota) + '</td>' +
+                    '</tr>';
+                }).join('')
+                : '<tr><td colspan="5" class="empty">Sin instancias rendidas.</td></tr>';
+
+            return '<div class="historial-detalle">' +
+                '<div class="historial-detalle-head">' +
+                    '<div>' +
+                        '<strong>Instancias rendidas</strong>' +
+                        '<span class="panel-hint">' + escapeHtml(alumno.nya || 'Alumno') + ' · ' +
+                            calificaciones.length + ' ' +
+                            pluralizar(calificaciones.length, 'examen rendido', 'exámenes rendidos') +
+                        '</span>' +
+                    '</div>' +
+                    '<span class="badge ' + clasePromedio + '">Promedio ' + formatearPromedio(promedio) + '</span>' +
+                '</div>' +
+                '<div class="table-wrap">' +
+                    '<table class="historial-table">' +
+                        '<thead>' +
+                            '<tr>' +
+                                '<th>Fecha</th>' +
+                                '<th>Qué rindió</th>' +
+                                '<th class="num">Nota</th>' +
+                                '<th>Observación</th>' +
+                                '<th>Estado</th>' +
+                            '</tr>' +
+                        '</thead>' +
+                        '<tbody>' + filas + '</tbody>' +
+                    '</table>' +
+                '</div>' +
+            '</div>';
+        }
+
+        function tooltipHistorialHtml(alumno, historial) {
+            const calificaciones = historial?.calificaciones || [];
+            const visibles = calificaciones.slice(0, 5);
+            const restantes = calificaciones.length - visibles.length;
+
+            const items = visibles.map(calificacion => {
+                const hora = calificacion.eventoHora
+                    ? ' · ' + formatearHora(calificacion.eventoHora)
+                    : '';
+                const meta = formatearFecha(calificacion.eventoFecha) + hora + ' · ' +
+                    formatearPromedio(calificacion.nota);
+
+                return '<li class="historial-tooltip-item">' +
+                    '<span class="historial-tooltip-exam">' + escapeHtml(calificacion.eventoNombre || 'Examen') + '</span>' +
+                    '<span class="historial-tooltip-meta">' + escapeHtml(meta) + '</span>' +
+                '</li>';
+            }).join('');
+
+            return '<div class="historial-tooltip-title">Instancias rendidas</div>' +
+                '<div class="historial-tooltip-sub">' + escapeHtml(alumno.nya || 'Alumno') + ' · ' +
+                    calificaciones.length + ' ' + pluralizar(calificaciones.length, 'nota', 'notas') +
+                '</div>' +
+                (items
+                    ? '<ul class="historial-tooltip-list">' + items + '</ul>'
+                    : '<div class="historial-tooltip-empty">Sin instancias rendidas.</div>') +
+                (restantes
+                    ? '<div class="historial-tooltip-more">+ ' + restantes + ' más. Clic para ver todas.</div>'
+                    : '') +
+                '<div class="historial-tooltip-hint">Clic para expandir el detalle.</div>';
+        }
+
+        function mostrarTooltipHistorial(evento, alumnoId) {
+            const trigger = evento?.currentTarget;
+            const tooltip = document.getElementById('tooltip-historial');
+
+            if (!trigger || !tooltip) return;
+
+            const historial = historialDeAlumno(alumnoId);
+            const inscripcion = state.inscripciones.find(item => item.alumno?.id === alumnoId);
+            const alumno = inscripcion?.alumno || {};
+
+            tooltip.innerHTML = tooltipHistorialHtml(alumno, historial);
+            tooltip.classList.remove('hidden');
+            tooltip.setAttribute('aria-hidden', 'false');
+
+            const rect = trigger.getBoundingClientRect();
+            const tipRect = tooltip.getBoundingClientRect();
+            let left = rect.left + rect.width / 2 - tipRect.width / 2;
+            let top = rect.bottom + 8;
+
+            if (top + tipRect.height > window.innerHeight - 8) {
+                top = rect.top - tipRect.height - 8;
+            }
+
+            left = Math.max(8, Math.min(left, window.innerWidth - tipRect.width - 8));
+            top = Math.max(8, top);
+
+            tooltip.style.left = left + 'px';
+            tooltip.style.top = top + 'px';
+        }
+
+        function ocultarTooltipHistorial() {
+            const tooltip = document.getElementById('tooltip-historial');
+            if (!tooltip || tooltip.classList.contains('hidden')) return;
+
+            tooltip.classList.add('hidden');
+            tooltip.setAttribute('aria-hidden', 'true');
+        }
+
+        function contarNotasExamen(eventoId) {
+            return state.historial.reduce((total, historial) => {
+                return total + (historial.calificaciones || [])
+                    .filter(calificacion => calificacion.eventoId === eventoId)
+                    .length;
+            }, 0);
+        }
+
+        function formatearPromedio(valor) {
+            if (valor === null || valor === undefined || valor === '') return '—';
+
+            const numero = Number(valor);
+            if (!Number.isFinite(numero)) return '—';
+
+            return numero.toLocaleString('es-AR', {
+                minimumFractionDigits: 1,
+                maximumFractionDigits: 2
+            });
+        }
+
+        function formatearFechaLarga(fecha) {
+            if (!fecha) return 'Fecha a confirmar';
+
+            const partes = String(fecha).slice(0, 10).split('-').map(Number);
+            if (partes.length !== 3 || partes.some(parte => !Number.isFinite(parte))) {
+                return formatearFecha(fecha);
+            }
+
+            const [anio, mes, dia] = partes;
+            return new Date(anio, mes - 1, dia).toLocaleDateString('es-AR', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric'
+            });
+        }
+
+        function formatearHora(hora) {
+            return hora ? String(hora).slice(0, 5) : '';
+        }
+
+        function valorNota(nota) {
+            if (nota === null || nota === undefined || nota === '') return '';
+
+            const numero = Number(nota);
+            return Number.isFinite(numero) ? String(numero) : '';
+        }
+
+        function notaValida(numero) {
+            return Number.isFinite(numero) &&
+                numero >= 1 &&
+                numero <= 10 &&
+                Math.abs(numero * 2 - Math.round(numero * 2)) < 1e-9;
+        }
+
+        function indicadorNotaHtml(valor) {
+            if (valor === null || valor === undefined || String(valor).trim() === '') {
+                return '<span class="badge SIN_DEFINIR">Sin nota</span>';
+            }
+
+            const numero = Number(valor);
+
+            if (!notaValida(numero)) {
+                return '<span class="badge NO_REGULAR">Nota inválida</span>';
+            }
+
+            return numero >= NOTA_APROBATORIA
+                ? '<span class="badge ACTIVA">Aprobado</span>'
+                : '<span class="badge NO_REGULAR">Desaprobado</span>';
+        }
+
+        function filaVacia(columnas, mensaje) {
+            return '<tr><td colspan="' + columnas + '" class="empty">' + escapeHtml(mensaje) + '</td></tr>';
+        }
+    </script>
+</body>
+</html>

@@ -2,9 +2,11 @@ package com.instituto.gestion.service;
 
 import com.instituto.gestion.model.Curso;
 import com.instituto.gestion.model.Profesor;
+import com.instituto.gestion.repository.CalificacionRepository;
 import com.instituto.gestion.repository.CuotaRepository;
 import com.instituto.gestion.repository.CursoRepository;
 import com.instituto.gestion.repository.InscripcionRepository;
+import com.instituto.gestion.repository.MaterialCursoRepository;
 import com.instituto.gestion.repository.ProfesorRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -28,8 +30,20 @@ public class CursoService {
     @Autowired
     private CuotaRepository cuotaRepository;
 
+    @Autowired
+    private CalificacionRepository calificacionRepository;
+
+    @Autowired
+    private MaterialCursoRepository materialCursoRepository;
+
     public List<Curso> obtenerTodos() {
         return repository.findAll();
+    }
+
+    public Curso obtenerPorId(Long id) {
+        return repository.findById(id).orElseThrow(() ->
+                new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "No se encontró el curso con ID " + id + "."));
     }
 
     public Curso guardarCurso(Curso curso) {
@@ -69,6 +83,20 @@ public class CursoService {
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT,
                     "No se puede eliminar el curso porque tiene cuotas asociadas. Conservá el historial de pagos.");
+        }
+
+        if (calificacionRepository.existsByCurso_Id(id)) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "No se puede eliminar el curso porque tiene calificaciones cargadas. "
+                            + "Conservá el historial académico de los alumnos.");
+        }
+
+        if (materialCursoRepository.existsByCurso_Id(id)) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "No se puede eliminar el curso porque tiene material de clase asociado. "
+                            + "Eliminá primero los recursos del curso.");
         }
 
         repository.deleteById(id);

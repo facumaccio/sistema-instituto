@@ -3,15 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="js/auth-guard.js?v=20261028-2"></script>
     <title>Finanzas - Instituto</title>
-    <link rel="stylesheet" href="css/instituto.css?v=20261024">
+    <link rel="stylesheet" href="css/instituto.css?v=20261028-2">
 </head>
 <body>
 
     <header class="topbar">
         <div class="brand">Instituto <span>Gestión Académica</span></div>
         <nav>
-            <a href="Dashboard.html">Dashboard</a>
+            <a href="Dashboard.html">Inicio</a>
+            <a href="Estadisticas.html" class="nav-highlight">Estadísticas</a>
             <a href="index.html">Inscripciones</a>
             <a href="Alumnos.html">Alumnos</a>
             <a href="Curso.html">Cursos</a>
@@ -35,25 +37,7 @@
             </div>
         </div>
 
-        <section class="kpis kpis-3" aria-label="Resumen financiero">
-            <article class="kpi">
-                <p class="kpi-label">Total ingresos</p>
-                <div class="kpi-value success" id="kpi-ingresos">—</div>
-                <div class="kpi-detail">Acreditado en el período</div>
-            </article>
-            <article class="kpi">
-                <p class="kpi-label">Total egresos</p>
-                <div class="kpi-value danger" id="kpi-egresos">—</div>
-                <div class="kpi-detail">Debitado en el período</div>
-            </article>
-            <article class="kpi">
-                <p class="kpi-label">Balance neto</p>
-                <div class="kpi-value" id="kpi-balance">—</div>
-                <div class="kpi-detail" id="kpi-balance-detalle">Ingresos menos egresos</div>
-            </article>
-        </section>
-
-        <section class="finanzas-top">
+        <section class="finanzas-top single">
             <article class="panel">
                 <div class="panel-head">
                     <h2 id="form-titulo">Registrar movimiento</h2>
@@ -99,18 +83,6 @@
                             <button type="submit" class="btn btn-primary" id="btn-guardar-movimiento">Registrar movimiento</button>
                         </div>
                     </form>
-                </div>
-            </article>
-
-            <article class="panel">
-                <div class="panel-head">
-                    <h2>Gastos por categoría</h2>
-                    <span class="panel-hint">Con los filtros activos</span>
-                </div>
-                <div class="panel-body">
-                    <div id="resumen-categorias" class="resumen-categorias">
-                        <div class="empty-state">Cargando resumen...</div>
-                    </div>
                 </div>
             </article>
         </section>
@@ -191,12 +163,10 @@
         const state = {
             categorias: [],
             movimientos: [],
-            resumen: null,
             editandoId: null
         };
 
         let secuenciaMovimientos = 0;
-        let secuenciaResumen = 0;
 
         const METODOS_PAGO = [
             { valor: 'EFECTIVO', texto: 'Efectivo' },
@@ -293,10 +263,7 @@
 
         async function cargarTodo() {
             const query = construirQuery();
-            await Promise.allSettled([
-                cargarMovimientos(query),
-                cargarResumen(query)
-            ]);
+            await cargarMovimientos(query);
             actualizarUltimaActualizacion();
         }
 
@@ -323,83 +290,6 @@
                 document.getElementById('contador-movimientos').textContent = 'No disponible';
                 mostrarToast(error.message || 'No se pudieron cargar los movimientos.', 'error');
             }
-        }
-
-        async function cargarResumen(query) {
-            const secuencia = ++secuenciaResumen;
-
-            try {
-                const url = API + '/finanzas/resumen' + (query ? '?' + query : '');
-                const resumen = await apiFetch(url);
-                if (secuencia !== secuenciaResumen) return;
-
-                state.resumen = resumen;
-                renderKpis(resumen);
-                renderResumenCategorias(resumen);
-            } catch (error) {
-                if (secuencia !== secuenciaResumen) return;
-                mostrarToast(error.message || 'No se pudo cargar el resumen financiero.', 'error');
-            }
-        }
-
-        function renderKpis(resumen) {
-            const ingresos = Number(resumen.totalIngresos || 0);
-            const egresos = Number(resumen.totalEgresos || 0);
-            const balance = Number(resumen.balanceNeto || 0);
-
-            document.getElementById('kpi-ingresos').textContent = formatearMoneda(ingresos);
-            document.getElementById('kpi-egresos').textContent = formatearMoneda(egresos);
-            document.getElementById('kpi-balance').textContent = formatearMoneda(balance);
-
-            const detalle = document.getElementById('kpi-balance-detalle');
-            detalle.className = 'kpi-detail';
-            if (balance > 0) {
-                detalle.textContent = 'Superávit del período';
-                detalle.classList.add('text-success');
-            } else if (balance < 0) {
-                detalle.textContent = 'Déficit del período';
-                detalle.classList.add('text-danger');
-            } else {
-                detalle.textContent = 'Sin diferencias en el período';
-            }
-        }
-
-        function renderResumenCategorias(resumen) {
-            const contenedor = document.getElementById('resumen-categorias');
-            const gastos = Array.isArray(resumen.gastosPorCategoria) ? resumen.gastosPorCategoria : [];
-            const totalEgresos = Number(resumen.totalEgresos || 0);
-
-            if (gastos.length === 0) {
-                contenedor.innerHTML = '<div class="empty-state">No hay egresos registrados con los filtros actuales.</div>';
-                return;
-            }
-
-            const items = gastos.map(gasto => {
-                const total = Number(gasto.total || 0);
-                const cantidad = Number(gasto.cantidad || 0);
-                const porcentaje = totalEgresos > 0 ? (total / totalEgresos) * 100 : 0;
-
-                return '<div class="categoria-resumen-item">' +
-                    '<div class="categoria-resumen-head">' +
-                        '<span class="badge ' + claseCategoria(gasto.categoriaId) + '">' + escapeHtml(gasto.nombre) + '</span>' +
-                        '<strong class="money-negative">' + formatearMoneda(total) + '</strong>' +
-                    '</div>' +
-                    '<div class="categoria-resumen-meta">' +
-                        porcentaje.toFixed(0) + '% de los egresos · ' +
-                        cantidad + ' ' + pluralizar(cantidad, 'movimiento', 'movimientos') +
-                    '</div>' +
-                    '<div class="progress">' +
-                        '<div class="progress-bar danger" style="width: ' +
-                            Math.min(100, Math.max(0, porcentaje)).toFixed(1) + '%"></div>' +
-                    '</div>' +
-                '</div>';
-            }).join('');
-
-            contenedor.innerHTML =
-                '<div class="resumen-total">' +
-                    '<span>Total egresos del período</span>' +
-                    '<strong class="money-negative">' + formatearMoneda(totalEgresos) + '</strong>' +
-                '</div>' + items;
         }
 
         function renderTabla() {

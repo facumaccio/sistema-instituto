@@ -2,8 +2,10 @@ package com.instituto.gestion.repository;
 
 import com.instituto.gestion.dto.CursoInscriptosProjection;
 import com.instituto.gestion.model.Curso;
+import com.instituto.gestion.model.EstadoAlumno;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -28,9 +30,15 @@ public interface CursoRepository extends JpaRepository<Curso, Long> {
             FROM Curso c
             LEFT JOIN c.profesor p
             LEFT JOIN Inscripcion i ON i.curso = c
+                 AND i.alumno.estado = :estado
                  AND (i.alumno.esRegular IS NULL OR i.alumno.esRegular = true)
             GROUP BY c.id, c.nombre, c.turno, c.cupo, p.nya
             ORDER BY c.nombre ASC
             """)
-    List<CursoInscriptosProjection> contarInscriptosActivosPorCurso();
+    List<CursoInscriptosProjection> contarInscriptosActivosPorCursoPorEstado(
+            @Param("estado") EstadoAlumno estado);
+
+    default List<CursoInscriptosProjection> contarInscriptosActivosPorCurso() {
+        return contarInscriptosActivosPorCursoPorEstado(EstadoAlumno.ACTIVO);
+    }
 }

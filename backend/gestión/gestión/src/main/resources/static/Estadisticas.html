@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="js/auth-guard.js?v=20261028-2"></script>
+    <title>Estadísticas - Instituto</title>
+    <link rel="stylesheet" href="css/instituto.css?v=20261028-2">
+</head>
+<body>
+
+    <header class="topbar">
+        <div class="brand">Instituto <span>Gestión Académica</span></div>
+        <nav>
+            <a href="Dashboard.html">Inicio</a>
+            <a href="Estadisticas.html" class="active nav-highlight">Estadísticas</a>
+            <a href="index.html">Inscripciones</a>
+            <a href="Alumnos.html">Alumnos</a>
+            <a href="Curso.html">Cursos</a>
+            <a href="Profesores.html">Profesores</a>
+            <a href="Pagos.html">Pagos y Cuotas</a>
+            <a href="Calendario.html">Calendario</a>
+            <a href="Finanzas.html">Finanzas</a>
+        </nav>
+    </header>
+
+    <main class="page">
+
+        <div class="page-head">
+            <div>
+                <h1>Estadísticas</h1>
+                <p class="subtitle">Visión consolidada del instituto: académica, financiera y evolución de cierres.</p>
+            </div>
+            <div class="page-actions">
+                <span class="last-update" id="ultima-actualizacion">Cargando...</span>
+                <button type="button" class="btn btn-ghost" id="btn-actualizar" onclick="cargarTodo()">Actualizar</button>
+                <button type="button" class="btn btn-ghost" id="btn-guardar" onclick="guardarCierre()">Guardar cierre</button>
+                <button type="button" class="btn btn-primary" id="btn-descargar-imagen" onclick="descargarImagenEstadisticas()" title="Descarga un PNG con el resumen actual">Descargar imagen</button>
+            </div>
+        </div>
+
+        <section class="kpis" aria-label="KPIs generales">
+            <article class="kpi">
+                <p class="kpi-label">Alumnos activos</p>
+                <div class="kpi-value success" id="kpi-alumnos">—</div>
+                <div class="kpi-detail" id="kpi-alumnos-detalle">—</div>
+            </article>
+            <article class="kpi">
+                <p class="kpi-label">Profesores</p>
+                <div class="kpi-value" id="kpi-profesores">—</div>
+                <div class="kpi-detail" id="kpi-profesores-detalle">—</div>
+            </article>
+            <article class="kpi">
+                <p class="kpi-label">Cursos</p>
+                <div class="kpi-value" id="kpi-cursos">—</div>
+                <div class="kpi-detail" id="kpi-cursos-detalle">—</div>
+            </article>
+            <article class="kpi">
+                <p class="kpi-label">Balance financiero</p>
+                <div class="kpi-value" id="kpi-balance">—</div>
+                <div class="kpi-detail" id="kpi-balance-detalle">—</div>
+            </article>
+        </section>
+
+        <section class="stats-section" aria-label="Estadísticas académicas">
+            <div class="section-head">
+                <div>
+                    <h2>Estadísticas académicas</h2>
+                    <p>Distribución de alumnos, ocupación de cupos y evolución de inscripciones.</p>
+                </div>
+                <span class="stats-meta" id="academico-meta">—</span>
+            </div>
+
+            <div class="stats-grid">
+                <article class="panel chart-card">
+                    <div class="panel-head">
+                        <h2>Alumnos por curso</h2>
+                        <span class="panel-hint">Inscriptos activos</span>
+                    </div>
+                    <div class="chart-body">
+                        <div class="chart-wrap" id="contenedor-grafico-cursos">
+                            <canvas id="grafico-cursos" role="img" aria-label="Cantidad de alumnos activos por curso"></canvas>
+                        </div>
+                        <div class="chart-empty hidden" id="vacio-cursos">No hay cursos registrados.</div>
+                    </div>
+                </article>
+
+                <article class="panel">
+                    <div class="panel-head">
+                        <h2>Ocupación de cupos</h2>
+                        <span class="panel-hint">Inscriptos sobre cupo</span>
+                    </div>
+                    <div class="panel-body">
+                        <div class="stack-list" id="lista-ocupacion">
+                            <div class="empty-state">Cargando cursos...</div>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="panel chart-card">
+                    <div class="panel-head">
+                        <h2>Evolución de inscripciones</h2>
+                        <span class="panel-hint">Últimos 12 meses</span>
+                    </div>
+                    <div class="chart-body">
+                        <div class="chart-wrap" id="contenedor-grafico-evolucion">
+                            <canvas id="grafico-evolucion" role="img" aria-label="Evolución mensual de inscripciones"></canvas>
+                        </div>
+                        <div class="chart-empty hidden" id="vacio-evolucion">Todavía no hay inscripciones en los últimos 12 meses.</div>
+                    </div>
+                </article>
+
+                <article class="panel asistencia-card">
+                    <div class="panel-head">
+                        <h2>Asistencia general</h2>
+                        <span class="panel-hint">Promedio del período</span>
+                    </div>
+                    <div class="asistencia-value sin-datos" id="asistencia-valor">Sin datos</div>
+                    <p class="asistencia-note" id="asistencia-nota">El instituto todavía no registra asistencias.</p>
+                    <div class="progress" style="width: 100%; max-width: 280px; margin-top: 18px;">
+                        <div class="progress-bar" id="asistencia-barra" style="width: 0%"></div>
+                    </div>
+                    <p class="stats-meta" id="asistencia-meta" style="margin-top: 10px;">—</p>
+                </article>
+            </div>
+        </section>
+
+        <section class="stats-section" aria-label="Estadísticas financieras">
+            <div class="section-head">
+                <div>
+                    <h2>Estadísticas financieras</h2>
+                    <p>Flujo de caja de los últimos seis meses y composición de los egresos.</p>
+                </div>
+                <span class="stats-meta" id="financiero-meta">—</span>
+            </div>
+
+            <div class="finance-kpis">
+                <article class="kpi">
+                    <p class="kpi-label">Ingresos del mes</p>
+                    <div class="kpi-value success" id="fin-ingresos">—</div>
+                    <div class="kpi-detail" id="fin-ingresos-detalle">—</div>
+                </article>
+                <article class="kpi">
+                    <p class="kpi-label">Egresos del mes</p>
+                    <div class="kpi-value danger" id="fin-egresos">—</div>
+                    <div class="kpi-detail" id="fin-egresos-detalle">—</div>
+                </article>
+                <article class="kpi">
+                    <p class="kpi-label">Balance del mes</p>
+                    <div class="kpi-value" id="fin-balance">—</div>
+                    <div class="kpi-detail" id="fin-balance-detalle">—</div>
+                </article>
+            </div>
+
+            <div class="stats-grid">
+                <article class="panel chart-card">
+                    <div class="panel-head">
+                        <h2>Ingresos vs. egresos</h2>
+                        <span class="panel-hint">Últimos 6 meses</span>
+                    </div>
+                    <div class="chart-body">
+                        <div class="chart-wrap" id="contenedor-grafico-flujo">
+                            <canvas id="grafico-flujo" role="img" aria-label="Comparación mensual de ingresos y egresos"></canvas>
+                        </div>
+                        <div class="chart-empty hidden" id="vacio-flujo">Sin movimientos en los últimos 6 meses.</div>
+                    </div>
+                </article>
+
+                <article class="panel chart-card">
+                    <div class="panel-head">
+                        <h2>Gastos por categoría</h2>
+                        <span class="panel-hint">Mes actual</span>
+                    </div>
+                    <div class="chart-body">
+                        <div class="chart-wrap" id="contenedor-grafico-gastos">
+                            <canvas id="grafico-gastos" role="img" aria-label="Distribución de gastos por categoría"></canvas>
+                        </div>
+                        <div class="chart-empty hidden" id="vacio-gastos">No hay egresos registrados este mes.</div>
+                        <div class="category-list" id="lista-gastos" style="margin-top: 16px;"></div>
+                    </div>
+                </article>
+            </div>
+        </section>
+
+        <section class="stats-section" aria-label="Historial de cierres">
+            <div class="section-head">
+                <div>
+                    <h2>Historial de cierres</h2>
+                    <p>Compará la evolución del instituto entre períodos.</p>
+                </div>
+                <button type="button" class="btn btn-primary" id="btn-guardar-historial" onclick="guardarCierre()">Guardar cierre</button>
+            </div>
+
+            <article class="panel">
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Período</th>
+                                <th>Generado</th>
+                                <th class="num">Alumnos</th>
+                                <th class="num">Profesores</th>
+                                <th class="num">Cursos</th>
+                                <th class="num">Asistencia</th>
+                                <th class="num">Ingresos</th>
+                                <th class="num">Egresos</th>
+                                <th class="num">Balance</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cuerpo-historial">
+                            <tr><td colspan="9" class="empty">Cargando historial...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </article>
+        </section>
+
+    </main>
+
+    <div class="toasts" id="toasts" aria-live="polite"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <script src="js/instituto.js"></script>
+    <script>
+        const state = {
+            actual: null,
+            historial: [],
+            charts: {},
+            cargando: false,
+            guardando: false,
+            generandoImagen: false
+        };
+
+        const PALETA_GASTOS = [
+            '#2e6f6d', '#1f3350', '#b88a35', '#a33a3a', '#6b4a7a',
+            '#0ea5e9', '#16a34a', '#f97316', '#64748b'
+        ];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (typeof Chart !== 'undefined') {
+                Chart.defaults.font.family = '"Segoe UI", "Helvetica Neue", Arial, sans-serif';
+                Chart.defaults.color = '#64748b';
+                Chart.defaults.animation = false;
+            }
+            cargarTodo();
+        });
+
+        async function cargarTodo() {
+            if (state.cargando) return;
+
+            state.cargando = true;
+            const boton = document.getElementById('btn-actualizar');
+            setBotonCargando(boton, true, 'Actualizando...');
+            document.getElementById('ultima-actualizacion').textContent = 'Actualizando...';
+
+            try {
+                const [actual, historial] = await Promise.all([
+                    apiFetch(API + '/estadisticas/actual'),
+                    apiFetch(API + '/estadisticas/historial')
+                ]);
+
+                state.actual = actual;
+                state.historial = Array.isArray(historial) ? historial : [];
+
+                renderActual(actual);
+                renderHistorial();
+
+                document.getElementById('ultima-actualizacion').textContent =
+                    'Actualizado ' + formatearFechaHora(actual.fechaGeneracion);
+            } catch (error) {
+                document.getElementById('ultima-actualizacion').textContent = 'Sin conexión';
+                renderError();
+                mostrarToast(error.message || 'No se pudieron cargar las estadísticas.', 'error');
+            } finally {
+                state.cargando = false;
+                setBotonCargando(boton, false);
+            }
+        }
+
+        function renderActual(actual) {
+            const kpis = actual.kpis || {};
+            const cursos = Array.isArray(actual.cursos) ? actual.cursos : [];
+            const evolucion = Array.isArray(actual.evolucionInscripciones) ? actual.evolucionInscripciones : [];
+            const flujo = actual.flujoCaja || { mensual: [] };
+            const gastos = Array.isArray(actual.gastosPorCategoria) ? actual.gastosPorCategoria : [];
+
+            const totalAlumnos = Number(kpis.totalAlumnosActivos || 0);
+            const totalProfesores = Number(kpis.totalProfesores || 0);
+            const totalCursos = Number(kpis.totalCursos || 0);
+            const inscripciones = Number(kpis.totalInscripcionesActivas || 0);
+            const balance = Number(kpis.balanceNeto || 0);
+
+            document.getElementById('kpi-alumnos').textContent = totalAlumnos;
+            document.getElementById('kpi-alumnos-detalle').textContent =
+                inscripciones + ' ' + pluralizar(inscripciones, 'inscripción activa', 'inscripciones activas');
+
+            document.getElementById('kpi-profesores').textContent = totalProfesores;
+            document.getElementById('kpi-profesores-detalle').textContent = 'Plantel docente registrado';
+
+            document.getElementById('kpi-cursos').textContent = totalCursos;
+            document.getElementById('kpi-cursos-detalle').textContent =
+                cursos.length + ' ' + pluralizar(cursos.length, 'curso con datos', 'cursos con datos');
+
+            const balanceEl = document.getElementById('kpi-balance');
+            balanceEl.textContent = formatearMoneda(balance);
+            balanceEl.classList.toggle('success', balance > 0);
+            balanceEl.classList.toggle('danger', balance < 0);
+            document.getElementById('kpi-balance-detalle').textContent =
+                balance > 0 ? 'Superávit del mes' : balance < 0 ? 'Déficit del mes' : 'Sin diferencias en el mes';
+
+            document.getElementById('academico-meta').textContent =
+                totalCursos + ' ' + pluralizar(totalCursos, 'curso', 'cursos') + ' · ' +
+                totalAlumnos + ' ' + pluralizar(totalAlumnos, 'alumno activo', 'alumnos activos');
+
+            document.getElementById('financiero-meta').textContent = 'Período ' + formatearPeriodo(actual.periodo);
+
+            renderGraficoCursos(cursos);
+            renderOcupacion(cursos);
+            renderGraficoEvolucion(evolucion);
+            renderAsistencia(actual);
+            renderFinanzas(actual);
+            renderGraficoFlujo(flujo.mensual || []);
+            renderGraficoGastos(gastos);
+            renderListaGastos(gastos);
+        }
+
+        function renderFinanzas(actual) {
+            const kpis = actual.kpis || {};
+            const ingresos = Number(kpis.totalIngresos || 0);
+            const egresos = Number(kpis.totalEgresos || 0);
+            const balance = Number(kpis.balanceNeto || 0);
+
+            document.getElementById('fin-ingresos').textContent = formatearMoneda(ingresos);
+            document.getElementById('fin-egresos').textContent = formatearMoneda(egresos);
+
+            const balanceEl = document.getElementById('fin-balance');
+            balanceEl.textContent = formatearMoneda(balance);
+            balanceEl.classList.toggle('success', balance > 0);
+            balanceEl.classList.toggle('danger', balance < 0);
+
+            document.getElementById('fin-ingresos-detalle').textContent =
+                'Acreditado en ' + formatearPeriodo(actual.periodo);
+            document.getElementById('fin-egresos-detalle').textContent =
+                'Debitado en ' + formatearPeriodo(actual.periodo);
+            document.getElementById('fin-balance-detalle').textContent =
+                balance > 0 ? 'Superávit del período' : balance < 0 ? 'Déficit del período' : 'Sin diferencias en el período';
+        }
+
+        function renderAsistencia(actual) {
+            const valor = document.getElementById('asistencia-valor');
+            const nota = document.getElementById('asistencia-nota');
+            const barra = document.getElementById('asistencia-barra');
+            const meta = document.getElementById('asistencia-meta');
+
+            if (actual.asistenciaDisponible) {
+                const tasa = Math.min(100, Math.max(0, Number(actual.tasaAsistenciaPromedio || 0)));
+                valor.textContent = formatearPorcentaje(tasa);
+                valor.classList.remove('sin-datos');
+                nota.textContent = 'Promedio general de asistencia del período.';
+                barra.style.width = tasa + '%';
+                barra.className = 'progress-bar' + (tasa >= 80 ? '' : tasa >= 60 ? ' warning' : ' danger');
+                meta.textContent = 'Datos de asistencia disponibles.';
+            } else {
+                valor.textContent = 'Sin datos';
+                valor.classList.add('sin-datos');
+                nota.textContent = actual.asistenciaNota || 'El instituto todavía no registra asistencias.';
+                barra.style.width = '0%';
+                barra.className = 'progress-bar';
+                meta.textContent = 'Módulo de asistencias pendiente';
+            }
+        }
+
+        function renderOcupacion(cursos) {
+            const contenedor = document.getElementById('lista-ocupacion');
+
+            if (!cursos.length) {
+                contenedor.innerHTML = '<div class="empty-state">No hay cursos registrados.</div>';
+                return;
+            }
+
+            const ordenados = [...cursos].sort((a, b) => {
+                const ocupacionA = Number(a.ocupacion ?? -1);
+                const ocupacionB = Number(b.ocupacion ?? -1);
+                if (ocupacionB !== ocupacionA) return ocupacionB - ocupacionA;
+                return String(a.nombre || '').localeCompare(String(b.nombre || ''), 'es');
+            });
+
+            contenedor.innerHTML = ordenados.map(curso => {
+                const cupo = Number(curso.cupo || 0);
+                const inscriptos = Number(curso.inscriptos || 0);
+                const ocupacion = curso.ocupacion !== null && curso.ocupacion !== undefined
+                    ? Number(curso.ocupacion)
+                    : null;
+                const clase = ocupacion !== null ? claseOcupacion(ocupacion) : '';
+                const badge = curso.casiLleno
+                    ? ' <span class="badge CASI_LLENO">Casi lleno</span>'
+                    : '';
+
+                if (cupo > 0 && ocupacion !== null) {
+                    const disponible = curso.cupoDisponible !== null && curso.cupoDisponible !== undefined
+                        ? Number(curso.cupoDisponible)
+                        : Math.max(0, cupo - inscriptos);
+                    return '<div class="ocupacion-item">' +
+                        '<div class="ocupacion-head">' +
+                            '<strong>' + escapeHtml(curso.nombre) + badge + '</strong>' +
+                            '<span class="cell-sub">' + formatearPorcentaje(ocupacion) + '</span>' +
+                        '</div>' +
+                        '<div class="ocupacion-meta">' +
+                            inscriptos + ' de ' + cupo + ' inscriptos · ' +
+                            disponible + ' ' + pluralizar(disponible, 'lugar disponible', 'lugares disponibles') +
+                        '</div>' +
+                        '<div class="progress">' +
+                            '<div class="progress-bar ' + clase + '" style="width:' +
+                                Math.min(100, Math.max(0, ocupacion)) + '%"></div>' +
+                        '</div>' +
+                    '</div>';
+                }
+
+                return '<div class="ocupacion-item">' +
+                    '<div class="ocupacion-head">' +
+                        '<strong>' + escapeHtml(curso.nombre) + '</strong>' +
+                        '<span class="cell-sub">Sin cupo</span>' +
+                    '</div>' +
+                    '<div class="ocupacion-meta">' +
+                        inscriptos + ' ' + pluralizar(inscriptos, 'alumno inscripto', 'alumnos inscriptos') +
+                        ' · cupo no definido' +
+                    '</div>' +
+                '</div>';
+            }).join('');
+        }
+
+        function renderGraficoCursos(cursos) {
+            destruirChart('cursos');
+            const contenedor = document.getElementById('contenedor-grafico-cursos');
+            const vacio = document.getElementById('vacio-cursos');
+
+            if (!cursos.length) {
+                mostrarEstadoGrafico(contenedor, vacio, 'No hay cursos registrados.');
+                return;
+            }
+
+            if (typeof Chart === 'undefined') {
+                mostrarEstadoGrafico(contenedor, vacio, 'No se pudo cargar Chart.js. Revisá la conexión a internet.');
+                return;
+            }
+
+            contenedor.classList.remove('hidden');
+            vacio.classList.add('hidden');
+            contenedor.style.height = Math.max(320, cursos.length * 34) + 'px';
+
+            const etiquetas = cursos.map(curso => curso.nombre || ('Curso #' + curso.cursoId));
+
+            state.charts.cursos = new Chart(document.getElementById('grafico-cursos'), {
+                type: 'bar',
+                data: {
+                    labels: etiquetas,
+                    datasets: [{
+                        label: 'Alumnos activos',
+                        data: cursos.map(curso => Number(curso.inscriptos || 0)),
+                        backgroundColor: 'rgba(46, 111, 109, .78)',
+                        borderColor: '#2e6f6d',
+                        borderWidth: 1,
+                        borderRadius: 4,
+                        maxBarThickness: 26
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: contexto => ' ' + contexto.parsed.x + ' ' +
+                                    pluralizar(contexto.parsed.x, 'alumno', 'alumnos')
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            ticks: { precision: 0 },
+                            grid: { color: '#edf1f5' }
+                        },
+                        y: {
+                            grid: { display: false },
+                            ticks: {
+                                autoSkip: false,
+                                callback: (valor, indice) => truncar(etiquetas[indice], 28)
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderGraficoEvolucion(evolucion) {
+            destruirChart('evolucion');
+            const contenedor = document.getElementById('contenedor-grafico-evolucion');
+            const vacio = document.getElementById('vacio-evolucion');
+            const hayDatos = evolucion.some(item => Number(item.total || 0) > 0);
+
+            if (!evolucion.length || !hayDatos) {
+                mostrarEstadoGrafico(contenedor, vacio, 'Todavía no hay inscripciones en los últimos 12 meses.');
+                return;
+            }
+
+            if (typeof Chart === 'undefined') {
+                mostrarEstadoGrafico(contenedor, vacio, 'No se pudo cargar Chart.js. Revisá la conexión a internet.');
+                return;
+            }
+
+            contenedor.classList.remove('hidden');
+            vacio.classList.add('hidden');
+
+            state.charts.evolucion = new Chart(document.getElementById('grafico-evolucion'), {
+                type: 'line',
+                data: {
+                    labels: evolucion.map(item => item.etiqueta),
+                    datasets: [{
+                        label: 'Inscripciones',
+                        data: evolucion.map(item => Number(item.total || 0)),
+                        borderColor: '#2e6f6d',
+                        backgroundColor: 'rgba(46, 111, 109, .12)',
+                        fill: true,
+                        tension: .3,
+                        pointRadius: 3,
+                        pointBackgroundColor: '#2e6f6d'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: contexto => ' ' + contexto.parsed.y + ' ' +
+                                    pluralizar(contexto.parsed.y, 'inscripción', 'inscripciones')
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { precision: 0 },
+                            grid: { color: '#edf1f5' }
+                        },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        function renderGraficoFlujo(mensual) {
+            destruirChart('flujo');
+            const contenedor = document.getElementById('contenedor-grafico-flujo');
+            const vacio = document.getElementById('vacio-flujo');
+            const hayDatos = mensual.some(item =>
+                Number(item.ingresos || 0) > 0 || Number(item.egresos || 0) > 0
+            );
+
+            if (!mensual.length || !hayDatos) {
+                mostrarEstadoGrafico(contenedor, vacio, 'Sin movimientos en los últimos 6 meses.');
+                return;
+            }
+
+            if (typeof Chart === 'undefined') {
+                mostrarEstadoGrafico(contenedor, vacio, 'No se pudo cargar Chart.js. Revisá la conexión a internet.');
+                return;
+            }
+
+            contenedor.classList.remove('hidden');
+            vacio.classList.add('hidden');
+
+            state.charts.flujo = new Chart(document.getElementById('grafico-flujo'), {
+                type: 'bar',
+                data: {
+                    labels: mensual.map(item => item.etiqueta),
+                    datasets: [
+                        {
+                            label: 'Ingresos',
+                            data: mensual.map(item => Number(item.ingresos || 0)),
+                            backgroundColor: 'rgba(47, 107, 79, .78)',
+                            borderColor: '#2f6b4f',
+                            borderWidth: 1,
+                            borderRadius: 4
+                        },
+                        {
+                            label: 'Egresos',
+                            data: mensual.map(item => Number(item.egresos || 0)),
+                            backgroundColor: 'rgba(163, 58, 58, .75)',
+                            borderColor: '#a33a3a',
+                            borderWidth: 1,
+                            borderRadius: 4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { boxWidth: 12, usePointStyle: true }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: contexto => contexto.dataset.label + ': ' + formatearMoneda(contexto.parsed.y)
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: '#edf1f5' },
+                            ticks: {
+                                maxTicksLimit: 6,
+                                callback: valor => formatearMoneda(valor)
+                            }
+                        },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        function renderGraficoGastos(gastos) {
+            destruirChart('gastos');
+            const contenedor = document.getElementById('contenedor-grafico-gastos');
+            const vacio = document.getElementById('vacio-gastos');
+
+            if (!gastos.length) {
+                mostrarEstadoGrafico(contenedor, vacio, 'No hay egresos registrados este mes.');
+                return;
+            }
+
+            if (typeof Chart === 'undefined') {
+                mostrarEstadoGrafico(contenedor, vacio, 'No se pudo cargar Chart.js. Revisá la conexión a internet.');
+                return;
+            }
+
+            contenedor.classList.remove('hidden');
+            vacio.classList.add('hidden');
+
+            state.charts.gastos = new Chart(document.getElementById('grafico-gastos'), {
+                type: 'doughnut',
+                data: {
+                    labels: gastos.map(gasto => gasto.nombre),
+                    datasets: [{
+                        data: gastos.map(gasto => Number(gasto.total || 0)),
+                        backgroundColor: gastos.map((gasto, indice) => PALETA_GASTOS[indice % PALETA_GASTOS.length]),
+                        borderColor: '#ffffff',
+                        borderWidth: 2,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '58%',
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { boxWidth: 12, usePointStyle: true }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: contexto => {
+                                    const gasto = gastos[contexto.dataIndex];
+                                    return ' ' + formatearMoneda(gasto.total) + ' · ' +
+                                        formatearPorcentaje(gasto.porcentaje);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderListaGastos(gastos) {
+            const contenedor = document.getElementById('lista-gastos');
+
+            if (!gastos.length) {
+                contenedor.innerHTML = '';
+                return;
+            }
+
+            contenedor.innerHTML = gastos.map((gasto, indice) => {
+                const porcentaje = Math.min(100, Math.max(0, Number(gasto.porcentaje || 0)));
+                return '<div class="category-row">' +
+                    '<div class="category-row-head">' +
+                        '<strong>' + escapeHtml(gasto.nombre) + '</strong>' +
+                        '<span>' + formatearMoneda(gasto.total) + ' · ' + formatearPorcentaje(porcentaje) + '</span>' +
+                    '</div>' +
+                    '<div class="progress">' +
+                        '<div class="progress-bar" style="width:' + porcentaje + '%; background:' +
+                            PALETA_GASTOS[indice % PALETA_GASTOS.length] + '"></div>' +
+                    '</div>' +
+                '</div>';
+            }).join('');
+        }
+
+        function renderHistorial() {
+            const cuerpo = document.getElementById('cuerpo-historial');
+
+            if (!state.historial.length) {
+                cuerpo.innerHTML = '<tr><td colspan="9" class="empty">' +
+                    'Todavía no hay cierres guardados. Usá “Guardar cierre” para crear el primero.' +
+                    '</td></tr>';
+                return;
+            }
+
+            cuerpo.innerHTML = state.historial.map(item => {
+                const balance = Number(item.balanceNeto || 0);
+                const claseBalance = balance > 0 ? 'money-positive' : balance < 0 ? 'money-negative' : '';
+                const asistencia = Number(item.tasaAsistenciaPromedio || 0) > 0
+                    ? formatearPorcentaje(item.tasaAsistenciaPromedio)
+                    : '<span class="cell-sub">Sin datos</span>';
+
+                return '<tr>' +
+                    '<td>' +
+                        '<div class="cell-main">' + formatearPeriodo(item.periodo) + '</div>' +
+                        '<div class="cell-sub">' + escapeHtml(item.periodo || '') + '</div>' +
+                    '</td>' +
+                    '<td>' + formatearFechaHora(item.fechaGeneracion) + '</td>' +
+                    '<td class="num">' + Number(item.totalAlumnosActivos || 0) + '</td>' +
+                    '<td class="num">' + Number(item.totalProfesores || 0) + '</td>' +
+                    '<td class="num">' + Number(item.totalCursos || 0) + '</td>' +
+                    '<td class="num">' + asistencia + '</td>' +
+                    '<td class="num money-positive">' + formatearMoneda(item.totalIngresos) + '</td>' +
+                    '<td class="num money-negative">' + formatearMoneda(item.totalEgresos) + '</td>' +
+                    '<td class="num history-balance ' + claseBalance + '">' + formatearMoneda(balance) + '</td>' +
+                '</tr>';
+            }).join('');
+        }
+
+        async function descargarImagenEstadisticas() {
+            if (state.generandoImagen) return;
+
+            if (state.cargando || !state.actual) {
+                mostrarToast('Esperá a que terminen de cargar las estadísticas.', 'warning');
+                return;
+            }
+
+            if (typeof html2canvas === 'undefined') {
+                mostrarToast('No se pudo cargar el generador de imágenes. Revisá la conexión a internet.', 'error');
+                return;
+            }
+
+            state.generandoImagen = true;
+            const boton = document.getElementById('btn-descargar-imagen');
+            setBotonCargando(boton, true, 'Generando imagen...');
+
+            try {
+                const objetivo = document.querySelector('main.page');
+                const altoPagina = Math.max(1, objetivo.scrollHeight || objetivo.offsetHeight || 1);
+                const escala = Math.min(2, Math.max(0.5, 16000 / altoPagina));
+
+                Object.values(state.charts).forEach(chart => {
+                    if (chart && typeof chart.update === 'function') {
+                        chart.update('none');
+                    }
+                });
+                await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+
+                const canvas = await html2canvas(objetivo, {
+                    backgroundColor: '#f4f6f8',
+                    scale: escala,
+                    useCORS: true,
+                    logging: false,
+                    onclone: (clonedDoc) => {
+                        clonedDoc.querySelectorAll('.page-actions .btn, .section-head .btn').forEach(elemento => {
+                            elemento.style.display = 'none';
+                        });
+                        clonedDoc.querySelectorAll('.table-wrap').forEach(elemento => {
+                            elemento.style.overflow = 'visible';
+                        });
+                    }
+                });
+
+                const enlace = document.createElement('a');
+                enlace.download = 'estadisticas-instituto-' + hoyISO() + '.png';
+                enlace.href = canvas.toDataURL('image/png');
+                enlace.rel = 'noopener';
+                enlace.style.display = 'none';
+                document.body.appendChild(enlace);
+                enlace.click();
+                setTimeout(() => enlace.remove(), 1000);
+
+                mostrarToast('Imagen PNG descargada en tu dispositivo.', 'success');
+            } catch (error) {
+                mostrarToast('No se pudo generar la imagen: ' + (error.message || 'error desconocido'), 'error');
+            } finally {
+                state.generandoImagen = false;
+                setBotonCargando(boton, false);
+            }
+        }
+
+        async function guardarCierre() {
+            if (state.guardando) return;
+
+            state.guardando = true;
+            const botones = [
+                document.getElementById('btn-guardar'),
+                document.getElementById('btn-guardar-historial')
+            ];
+            botones.forEach(boton => setBotonCargando(boton, true, 'Guardando...'));
+
+            try {
+                await apiFetch(API + '/estadisticas/guardar-cierre', { method: 'POST' });
+                mostrarToast('Cierre estadístico guardado. El historial se actualizó.', 'success');
+                await cargarTodo();
+            } catch (error) {
+                mostrarToast(error.message || 'No se pudo guardar el cierre estadístico.', 'error');
+            } finally {
+                state.guardando = false;
+                botones.forEach(boton => setBotonCargando(boton, false));
+            }
+        }
+
+        function renderError() {
+            ['kpi-alumnos', 'kpi-profesores', 'kpi-cursos', 'kpi-balance',
+             'fin-ingresos', 'fin-egresos', 'fin-balance'].forEach(id => {
+                const elemento = document.getElementById(id);
+                if (elemento) elemento.textContent = '—';
+            });
+
+            document.getElementById('lista-ocupacion').innerHTML =
+                '<div class="empty-state">No se pudieron cargar los cursos.</div>';
+            document.getElementById('cuerpo-historial').innerHTML =
+                '<tr><td colspan="9" class="empty">No se pudo cargar el historial.</td></tr>';
+            document.getElementById('lista-gastos').innerHTML = '';
+
+            mostrarEstadoGrafico(
+                document.getElementById('contenedor-grafico-cursos'),
+                document.getElementById('vacio-cursos'),
+                'No se pudo cargar el gráfico.'
+            );
+            mostrarEstadoGrafico(
+                document.getElementById('contenedor-grafico-evolucion'),
+                document.getElementById('vacio-evolucion'),
+                'No se pudo cargar el gráfico.'
+            );
+            mostrarEstadoGrafico(
+                document.getElementById('contenedor-grafico-flujo'),
+                document.getElementById('vacio-flujo'),
+                'No se pudo cargar el gráfico.'
+            );
+            mostrarEstadoGrafico(
+                document.getElementById('contenedor-grafico-gastos'),
+                document.getElementById('vacio-gastos'),
+                'No se pudo cargar el gráfico.'
+            );
+        }
+
+        function mostrarEstadoGrafico(contenedor, vacio, mensaje) {
+            if (contenedor) contenedor.classList.add('hidden');
+            if (vacio) {
+                vacio.textContent = mensaje;
+                vacio.classList.remove('hidden');
+            }
+        }
+
+        function destruirChart(nombre) {
+            if (state.charts[nombre]) {
+                state.charts[nombre].destroy();
+                delete state.charts[nombre];
+            }
+        }
+
+        function formatearFechaHora(valor) {
+            if (!valor) return '—';
+            const fecha = new Date(valor);
+            if (Number.isNaN(fecha.getTime())) {
+                return String(valor).replace('T', ' ').slice(0, 16);
+            }
+            return fecha.toLocaleString('es-AR', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function formatearPeriodo(periodo) {
+            if (!periodo) return '—';
+            const partes = String(periodo).split('-');
+            if (partes.length < 2) return String(periodo);
+            const anio = Number(partes[0]);
+            const mes = Number(partes[1]);
+            if (!Number.isFinite(anio) || !Number.isFinite(mes) || mes < 1 || mes > 12) {
+                return String(periodo);
+            }
+            const fecha = new Date(anio, mes - 1, 1);
+            const texto = fecha.toLocaleDateString('es-AR', { month: 'long', year: 'numeric' });
+            return texto.charAt(0).toUpperCase() + texto.slice(1);
+        }
+
+        function formatearPorcentaje(valor) {
+            const numero = Number(valor);
+            if (!Number.isFinite(numero)) return '—';
+            return numero.toLocaleString('es-AR', {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 1
+            }) + '%';
+        }
+
+        function claseOcupacion(ocupacion) {
+            if (Number(ocupacion) >= 100) return 'danger';
+            if (Number(ocupacion) >= 80) return 'warning';
+            return '';
+        }
+
+        function truncar(texto, maximo) {
+            const valor = String(texto || '');
+            return valor.length > maximo ? valor.slice(0, maximo - 1) + '…' : valor;
+        }
+    </script>
+</body>
+</html>

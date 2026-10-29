@@ -1,9 +1,11 @@
 package com.instituto.gestion.controller;
 
+import com.instituto.gestion.dto.DesafiliarAlumnoRequest;
 import com.instituto.gestion.model.Alumno;
 import com.instituto.gestion.service.AlumnoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 
 @RestController
@@ -14,9 +16,20 @@ public class AlumnoController {
     @Autowired
     private AlumnoService service;
 
+    /**
+     * Listado operativo. Por defecto solo devuelve alumnos ACTIVO.
+     */
     @GetMapping
     public List<Alumno> listar() {
-        return service.obtenerTodos();
+        return service.obtenerActivos();
+    }
+
+    /**
+     * Alumnos desafiliados o archivados automáticamente por inactividad.
+     */
+    @GetMapping("/archivados")
+    public List<Alumno> listarArchivados() {
+        return service.obtenerArchivados();
     }
 
     @PostMapping
@@ -24,10 +37,22 @@ public class AlumnoController {
         return service.guardarAlumno(alumno);
     }
 
-    @DeleteMapping("/{id}")
-    public String eliminar(@PathVariable Long id) {
-        service.eliminarAlumno(id);
-        return "Alumno con ID " + id + " eliminado correctamente.";
+    /**
+     * Baja lógica. El registro y su historial se conservan.
+     */
+    @PutMapping("/{id}/desafiliar")
+    public Alumno desafiliar(
+            @PathVariable Long id,
+            @RequestBody(required = false) DesafiliarAlumnoRequest request) {
+        return service.desafiliarAlumno(id, request != null ? request.motivo() : null);
+    }
+
+    /**
+     * Reincorpora al alumno a la operatoria diaria.
+     */
+    @PutMapping("/{id}/reactivar")
+    public Alumno reactivar(@PathVariable Long id) {
+        return service.reactivarAlumno(id);
     }
 
     @PutMapping("/{id}")

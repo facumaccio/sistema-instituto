@@ -36,6 +36,9 @@ public class CuotaService {
     private AlumnoRepository alumnoRepository;
 
     @Autowired
+    private AlumnoService alumnoService;
+
+    @Autowired
     private InscripcionRepository inscripcionRepository;
 
     @Autowired
@@ -76,6 +79,9 @@ public class CuotaService {
         for (Inscripcion inscripcion : inscripcionRepository.findByCurso_Id(curso.getId())) {
             Alumno alumno = inscripcion.getAlumno();
             if (alumno == null || alumno.getId() == null) {
+                continue;
+            }
+            if (alumno.getEstado() != EstadoAlumno.ACTIVO) {
                 continue;
             }
             if (Boolean.FALSE.equals(alumno.getEsRegular())) {
@@ -149,7 +155,13 @@ public class CuotaService {
         cuota.setFechaPago(fecha);
         cuota.setEstado(EstadoCuota.PAGADO);
         registrarIngresoCuota(cuota, fecha, metodoPago);
-        return cuotaRepository.save(cuota);
+        Cuota guardada = cuotaRepository.save(cuota);
+
+        if (guardada.getAlumno() != null && guardada.getAlumno().getId() != null) {
+            alumnoService.registrarActividad(guardada.getAlumno().getId());
+        }
+
+        return guardada;
     }
 
     /**
@@ -463,6 +475,10 @@ public class CuotaService {
         if (guardada.getEstado() == EstadoCuota.PAGADO) {
             registrarIngresoCuota(guardada, guardada.getFechaPago(), MetodoPago.EFECTIVO);
             guardada = cuotaRepository.save(guardada);
+
+            if (guardada.getAlumno() != null && guardada.getAlumno().getId() != null) {
+                alumnoService.registrarActividad(guardada.getAlumno().getId());
+            }
         }
         return guardada;
     }

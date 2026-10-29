@@ -28,6 +28,14 @@ public interface CuotaRepository extends JpaRepository<Cuota, Long> {
 
     List<Cuota> findByCurso_IdOrderByPeriodoAnioDescPeriodoMesDesc(Long cursoId);
 
+    @Query("""
+            SELECT MAX(c.fechaPago)
+            FROM Cuota c
+            WHERE c.alumno.id = :alumnoId
+              AND c.fechaPago IS NOT NULL
+            """)
+    LocalDate findUltimaFechaPagoByAlumnoId(@Param("alumnoId") Long alumnoId);
+
     long countByEstado(EstadoCuota estado);
 
     @Query("SELECT COUNT(DISTINCT c.alumno.id) FROM Cuota c WHERE c.estado = :estado")

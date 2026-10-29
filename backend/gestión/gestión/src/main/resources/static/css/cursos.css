@@ -1,0 +1,837 @@
+/* ==========================================================================
+   Cursos — capa de página inspirada en Innovaccer Design System (MDS)
+   --------------------------------------------------------------------------
+   La base compartida (topbar, estructura, modal y toasts) sigue en
+   instituto.css. Acá se redefine sólo la pantalla de Cursos con los patrones
+   de MDS: tabla compacta, botones primary/secondary/transparent y etiquetas
+   de estado (badges y status hints).
+   ========================================================================== */
+
+.cursos-page {
+    /* Tokens MDS usados por esta pantalla. Se prefijan con --mds- para no
+       pisar los tokens históricos que comparten otras páginas. */
+    --mds-primary: #0060d6;
+    --mds-primary-dark: #003e85;
+    --mds-primary-darker: #003066;
+    --mds-primary-lightest: #d6eeff;
+    --mds-primary-ultra-light: #f0f9ff;
+
+    --mds-secondary: #d4d4d4;
+    --mds-secondary-light: #e0e0e0;
+    --mds-secondary-lighter: #ebebeb;
+    --mds-secondary-lightest: #f7f7f7;
+
+    --mds-inverse: #1a1a1a;
+    --mds-text-subtle: #636363;
+    --mds-text-disabled: #a3a3a3;
+
+    --mds-success: #008000;
+    --mds-success-darker: #003d04;
+    --mds-success-lightest: #dcf0db;
+
+    --mds-alert: #bd1c00;
+    --mds-alert-darker: #5c1305;
+    --mds-alert-lightest: #ffe1db;
+
+    --mds-warning: #f5ba0a;
+    --mds-warning-darker: #664d00;
+    --mds-warning-300: #ffe9a8;
+
+    --mds-white: #ffffff;
+    --mds-radius: 4px;
+    --mds-radius-card: 8px;
+    --mds-shadow-card: 0 1px 2px rgba(26, 26, 26, .04);
+    --mds-shadow-modal: 0 16px 48px rgba(26, 26, 26, .18);
+    --mds-font: "Nunito Sans", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    --mds-ease: cubic-bezier(.2, 0, .38, .9);
+
+    background: #f7f7f7;
+}
+
+.cursos-page .page {
+    max-width: 1320px;
+    padding: 32px 32px 64px;
+    color: var(--mds-inverse);
+    font-family: var(--mds-font);
+    font-size: 14px;
+    line-height: 20px;
+    -webkit-font-smoothing: antialiased;
+}
+
+.cursos-page .modal,
+.cursos-page .toasts {
+    font-family: var(--mds-font);
+}
+
+/* ----------------------------- Título de página ----------------------------- */
+.cursos-page .cursos-head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+}
+
+.cursos-page .cursos-head__copy {
+    min-width: 0;
+}
+
+.cursos-page .cursos-head h1 {
+    margin: 0;
+    color: var(--mds-inverse);
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -.02em;
+}
+
+.cursos-page .cursos-head__sub {
+    margin: 4px 0 0;
+    color: var(--mds-text-subtle);
+    font-size: 14px;
+    line-height: 20px;
+}
+
+.cursos-page .cursos-head__actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+/* ----------------------------- Botones MDS ----------------------------- */
+.cursos-page .mds-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    height: 32px;
+    padding: 0 12px;
+    border: 0;
+    border-radius: var(--mds-radius);
+    background: transparent;
+    color: var(--mds-inverse);
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 16px;
+    text-align: center;
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 80ms var(--mds-ease), box-shadow 80ms var(--mds-ease), color 80ms var(--mds-ease);
+}
+
+.cursos-page .mds-btn:focus-visible {
+    outline: 2px solid var(--mds-primary-dark);
+    outline-offset: 2px;
+}
+
+.cursos-page .mds-btn:disabled {
+    opacity: .55;
+    cursor: not-allowed;
+}
+
+.cursos-page .mds-btn--primary {
+    background: var(--mds-primary);
+    color: var(--mds-white);
+}
+
+.cursos-page .mds-btn--primary:hover:not(:disabled) {
+    background: var(--mds-primary-dark);
+}
+
+.cursos-page .mds-btn--primary:active:not(:disabled) {
+    background: var(--mds-primary-darker);
+}
+
+.cursos-page .mds-btn--secondary {
+    background: transparent;
+    color: var(--mds-inverse);
+    box-shadow: inset 0 0 0 1px var(--mds-secondary);
+}
+
+.cursos-page .mds-btn--secondary:hover:not(:disabled) {
+    background: var(--mds-secondary-lighter);
+    box-shadow: inset 0 0 0 1px var(--mds-text-disabled);
+}
+
+.cursos-page .mds-btn--secondary:active:not(:disabled) {
+    background: var(--mds-secondary);
+    box-shadow: inset 0 0 0 1px var(--mds-text-disabled);
+}
+
+.cursos-page .mds-btn--transparent {
+    background: transparent;
+    color: var(--mds-inverse);
+}
+
+.cursos-page .mds-btn--transparent:hover:not(:disabled) {
+    background: var(--mds-secondary-light);
+}
+
+.cursos-page .mds-btn--transparent:active:not(:disabled) {
+    background: var(--mds-secondary);
+}
+
+.cursos-page .mds-btn--small {
+    height: 28px;
+    padding: 0 10px;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 16px;
+}
+
+.cursos-page .mds-btn svg {
+    flex: none;
+}
+
+/* ----------------------------- Búsqueda y filtros ----------------------------- */
+.cursos-page .cursos-filters {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+}
+
+.cursos-page .cursos-search {
+    position: relative;
+    flex: 0 1 380px;
+    min-width: 220px;
+}
+
+.cursos-page .cursos-search__icon {
+    position: absolute;
+    top: 50%;
+    left: 10px;
+    display: flex;
+    color: var(--mds-text-subtle);
+    pointer-events: none;
+    transform: translateY(-50%);
+}
+
+.cursos-page .cursos-search .mds-input {
+    padding-left: 34px;
+}
+
+.cursos-page .cursos-select {
+    flex: 0 0 210px;
+}
+
+.cursos-page .cursos-filters__spacer {
+    flex: 1;
+}
+
+.cursos-page .filter-note {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 28px;
+    padding: 0 10px;
+    border: 1px solid var(--mds-secondary);
+    border-radius: var(--mds-radius);
+    background: var(--mds-secondary-lightest);
+    color: var(--mds-inverse);
+    font-size: 12px;
+    line-height: 16px;
+    white-space: nowrap;
+}
+
+.cursos-page .filter-note strong {
+    font-weight: 600;
+}
+
+.cursos-page .filter-note button {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--mds-text-subtle);
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.cursos-page .filter-note button:hover {
+    color: var(--mds-alert);
+}
+
+.cursos-page .results-info {
+    color: var(--mds-text-subtle);
+    font-size: 12px;
+    line-height: 16px;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
+/* ----------------------------- Controles MDS ----------------------------- */
+.cursos-page .mds-input,
+.cursos-page .mds-select {
+    width: 100%;
+    height: 32px;
+    padding: 0 10px;
+    border: 1px solid var(--mds-secondary);
+    border-radius: var(--mds-radius);
+    background-color: var(--mds-white);
+    color: var(--mds-inverse);
+    font-family: inherit;
+    font-size: 14px;
+    line-height: 16px;
+    transition: background-color 80ms var(--mds-ease), border-color 80ms var(--mds-ease), box-shadow 80ms var(--mds-ease);
+}
+
+.cursos-page .mds-input::placeholder {
+    color: var(--mds-text-disabled);
+}
+
+.cursos-page .mds-input:hover,
+.cursos-page .mds-select:hover {
+    background-color: var(--mds-secondary-lightest);
+    border-color: #c4c4c4;
+}
+
+.cursos-page .mds-input:focus,
+.cursos-page .mds-select:focus,
+.cursos-page .mds-input:focus-visible,
+.cursos-page .mds-select:focus-visible {
+    outline: 2px solid var(--mds-primary-dark);
+    outline-offset: 2px;
+    border-color: var(--mds-secondary);
+    background-color: var(--mds-white);
+    box-shadow: none;
+}
+
+.cursos-page .mds-select {
+    padding-right: 30px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 4.5 6 8l3.5-3.5' fill='none' stroke='%23636363' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 12px;
+    cursor: pointer;
+    appearance: none;
+}
+
+/* ----------------------------- Panel y tabla ----------------------------- */
+.cursos-page .cursos-panel {
+    overflow: hidden;
+    border: 1px solid var(--mds-secondary-light);
+    border-radius: var(--mds-radius-card);
+    background: var(--mds-white);
+    box-shadow: var(--mds-shadow-card);
+}
+
+.cursos-page .cursos-panel__head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--mds-secondary-light);
+}
+
+.cursos-page .cursos-panel__head h2 {
+    margin: 0;
+    color: var(--mds-inverse);
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 24px;
+}
+
+.cursos-page .cursos-panel__sub {
+    margin: 2px 0 0;
+    color: var(--mds-text-subtle);
+    font-size: 12px;
+    line-height: 16px;
+}
+
+.cursos-page .table-wrap {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.cursos-page .mds-table {
+    width: 100%;
+    min-width: 860px;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+.cursos-page .mds-table thead th {
+    height: 40px;
+    padding: 0 12px;
+    border-bottom: 1px solid var(--mds-secondary);
+    background: var(--mds-white);
+    color: var(--mds-text-subtle);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0;
+    line-height: 16px;
+    text-align: left;
+    text-transform: none;
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+.cursos-page .mds-table tbody td {
+    padding: 12px;
+    border-bottom: 1px solid var(--mds-secondary-lighter);
+    color: var(--mds-inverse);
+    font-size: 14px;
+    line-height: 20px;
+    vertical-align: middle;
+}
+
+.cursos-page .mds-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.cursos-page .mds-table tbody tr:hover td {
+    background: var(--mds-secondary-lightest);
+}
+
+.cursos-page .col-curso { width: 28%; }
+.cursos-page .col-turno { width: 12%; }
+.cursos-page .col-profesor { width: 22%; }
+.cursos-page .col-inscriptos { width: 18%; }
+.cursos-page .col-acciones { width: 20%; }
+
+.cursos-page .mds-table th.col-inscriptos,
+.cursos-page .mds-table td.col-inscriptos,
+.cursos-page .mds-table th.col-acciones,
+.cursos-page .mds-table td.col-acciones {
+    text-align: right;
+}
+
+.cursos-page .mds-table td.col-acciones {
+    white-space: nowrap;
+}
+
+/* ----------------------------- Celdas ----------------------------- */
+.cursos-page .course-cell {
+    min-width: 0;
+}
+
+.cursos-page .course-cell__title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.cursos-page .course-link {
+    min-width: 0;
+    overflow: hidden;
+    color: var(--mds-primary);
+    font-weight: 600;
+    text-decoration: none;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.cursos-page .course-link:hover {
+    color: var(--mds-primary-dark);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.cursos-page .course-link:focus-visible {
+    border-radius: 2px;
+    outline: 2px solid var(--mds-primary-dark);
+    outline-offset: 2px;
+}
+
+.cursos-page .course-cell__meta {
+    margin-top: 2px;
+    color: var(--mds-text-subtle);
+    font-size: 12px;
+    line-height: 16px;
+}
+
+.cursos-page .cell-main {
+    overflow: hidden;
+    color: var(--mds-inverse);
+    font-weight: 500;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.cursos-page .cell-sub {
+    margin-top: 2px;
+    overflow: hidden;
+    color: var(--mds-text-subtle);
+    font-size: 12px;
+    line-height: 16px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* ----------------------------- Etiquetas de estado (Badge) ----------------------------- */
+.cursos-page .mds-badge {
+    display: inline-block;
+    flex: none;
+    max-width: 160px;
+    overflow: hidden;
+    padding: 2px 4px;
+    border-radius: var(--mds-radius);
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 16px;
+    text-overflow: ellipsis;
+    text-transform: uppercase;
+    vertical-align: middle;
+    white-space: nowrap;
+    cursor: default;
+}
+
+.cursos-page .mds-badge--subtle-success {
+    background: var(--mds-success-lightest);
+    color: var(--mds-success-darker);
+}
+
+.cursos-page .mds-badge--subtle-warning {
+    background: var(--mds-warning-300);
+    color: var(--mds-warning-darker);
+}
+
+.cursos-page .mds-badge--subtle-alert {
+    background: var(--mds-alert-lightest);
+    color: var(--mds-alert-darker);
+}
+
+.cursos-page .mds-badge--subtle-secondary {
+    background: var(--mds-secondary-light);
+    color: var(--mds-inverse);
+}
+
+/* ----------------------------- StatusHint MDS ----------------------------- */
+.cursos-page .mds-status-hint {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--mds-text-subtle);
+    font-size: 12px;
+    line-height: 16px;
+    white-space: nowrap;
+}
+
+.cursos-page .mds-status-hint__dot {
+    flex: none;
+    width: 8px;
+    height: 8px;
+    border-radius: 9999px;
+    background: var(--mds-secondary);
+}
+
+.cursos-page .mds-status-hint--success .mds-status-hint__dot { background: var(--mds-success); }
+.cursos-page .mds-status-hint--warning .mds-status-hint__dot { background: var(--mds-warning); }
+.cursos-page .mds-status-hint--alert .mds-status-hint__dot { background: var(--mds-alert); }
+.cursos-page .mds-status-hint--default .mds-status-hint__dot { background: var(--mds-secondary); }
+
+/* ----------------------------- Ocupación ----------------------------- */
+.cursos-page .enrollment {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+}
+
+.cursos-page .enrollment__value {
+    display: flex;
+    align-items: baseline;
+    gap: 2px;
+    color: var(--mds-text-subtle);
+    font-size: 12px;
+    line-height: 16px;
+    font-variant-numeric: tabular-nums;
+}
+
+.cursos-page .enrollment__value strong {
+    color: var(--mds-inverse);
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 20px;
+}
+
+.cursos-page .enrollment__bar {
+    width: 100%;
+    max-width: 140px;
+    height: 4px;
+    overflow: hidden;
+    border-radius: 9999px;
+    background: var(--mds-secondary-lighter);
+}
+
+.cursos-page .enrollment__fill {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--mds-primary);
+    transition: width 200ms var(--mds-ease);
+}
+
+.cursos-page .enrollment__fill--success { background: var(--mds-success); }
+.cursos-page .enrollment__fill--warning { background: var(--mds-warning); }
+.cursos-page .enrollment__fill--alert { background: var(--mds-alert); }
+
+.cursos-page .enrollment__caption {
+    color: var(--mds-text-subtle);
+    font-size: 12px;
+    line-height: 16px;
+    white-space: nowrap;
+}
+
+/* ----------------------------- Estado vacío / carga ----------------------------- */
+.cursos-page .cursos-empty-cell {
+    padding: 48px 16px !important;
+    border-bottom: 0 !important;
+    text-align: center;
+}
+
+.cursos-page .cursos-empty {
+    color: var(--mds-text-subtle);
+    font-size: 14px;
+    line-height: 20px;
+}
+
+/* ----------------------------- Modal ----------------------------- */
+.cursos-page .modal-overlay {
+    background: rgba(26, 26, 26, .48);
+}
+
+.cursos-page .modal {
+    width: 100%;
+    max-width: 560px;
+    border: 1px solid var(--mds-secondary-light);
+    border-radius: var(--mds-radius-card);
+    background: var(--mds-white);
+    box-shadow: var(--mds-shadow-modal);
+}
+
+.cursos-page .modal-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--mds-secondary-light);
+}
+
+.cursos-page .modal-head h3 {
+    margin: 0;
+    color: var(--mds-inverse);
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 24px;
+}
+
+.cursos-page .mds-modal__sub {
+    margin: 2px 0 0;
+    color: var(--mds-text-subtle);
+    font-size: 12px;
+    line-height: 16px;
+}
+
+.cursos-page .mds-icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: 0;
+    border-radius: var(--mds-radius);
+    background: transparent;
+    color: var(--mds-text-subtle);
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+    transition: background-color 80ms var(--mds-ease), color 80ms var(--mds-ease);
+}
+
+.cursos-page .mds-icon-btn:hover {
+    background: var(--mds-secondary-lightest);
+    color: var(--mds-inverse);
+}
+
+.cursos-page .mds-icon-btn:focus-visible {
+    outline: 2px solid var(--mds-primary-dark);
+    outline-offset: 2px;
+}
+
+.cursos-page .modal-body {
+    padding: 20px;
+}
+
+.cursos-page .mds-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.cursos-page .mds-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+}
+
+.cursos-page .mds-field--full {
+    grid-column: 1 / -1;
+}
+
+.cursos-page .mds-field label {
+    color: var(--mds-inverse);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0;
+    line-height: 16px;
+    text-transform: none;
+}
+
+.cursos-page .mds-required {
+    color: var(--mds-alert);
+}
+
+.cursos-page .mds-field-hint {
+    color: var(--mds-text-subtle);
+    font-size: 12px;
+    line-height: 16px;
+}
+
+.cursos-page .mds-field-hint a {
+    color: var(--mds-primary);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.cursos-page .mds-field-hint a:hover {
+    color: var(--mds-primary-dark);
+}
+
+.cursos-page .mds-note {
+    margin: 16px 0 0;
+    padding: 10px 12px;
+    border: 1px solid var(--mds-secondary-light);
+    border-radius: var(--mds-radius);
+    background: var(--mds-secondary-lightest);
+    color: var(--mds-text-subtle);
+    font-size: 12px;
+    line-height: 18px;
+}
+
+.cursos-page .modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 14px 20px;
+    border-top: 1px solid var(--mds-secondary-light);
+    background: var(--mds-secondary-lightest);
+}
+
+/* ----------------------------- Toasts ----------------------------- */
+.cursos-page .toast {
+    border: 1px solid var(--mds-secondary-light);
+    border-left: 4px solid var(--mds-primary);
+    border-radius: var(--mds-radius);
+    background: var(--mds-white);
+    color: var(--mds-inverse);
+    box-shadow: 0 8px 24px rgba(26, 26, 26, .12);
+    font-size: 14px;
+    line-height: 20px;
+}
+
+.cursos-page .toast.error { border-left-color: var(--mds-alert); }
+.cursos-page .toast.success { border-left-color: var(--mds-success); }
+
+/* ----------------------------- Adaptación ----------------------------- */
+@media (max-width: 1100px) {
+    .cursos-page .page {
+        padding: 24px 24px 48px;
+    }
+}
+
+@media (max-width: 900px) {
+    .cursos-page .mds-table th.col-acciones,
+    .cursos-page .mds-table td.col-acciones {
+        position: sticky;
+        right: 0;
+        background: var(--mds-white);
+        box-shadow: -1px 0 0 var(--mds-secondary-light);
+    }
+
+    .cursos-page .mds-table th.col-acciones { z-index: 2; }
+    .cursos-page .mds-table td.col-acciones { z-index: 1; }
+
+    .cursos-page .mds-table tbody tr:hover td.col-acciones {
+        background: var(--mds-secondary-lightest);
+    }
+}
+
+@media (max-width: 860px) {
+    .cursos-page .cursos-head {
+        align-items: flex-start;
+    }
+
+    .cursos-page .cursos-head__actions {
+        width: 100%;
+    }
+
+    .cursos-page .cursos-search,
+    .cursos-page .cursos-select {
+        flex: 1 1 100%;
+        min-width: 0;
+    }
+
+    .cursos-page .cursos-filters__spacer {
+        display: none;
+    }
+}
+
+@media (max-width: 640px) {
+    .cursos-page .page {
+        padding: 16px 16px 40px;
+    }
+
+    .cursos-page .cursos-head h1 {
+        font-size: 22px;
+    }
+
+    .cursos-page .cursos-panel__head {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+
+    .cursos-page .mds-table {
+        min-width: 760px;
+    }
+
+    .cursos-page .mds-form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .cursos-page .mds-field--full {
+        grid-column: auto;
+    }
+
+    .cursos-page .modal {
+        max-height: calc(100vh - 24px);
+    }
+
+    .cursos-page .modal-overlay {
+        padding: 12px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .cursos-page .mds-btn,
+    .cursos-page .mds-input,
+    .cursos-page .mds-select,
+    .cursos-page .enrollment__fill,
+    .cursos-page .mds-icon-btn {
+        transition-duration: 0.01ms;
+    }
+}

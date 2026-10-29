@@ -4,10 +4,15 @@ import com.instituto.gestion.dto.EventoCalendarioRequest;
 import com.instituto.gestion.dto.EventoCalendarioResponse;
 import com.instituto.gestion.dto.TipoEventoResponse;
 import com.instituto.gestion.model.Curso;
+import com.instituto.gestion.model.EstadoAlumno;
 import com.instituto.gestion.model.EventoCalendario;
 import com.instituto.gestion.model.TipoEvento;
+import com.instituto.gestion.repository.CalificacionRepository;
 import com.instituto.gestion.repository.CursoRepository;
 import com.instituto.gestion.repository.EventoCalendarioRepository;
+import com.instituto.gestion.repository.InscripcionRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -17,10 +22,12 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 public class EventoCalendarioService {
 
+    private static final Logger log = LoggerFactory.getLogger(EventoCalendarioService.class);
     private static final LocalDate FECHA_MINIMA = LocalDate.of(1900, 1, 1);
     private static final LocalDate FECHA_MAXIMA = LocalDate.of(9999, 12, 31);
     private static final int MAX_TITULO = 160;
@@ -32,6 +39,15 @@ public class EventoCalendarioService {
 
     @Autowired
     private CursoRepository cursoRepository;
+
+    @Autowired
+    private CalificacionRepository calificacionRepository;
+
+    @Autowired
+    private InscripcionRepository inscripcionRepository;
+
+    @Autowired
+    private EmailService emailService;
 
     @Transactional(readOnly = true)
     public List<EventoCalendarioResponse> listar(
@@ -80,6 +96,24 @@ public class EventoCalendarioService {
                 .toList();
     }
 
+    /**
+     * Exámenes agendados para un curso, ordenados cronológicamente. Son los
+     * eventos del calendario que se usan como instancias de evaluación.
+     */
+    @Transactional(readOnly = true)
+    public List<EventoCalendarioResponse> listarExamenesPorCurso(Long cursoId) {
+        if (cursoId == null || !cursoRepository.existsById(cursoId)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    "No se encontró el curso con ID " + cursoId + ".");
+        }
+
+        return eventoRepository
+                .findByCurso_IdAndTipoOrderByFechaInicioAscHoraAsc(cursoId, TipoEvento.EXAMEN)
+                .stream()
+                .map(this::mapearEvento)
+                .toList();
+    }
+
     @Transactional
     public EventoCalendarioResponse crear(EventoCalendarioRequest request) {
         Curso curso = validarRequest(request);
@@ -87,13 +121,49 @@ public class EventoCalendarioService {
         EventoCalendario evento = new EventoCalendario();
         aplicarDatos(evento, request, curso);
 
-        return mapearEvento(eventoRepository.save(evento));
+        EventoCalendario eventoGuardado = eventoRepository.save(evento);
+        notificarNuevoExamen(eventoGuardado);
+
+        return mapearEvento(eventoGuardado);
+    }
+
+    /**
+     * Dispara la notificación por correo cuando se crea un examen asociado a
+     * un curso. La consulta de destinatarios se resuelve dentro de la
+     * transacción; el envío real queda a cargo del método @Async.
+     */
+    private void notificarNuevoExamen(EventoCalendario evento) {
+        if (evento.getTipo() != TipoEvento.EXAMEN || evento.getCurso() == null) {
+            return;
+        }
+
+        try {
+            List<String> destinatarios = inscripcionRepository
+                    .findEmailsAlumnosPorCursoYEstado(
+                            evento.getCurso().getId(),
+                            EstadoAlumno.ACTIVO);
+
+            emailService.notificarNuevoExamen(
+                    destinatarios,
+                    evento.getCurso().getNombre(),
+                    evento.getTitulo(),
+                    evento.getFechaInicio(),
+                    evento.getHora(),
+                    evento.getDescripcion());
+        } catch (Exception error) {
+            // Un problema al preparar o encolar la notificación nunca debe
+            // impedir que el examen quede guardado.
+            log.error("No se pudo preparar la notificación del examen '{}': {}",
+                    evento.getTitulo(), error.getMessage(), error);
+        }
     }
 
     @Transactional
     public EventoCalendarioResponse actualizar(Long id, EventoCalendarioRequest request) {
         EventoCalendario evento = buscarEvento(id);
         Curso curso = validarRequest(request);
+
+        validarCambioConNotas(evento, request, curso);
 
         aplicarDatos(evento, request, curso);
 
@@ -103,7 +173,37 @@ public class EventoCalendarioService {
     @Transactional
     public void eliminar(Long id) {
         EventoCalendario evento = buscarEvento(id);
+
+        if (calificacionRepository.existsByEventoExamen_Id(id)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "No se puede eliminar el examen porque tiene notas cargadas. "
+                            + "Primero quitá las notas desde el detalle del curso.");
+        }
+
         eventoRepository.delete(evento);
+    }
+
+    /**
+     * Un examen con notas no puede cambiar de curso ni dejar de ser EXAMEN:
+     * las calificaciones quedarían vinculadas a un evento inconsistente.
+     */
+    private void validarCambioConNotas(
+            EventoCalendario evento,
+            EventoCalendarioRequest request,
+            Curso cursoNuevo
+    ) {
+        if (!calificacionRepository.existsByEventoExamen_Id(evento.getId())) {
+            return;
+        }
+
+        Long cursoActualId = evento.getCurso() != null ? evento.getCurso().getId() : null;
+        Long cursoNuevoId = cursoNuevo != null ? cursoNuevo.getId() : null;
+
+        if (request.getTipo() != TipoEvento.EXAMEN
+                || !Objects.equals(cursoActualId, cursoNuevoId)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "No se puede cambiar el tipo ni el curso de un examen que ya tiene notas cargadas.");
+        }
     }
 
     private EventoCalendario buscarEvento(Long id) {

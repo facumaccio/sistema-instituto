@@ -3,15 +3,171 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Instituto</title>
-    <link rel="stylesheet" href="css/instituto.css?v=20261024">
+    <script src="js/auth-guard.js?v=20261028-2"></script>
+    <title>Inicio - Instituto</title>
+    <link rel="stylesheet" href="css/instituto.css?v=20261028-2">
+    <style>
+        .welcome-hero {
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 26px;
+            padding: 36px 38px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #1f3350 0%, #2e6f6d 100%);
+            color: #ffffff;
+            box-shadow: var(--shadow);
+        }
+
+        .welcome-hero::after {
+            content: '';
+            position: absolute;
+            top: -70px;
+            right: -50px;
+            width: 260px;
+            height: 260px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, .07);
+        }
+
+        .welcome-hero h1 {
+            position: relative;
+            margin: 0 0 8px;
+            font-size: 30px;
+            font-weight: 600;
+            letter-spacing: -.3px;
+        }
+
+        .welcome-hero p {
+            position: relative;
+            max-width: 660px;
+            margin: 0;
+            color: #d7e3ea;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .welcome-actions {
+            position: relative;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 22px;
+        }
+
+        .welcome-actions .btn-primary {
+            background: #ffffff;
+            border-color: #ffffff;
+            color: var(--navy);
+        }
+
+        .welcome-actions .btn-primary:hover { background: #eef4f4; border-color: #eef4f4; }
+
+        .welcome-actions .btn-ghost {
+            color: #ffffff;
+            background: transparent;
+            border-color: rgba(255, 255, 255, .45);
+        }
+
+        .welcome-actions .btn-ghost:hover { background: rgba(255, 255, 255, .1); }
+
+        .quick-head {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+        }
+
+        .quick-head h2 {
+            margin: 0;
+            font-size: 19px;
+            font-weight: 600;
+            color: var(--navy);
+            letter-spacing: -.15px;
+        }
+
+        .quick-head p { margin: 3px 0 0; color: var(--muted); font-size: 12.5px; }
+
+        .quick-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 16px;
+        }
+
+        .quick-card {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-height: 150px;
+            padding: 18px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: var(--surface);
+            box-shadow: var(--shadow);
+            color: inherit;
+            text-decoration: none;
+            transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease;
+        }
+
+        .quick-card:hover {
+            transform: translateY(-2px);
+            border-color: #b9c7d6;
+            box-shadow: 0 6px 20px rgba(15, 23, 42, .08);
+        }
+
+        .quick-card.destacado {
+            border-color: rgba(46, 111, 109, .45);
+            background: linear-gradient(180deg, #f5faf9, #ffffff);
+        }
+
+        .quick-icon {
+            display: grid;
+            place-items: center;
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+            background: #eef3f7;
+            color: var(--navy);
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: .4px;
+        }
+
+        .quick-card.destacado .quick-icon {
+            background: rgba(46, 111, 109, .12);
+            color: var(--teal);
+        }
+
+        .quick-card h3 { margin: 0; font-size: 14.5px; font-weight: 600; color: var(--navy); }
+        .quick-card p { margin: 0; color: var(--muted); font-size: 12.5px; line-height: 1.5; }
+
+        .quick-card .quick-link {
+            margin-top: auto;
+            padding-top: 8px;
+            color: var(--teal);
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        @media (max-width: 1100px) {
+            .quick-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
+
+        @media (max-width: 720px) {
+            .welcome-hero { padding: 26px 22px; }
+            .welcome-hero h1 { font-size: 24px; }
+            .quick-grid { grid-template-columns: 1fr; }
+        }
+    </style>
 </head>
 <body>
 
     <header class="topbar">
         <div class="brand">Instituto <span>Gestión Académica</span></div>
         <nav>
-            <a href="Dashboard.html" class="active">Dashboard</a>
+            <a href="Dashboard.html" class="active">Inicio</a>
+            <a href="Estadisticas.html" class="nav-highlight">Estadísticas</a>
             <a href="index.html">Inscripciones</a>
             <a href="Alumnos.html">Alumnos</a>
             <a href="Curso.html">Cursos</a>
@@ -24,599 +180,87 @@
 
     <main class="page">
 
-        <div class="page-head">
-            <div>
-                <h1>Panel de estadísticas</h1>
-                <p class="subtitle">Indicadores académicos, ocupación de cursos y reportes descargables.</p>
+        <section class="welcome-hero">
+            <h1>Bienvenido al Instituto</h1>
+            <p>
+                Gestioná la actividad académica y administrativa desde un solo lugar.
+                Las estadísticas consolidadas, la evolución de cierres y los indicadores
+                financieros están disponibles en la sección Estadísticas.
+            </p>
+            <div class="welcome-actions">
+                <a class="btn btn-primary" href="Estadisticas.html">Ver estadísticas</a>
+                <a class="btn btn-ghost" href="index.html?nuevo=1">Nueva inscripción</a>
             </div>
-            <div class="page-actions">
-                <span class="last-update" id="ultima-actualizacion">Cargando información...</span>
-                <button type="button" class="btn btn-ghost" id="btn-actualizar" onclick="cargarDashboard()">Actualizar</button>
-                <a class="btn btn-primary" href="index.html?nuevo=1">Nueva inscripción</a>
-            </div>
-        </div>
-
-        <section class="kpis" aria-label="Indicadores generales">
-            <article class="kpi">
-                <p class="kpi-label">Alumnos activos</p>
-                <div class="kpi-value success" id="kpi-alumnos-activos">—</div>
-                <div class="kpi-detail" id="kpi-alumnos-activos-detalle">—</div>
-            </article>
-            <article class="kpi">
-                <p class="kpi-label">Inscripciones activas</p>
-                <div class="kpi-value" id="kpi-inscripciones">—</div>
-                <div class="kpi-detail" id="kpi-inscripciones-detalle">—</div>
-            </article>
-            <article class="kpi">
-                <p class="kpi-label">Cursos registrados</p>
-                <div class="kpi-value" id="kpi-cursos">—</div>
-                <div class="kpi-detail" id="kpi-cursos-detalle">—</div>
-            </article>
-            <article class="kpi">
-                <p class="kpi-label">Cursos casi llenos</p>
-                <div class="kpi-value warning" id="kpi-casi-llenos">—</div>
-                <div class="kpi-detail" id="kpi-casi-llenos-detalle">—</div>
-            </article>
         </section>
 
-        <section class="dashboard-grid" aria-label="Gráficos del instituto">
-            <article class="panel chart-card">
-                <div class="panel-head">
-                    <h2>Alumnos activos por curso</h2>
-                    <span class="panel-hint">Inscriptos con regularidad activa</span>
+        <section aria-label="Accesos rápidos">
+            <div class="quick-head">
+                <div>
+                    <h2>Accesos rápidos</h2>
+                    <p>Entrá directamente al módulo que necesitás gestionar.</p>
                 </div>
-                <div class="chart-body">
-                    <div class="chart-wrap" id="contenedor-grafico-cursos">
-                        <canvas id="grafico-cursos" role="img" aria-label="Cantidad de alumnos activos por curso"></canvas>
-                    </div>
-                    <div class="chart-empty hidden" id="vacio-cursos">No hay cursos registrados.</div>
-                </div>
-            </article>
-
-            <article class="panel chart-card">
-                <div class="panel-head">
-                    <h2>Evolución de inscripciones</h2>
-                    <span class="panel-hint">Últimos 12 meses</span>
-                </div>
-                <div class="chart-body">
-                    <div class="chart-wrap" id="contenedor-grafico-evolucion">
-                        <canvas id="grafico-evolucion" role="img" aria-label="Evolución mensual de inscripciones"></canvas>
-                    </div>
-                    <div class="chart-empty hidden" id="vacio-evolucion">Todavía no hay inscripciones en los últimos 12 meses.</div>
-                </div>
-            </article>
-        </section>
-
-        <section class="dashboard-grid" aria-label="Ocupación y reportes">
-            <article class="panel">
-                <div class="panel-head">
-                    <h2>Cursos con cupo casi lleno</h2>
-                    <span class="panel-hint">Ocupación desde 80%</span>
-                </div>
-                <div class="panel-body">
-                    <div class="stack-list" id="lista-casi-llenos">
-                        <div class="empty-state">Cargando cursos...</div>
-                    </div>
-                </div>
-            </article>
-
-            <article class="panel">
-                <div class="panel-head">
-                    <h2>Descargar listado de alumnos</h2>
-                    <span class="panel-hint">CSV o PDF listo para imprimir</span>
-                </div>
-                <div class="panel-body">
-                    <div class="field">
-                        <label for="reporte-curso">Curso</label>
-                        <select id="reporte-curso" onchange="actualizarResumenReporte()" disabled>
-                            <option value="">Cargando cursos...</option>
-                        </select>
-                    </div>
-
-                    <div class="reporte-resumen" id="reporte-resumen">
-                        Seleccioná un curso para consultar su ocupación y descargar el listado completo.
-                    </div>
-
-                    <div class="reporte-actions">
-                        <button type="button" class="btn btn-primary" id="btn-csv" onclick="descargarReporte('csv')" disabled>Descargar CSV</button>
-                        <button type="button" class="btn btn-success" id="btn-pdf" onclick="descargarReporte('pdf')" disabled>Descargar PDF</button>
-                    </div>
-
-                    <p class="nota">El archivo incluye nombre, DNI, legajo, edad, regularidad y fecha de inscripción de todos los alumnos del curso. El PDF se genera en A4 horizontal.</p>
-                </div>
-            </article>
-        </section>
-
-        <section class="panel">
-            <div class="panel-head">
-                <h2>Detalle por curso</h2>
-                <span class="panel-hint">Inscriptos activos, cupo y ocupación</span>
             </div>
-            <div class="table-wrap">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Curso</th>
-                            <th>Turno</th>
-                            <th>Profesor</th>
-                            <th class="num">Inscriptos</th>
-                            <th class="num">Cupo</th>
-                            <th>Ocupación</th>
-                            <th class="acciones">Reportes</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tabla-cursos">
-                        <tr><td colspan="7" class="empty">Cargando cursos...</td></tr>
-                    </tbody>
-                </table>
+
+            <div class="quick-grid">
+                <a class="quick-card destacado" href="Estadisticas.html">
+                    <span class="quick-icon">ES</span>
+                    <h3>Estadísticas</h3>
+                    <p>KPIs generales, distribución académica, finanzas e historial de cierres.</p>
+                    <span class="quick-link">Ver panel completo →</span>
+                </a>
+
+                <a class="quick-card" href="index.html">
+                    <span class="quick-icon">IN</span>
+                    <h3>Inscripciones</h3>
+                    <p>Altas y bajas de alumnos en los cursos del instituto.</p>
+                    <span class="quick-link">Gestionar inscripciones →</span>
+                </a>
+
+                <a class="quick-card" href="Alumnos.html">
+                    <span class="quick-icon">AL</span>
+                    <h3>Alumnos</h3>
+                    <p>Legajos, datos personales y regularidad de los alumnos.</p>
+                    <span class="quick-link">Ver alumnos →</span>
+                </a>
+
+                <a class="quick-card" href="Curso.html">
+                    <span class="quick-icon">CU</span>
+                    <h3>Cursos</h3>
+                    <p>Oferta académica, turnos, profesores y cupos.</p>
+                    <span class="quick-link">Ver cursos →</span>
+                </a>
+
+                <a class="quick-card" href="Profesores.html">
+                    <span class="quick-icon">PR</span>
+                    <h3>Profesores</h3>
+                    <p>Plantel docente, especialidades y datos de contacto.</p>
+                    <span class="quick-link">Ver profesores →</span>
+                </a>
+
+                <a class="quick-card" href="Pagos.html">
+                    <span class="quick-icon">PA</span>
+                    <h3>Pagos y Cuotas</h3>
+                    <p>Cuotas, registro de pagos y estado de cuenta por alumno.</p>
+                    <span class="quick-link">Gestionar pagos →</span>
+                </a>
+
+                <a class="quick-card" href="Calendario.html">
+                    <span class="quick-icon">CA</span>
+                    <h3>Calendario</h3>
+                    <p>Exámenes, festejos, feriados y reuniones del instituto.</p>
+                    <span class="quick-link">Ver calendario →</span>
+                </a>
+
+                <a class="quick-card" href="Finanzas.html">
+                    <span class="quick-icon">FI</span>
+                    <h3>Finanzas</h3>
+                    <p>Registro de ingresos, egresos y movimientos de caja.</p>
+                    <span class="quick-link">Gestionar finanzas →</span>
+                </a>
             </div>
         </section>
 
     </main>
 
-    <div class="toasts" id="toasts" aria-live="polite"></div>
-
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-    <script src="js/instituto.js"></script>
-    <script>
-        const state = {
-            dashboard: null,
-            charts: { cursos: null, evolucion: null },
-            cargando: false
-        };
-
-        document.addEventListener('DOMContentLoaded', () => {
-            cargarDashboard();
-        });
-
-        async function cargarDashboard() {
-            if (state.cargando) return;
-
-            state.cargando = true;
-            const boton = document.getElementById('btn-actualizar');
-            setBotonCargando(boton, true, 'Actualizando...');
-            document.getElementById('ultima-actualizacion').textContent = 'Actualizando...';
-
-            try {
-                const datos = await apiFetch(API + '/reportes/dashboard');
-                state.dashboard = datos;
-
-                renderKpis(datos);
-                renderGraficos(datos);
-                renderCasiLlenos(datos.cursosCasiLlenos || []);
-                renderTabla(datos.cursos || []);
-                llenarSelectReportes(datos.cursos || []);
-
-                document.getElementById('ultima-actualizacion').textContent =
-                    'Actualizado ' + (datos.generadoEn || '');
-            } catch (error) {
-                document.getElementById('ultima-actualizacion').textContent = 'Sin conexión';
-                document.getElementById('tabla-cursos').innerHTML =
-                    '<tr><td colspan="7" class="empty">No se pudieron cargar los indicadores.</td></tr>';
-                document.getElementById('lista-casi-llenos').innerHTML =
-                    '<div class="empty-state">No se pudieron cargar los cursos.</div>';
-                mostrarEstadoGrafico('vacio-cursos', 'No se pudo cargar el gráfico.');
-                mostrarEstadoGrafico('vacio-evolucion', 'No se pudo cargar el gráfico.');
-                mostrarToast('No se pudo cargar el dashboard: ' + error.message, 'error');
-            } finally {
-                state.cargando = false;
-                setBotonCargando(boton, false);
-            }
-        }
-
-        function renderKpis(datos) {
-            const cursos = datos.cursos || [];
-            const conCupo = cursos.filter(curso => Number(curso.cupo) > 0).length;
-
-            document.getElementById('kpi-alumnos-activos').textContent = datos.totalAlumnosActivos ?? 0;
-            document.getElementById('kpi-alumnos-activos-detalle').textContent =
-                'Con al menos una inscripción y regularidad activa';
-
-            document.getElementById('kpi-inscripciones').textContent = datos.totalInscripcionesActivas ?? 0;
-            document.getElementById('kpi-inscripciones-detalle').textContent =
-                (datos.inscripcionesMesActual ?? 0) + ' ' +
-                pluralizar(datos.inscripcionesMesActual, 'alta este mes', 'altas este mes');
-
-            document.getElementById('kpi-cursos').textContent = datos.totalCursos ?? 0;
-            document.getElementById('kpi-cursos-detalle').textContent =
-                conCupo + ' ' + pluralizar(conCupo, 'curso con cupo definido', 'cursos con cupo definido');
-
-            document.getElementById('kpi-casi-llenos').textContent = datos.totalCursosCasiLlenos ?? 0;
-            document.getElementById('kpi-casi-llenos-detalle').textContent =
-                'Ocupación desde ' + (datos.umbralCasiLleno ?? 80) + '% del cupo';
-        }
-
-        function renderGraficos(datos) {
-            if (typeof Chart === 'undefined') {
-                mostrarEstadoGrafico('vacio-cursos', 'No se pudo cargar Chart.js desde el CDN.');
-                mostrarEstadoGrafico('vacio-evolucion', 'No se pudo cargar Chart.js desde el CDN.');
-                return;
-            }
-
-            Chart.defaults.font.family = '"Segoe UI", "Helvetica Neue", Arial, sans-serif';
-            Chart.defaults.color = '#64748b';
-
-            renderGraficoCursos(datos.cursos || []);
-            renderGraficoEvolucion(datos.evolucionMensual || []);
-        }
-
-        function renderGraficoCursos(cursos) {
-            if (state.charts.cursos) {
-                state.charts.cursos.destroy();
-                state.charts.cursos = null;
-            }
-
-            if (!cursos.length) {
-                mostrarEstadoGrafico('vacio-cursos', 'No hay cursos registrados.');
-                return;
-            }
-
-            ocultarEstadoGrafico('vacio-cursos');
-            const canvas = document.getElementById('grafico-cursos');
-            const cupos = cursos.map(curso => Number(curso.cupo) > 0 ? Number(curso.cupo) : null);
-
-            state.charts.cursos = new Chart(canvas, {
-                type: 'bar',
-                data: {
-                    labels: cursos.map(curso => curso.nombre),
-                    datasets: [
-                        {
-                            label: 'Alumnos activos',
-                            data: cursos.map(curso => curso.inscriptos),
-                            backgroundColor: 'rgba(46, 111, 109, .78)',
-                            borderRadius: 4,
-                            maxBarThickness: 26
-                        },
-                        {
-                            label: 'Cupo máximo',
-                            data: cupos,
-                            backgroundColor: 'rgba(217, 224, 232, .9)',
-                            borderRadius: 4,
-                            maxBarThickness: 26
-                        }
-                    ]
-                },
-                options: {
-                    indexAxis: 'y',
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: { boxWidth: 10, usePointStyle: true, padding: 16 }
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: contexto => {
-                                    const valor = contexto.parsed.x;
-                                    return contexto.dataset.label + ': ' + (valor ?? 0);
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        x: {
-                            beginAtZero: true,
-                            ticks: { precision: 0, color: '#64748b' },
-                            grid: { color: '#edf1f5' },
-                            border: { display: false }
-                        },
-                        y: {
-                            grid: { display: false },
-                            ticks: { color: '#1f2933', autoSkip: false }
-                        }
-                    }
-                }
-            });
-        }
-
-        function renderGraficoEvolucion(evolucion) {
-            if (state.charts.evolucion) {
-                state.charts.evolucion.destroy();
-                state.charts.evolucion = null;
-            }
-
-            const hayDatos = evolucion.some(item => Number(item.total) > 0);
-            if (!hayDatos) {
-                mostrarEstadoGrafico('vacio-evolucion', 'Todavía no hay inscripciones en los últimos 12 meses.');
-                return;
-            }
-
-            ocultarEstadoGrafico('vacio-evolucion');
-            const canvas = document.getElementById('grafico-evolucion');
-
-            state.charts.evolucion = new Chart(canvas, {
-                type: 'line',
-                data: {
-                    labels: evolucion.map(item => item.etiqueta),
-                    datasets: [{
-                        label: 'Inscripciones',
-                        data: evolucion.map(item => item.total),
-                        borderColor: '#2e6f6d',
-                        backgroundColor: 'rgba(46, 111, 109, .12)',
-                        fill: true,
-                        tension: .32,
-                        pointRadius: 3,
-                        pointHoverRadius: 5,
-                        pointBackgroundColor: '#ffffff',
-                        pointBorderColor: '#2e6f6d',
-                        pointBorderWidth: 2
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            callbacks: {
-                                label: contexto => 'Inscripciones: ' + (contexto.parsed.y ?? 0)
-                            }
-                        }
-                    },
-                    scales: {
-                        x: {
-                            grid: { display: false },
-                            ticks: { color: '#64748b', maxRotation: 0, autoSkip: true }
-                        },
-                        y: {
-                            beginAtZero: true,
-                            ticks: { precision: 0, color: '#64748b' },
-                            grid: { color: '#edf1f5' },
-                            border: { display: false }
-                        }
-                    }
-                }
-            });
-        }
-
-        function mostrarEstadoGrafico(id, mensaje) {
-            const vacio = document.getElementById(id);
-            if (vacio) {
-                vacio.textContent = mensaje;
-                vacio.classList.remove('hidden');
-            }
-            const contenedor = id === 'vacio-cursos'
-                ? document.getElementById('contenedor-grafico-cursos')
-                : document.getElementById('contenedor-grafico-evolucion');
-            if (contenedor) contenedor.classList.add('hidden');
-        }
-
-        function ocultarEstadoGrafico(id) {
-            const vacio = document.getElementById(id);
-            if (vacio) vacio.classList.add('hidden');
-            const contenedor = id === 'vacio-cursos'
-                ? document.getElementById('contenedor-grafico-cursos')
-                : document.getElementById('contenedor-grafico-evolucion');
-            if (contenedor) contenedor.classList.remove('hidden');
-        }
-
-        function renderCasiLlenos(cursos) {
-            const contenedor = document.getElementById('lista-casi-llenos');
-
-            if (!cursos.length) {
-                contenedor.innerHTML = '<div class="empty-state">No hay cursos con cupo definido que hayan alcanzado el 80% de ocupación.</div>';
-                return;
-            }
-
-            contenedor.innerHTML = cursos.map(curso => {
-                const ocupacion = Number(curso.ocupacion) || 0;
-                const clase = claseOcupacion(ocupacion);
-                const disponible = curso.cupoDisponible === 0
-                    ? 'Sin cupo disponible'
-                    : (curso.cupoDisponible ?? 0) + ' ' +
-                      pluralizar(curso.cupoDisponible, 'lugar disponible', 'lugares disponibles');
-
-                return '<div class="ocupacion-item">' +
-                    '<div class="ocupacion-head">' +
-                        '<strong>' + escapeHtml(curso.nombre) + '</strong>' +
-                        '<span class="badge CASI_LLENO">' + formatearPorcentaje(ocupacion) + '</span>' +
-                    '</div>' +
-                    '<div class="ocupacion-meta">' +
-                        curso.inscriptos + ' de ' + curso.cupo + ' ' +
-                        pluralizar(curso.cupo, 'alumno', 'alumnos') + ' · ' + escapeHtml(disponible) +
-                    '</div>' +
-                    '<div class="progress" title="' + formatearPorcentaje(ocupacion) + ' de ocupación">' +
-                        '<div class="progress-bar ' + clase + '" style="width:' + Math.min(ocupacion, 100) + '%"></div>' +
-                    '</div>' +
-                '</div>';
-            }).join('');
-        }
-
-        function renderTabla(cursos) {
-            const cuerpo = document.getElementById('tabla-cursos');
-
-            if (!cursos.length) {
-                cuerpo.innerHTML = '<tr><td colspan="7" class="empty">No hay cursos registrados. Creá el primero desde la sección Cursos.</td></tr>';
-                return;
-            }
-
-            cuerpo.innerHTML = cursos.map(curso => {
-                const cupo = Number(curso.cupo) > 0 ? Number(curso.cupo) : null;
-                const ocupacion = curso.ocupacion !== null && curso.ocupacion !== undefined
-                    ? Number(curso.ocupacion)
-                    : null;
-                const clase = ocupacion !== null ? claseOcupacion(ocupacion) : '';
-                const badge = curso.casiLleno
-                    ? ' <span class="badge CASI_LLENO">Casi lleno</span>'
-                    : '';
-
-                const ocupacionHtml = ocupacion !== null
-                    ? '<div class="cell-main ' + (clase ? 'text-' + clase : '') + '">' +
-                          formatearPorcentaje(ocupacion) +
-                      '</div>' +
-                      '<div class="progress mini-progress"><div class="progress-bar ' + clase +
-                          '" style="width:' + Math.min(ocupacion, 100) + '%"></div></div>'
-                    : '<span class="cell-sub">Sin cupo definido</span>';
-
-                return '<tr>' +
-                    '<td>' +
-                        '<div class="cell-main">' + escapeHtml(curso.nombre) + badge + '</div>' +
-                        '<div class="cell-sub">Curso #' + curso.cursoId + '</div>' +
-                    '</td>' +
-                    '<td>' + (curso.turno
-                        ? escapeHtml(curso.turno)
-                        : '<span class="cell-sub">Sin turno</span>') + '</td>' +
-                    '<td>' + (curso.profesor
-                        ? escapeHtml(curso.profesor)
-                        : '<span class="cell-sub">Sin asignar</span>') + '</td>' +
-                    '<td class="num">' + (curso.inscriptos ?? 0) + '</td>' +
-                    '<td class="num">' + (cupo !== null ? cupo : '—') + '</td>' +
-                    '<td>' + ocupacionHtml + '</td>' +
-                    '<td class="acciones">' +
-                        '<button type="button" class="action-link" onclick="descargarReporteCurso(' +
-                            curso.cursoId + ', \'csv\')">CSV</button>' +
-                        '<button type="button" class="action-link" onclick="descargarReporteCurso(' +
-                            curso.cursoId + ', \'pdf\')">PDF</button>' +
-                    '</td>' +
-                '</tr>';
-            }).join('');
-        }
-
-        function llenarSelectReportes(cursos) {
-            const select = document.getElementById('reporte-curso');
-            const anterior = select.value;
-
-            if (!cursos.length) {
-                select.innerHTML = '<option value="">No hay cursos disponibles</option>';
-                select.disabled = true;
-                actualizarResumenReporte();
-                return;
-            }
-
-            select.disabled = false;
-            select.innerHTML = '<option value="">Seleccioná un curso...</option>' +
-                cursos.map(curso =>
-                    '<option value="' + curso.cursoId + '">' +
-                        escapeHtml(curso.nombre + (curso.turno ? ' — ' + curso.turno : '')) +
-                    '</option>'
-                ).join('');
-
-            if (anterior && cursos.some(curso => String(curso.cursoId) === String(anterior))) {
-                select.value = anterior;
-            } else if (cursos.length === 1) {
-                select.value = String(cursos[0].cursoId);
-            }
-
-            actualizarResumenReporte();
-        }
-
-        function actualizarResumenReporte() {
-            const select = document.getElementById('reporte-curso');
-            const resumen = document.getElementById('reporte-resumen');
-            const btnCsv = document.getElementById('btn-csv');
-            const btnPdf = document.getElementById('btn-pdf');
-            const id = Number(select.value);
-            const curso = (state.dashboard?.cursos || []).find(item => item.cursoId === id);
-
-            if (!curso) {
-                resumen.innerHTML = 'Seleccioná un curso para consultar su ocupación y descargar el listado completo.';
-                btnCsv.disabled = true;
-                btnPdf.disabled = true;
-                return;
-            }
-
-            const cupo = Number(curso.cupo) > 0 ? Number(curso.cupo) : null;
-            const ocupacion = curso.ocupacion !== null && curso.ocupacion !== undefined
-                ? Number(curso.ocupacion)
-                : null;
-            const clase = ocupacion !== null ? claseOcupacion(ocupacion) : '';
-            const detalleCupo = cupo
-                ? (curso.inscriptos + ' de ' + cupo + ' ' +
-                   pluralizar(cupo, 'alumno', 'alumnos') + ' · ' +
-                   formatearPorcentaje(ocupacion) + ' de ocupación')
-                : (curso.inscriptos + ' ' +
-                   pluralizar(curso.inscriptos, 'alumno inscripto', 'alumnos inscriptos') +
-                   ' · sin cupo definido');
-            const disponible = curso.cupoDisponible ?? 0;
-            const alerta = curso.casiLleno
-                ? '<br><span class="reporte-alerta">Este curso está casi lleno: ' +
-                  (disponible === 0
-                    ? 'no quedan lugares disponibles.'
-                    : 'queda ' + disponible + ' ' +
-                      pluralizar(disponible, 'lugar disponible', 'lugares disponibles') + '.') +
-                  '</span>'
-                : '';
-
-            resumen.innerHTML =
-                '<strong>' + escapeHtml(curso.nombre) + '</strong><br>' +
-                escapeHtml(detalleCupo) + alerta +
-                '<br>El listado incluye a todos los alumnos inscriptos, incluso los no regulares.';
-
-            btnCsv.disabled = false;
-            btnPdf.disabled = false;
-        }
-
-        async function descargarReporte(formato) {
-            const select = document.getElementById('reporte-curso');
-            const id = Number(select.value);
-
-            if (!id) {
-                mostrarToast('Seleccioná un curso para descargar el reporte.', 'error');
-                return;
-            }
-
-            await descargarReporteCurso(id, formato);
-        }
-
-        function descargarReporteCurso(cursoId, formato) {
-            const formatoNormalizado = formato === 'pdf' ? 'pdf' : 'csv';
-            const curso = (state.dashboard?.cursos || [])
-                .find(item => item.cursoId === Number(cursoId));
-            const select = document.getElementById('reporte-curso');
-            const boton = Number(select.value) === Number(cursoId)
-                ? document.getElementById(formatoNormalizado === 'pdf' ? 'btn-pdf' : 'btn-csv')
-                : null;
-
-            if (boton) {
-                setBotonCargando(boton, true, 'Generando...');
-                setTimeout(() => setBotonCargando(boton, false), 700);
-            }
-
-            // Se usa el endpoint directamente para que el navegador procese el
-            // Content-Disposition attachment. Evita bloqueos de descargas blob
-            // en navegadores embebidos y conserva el nombre de archivo.
-            const url = API + '/reportes/cursos/' + cursoId + '/alumnos?formato=' +
-                encodeURIComponent(formatoNormalizado);
-            const enlace = document.createElement('a');
-            enlace.href = url;
-            enlace.download = nombreArchivoReporte(curso, cursoId, formatoNormalizado);
-            enlace.rel = 'noopener';
-            enlace.style.display = 'none';
-            document.body.appendChild(enlace);
-            enlace.click();
-
-            setTimeout(() => enlace.remove(), 5000);
-            mostrarToast('Descarga en ' + formatoNormalizado.toUpperCase() + ' iniciada.', 'success');
-        }
-
-        function nombreArchivoReporte(curso, cursoId, formato) {
-            const base = curso?.nombre
-                ? slugArchivo(curso.nombre)
-                : 'curso-' + cursoId;
-            return 'alumnos-' + base + '-' + hoyISO().replaceAll('-', '') + '.' + formato;
-        }
-
-        function slugArchivo(texto) {
-            return normalizarTexto(texto)
-                .replace(/[^a-z0-9]+/g, '-')
-                .replace(/^-+|-+$/g, '') || 'curso';
-        }
-
-        function formatearPorcentaje(valor) {
-            const numero = Number(valor);
-            if (!Number.isFinite(numero)) return '—';
-            return numero.toLocaleString('es-AR', {
-                minimumFractionDigits: 0,
-                maximumFractionDigits: 1
-            }) + '%';
-        }
-
-        function claseOcupacion(ocupacion) {
-            if (Number(ocupacion) >= 100) return 'danger';
-            if (Number(ocupacion) >= 80) return 'warning';
-            return '';
-        }
-    </script>
 </body>
 </html>

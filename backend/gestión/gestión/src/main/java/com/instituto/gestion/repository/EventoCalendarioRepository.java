@@ -88,4 +88,8 @@ public interface EventoCalendarioRepository extends JpaRepository<EventoCalendar
 
     @EntityGraph(attributePaths = "curso")
     List<EventoCalendario> findByCurso_IdOrderByFechaInicioAscHoraAsc(Long cursoId);
+
+    @EntityGraph(attributePaths = "curso")
+    List<EventoCalendario> findByCurso_IdAndTipoOrderByFechaInicioAscHoraAsc(
+            Long cursoId, TipoEvento tipo);
 }

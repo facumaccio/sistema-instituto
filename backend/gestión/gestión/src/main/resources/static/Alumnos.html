@@ -3,15 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="js/auth-guard.js?v=20261028-2"></script>
     <title>Alumnos - Instituto</title>
-    <link rel="stylesheet" href="css/instituto.css?v=20261024">
+    <link rel="stylesheet" href="css/instituto.css?v=20261028-2">
 </head>
 <body>
 
     <header class="topbar">
         <div class="brand">Instituto <span>Gestión Académica</span></div>
         <nav>
-            <a href="Dashboard.html">Dashboard</a>
+            <a href="Dashboard.html">Inicio</a>
+            <a href="Estadisticas.html" class="nav-highlight">Estadísticas</a>
             <a href="index.html">Inscripciones</a>
             <a href="Alumnos.html" class="active">Alumnos</a>
             <a href="Curso.html">Cursos</a>
@@ -32,34 +34,11 @@
             <button type="button" class="btn btn-primary" onclick="abrirModalNuevo()">Nuevo alumno</button>
         </div>
 
-        <section class="kpis" aria-label="Indicadores de alumnos">
-            <article class="kpi">
-                <p class="kpi-label">Total de alumnos</p>
-                <div class="kpi-value" id="kpi-total">—</div>
-                <div class="kpi-detail" id="kpi-total-detalle">—</div>
-            </article>
-            <article class="kpi">
-                <p class="kpi-label">Alumnos regulares</p>
-                <div class="kpi-value success" id="kpi-regulares">—</div>
-                <div class="kpi-detail" id="kpi-regulares-detalle">—</div>
-            </article>
-            <article class="kpi">
-                <p class="kpi-label">Con legajo asignado</p>
-                <div class="kpi-value" id="kpi-legajos">—</div>
-                <div class="kpi-detail" id="kpi-legajos-detalle">—</div>
-            </article>
-            <article class="kpi">
-                <p class="kpi-label">Con inscripciones</p>
-                <div class="kpi-value" id="kpi-inscriptos">—</div>
-                <div class="kpi-detail" id="kpi-inscriptos-detalle">—</div>
-            </article>
-        </section>
-
         <section class="toolbar" aria-label="Búsqueda y filtros">
             <div class="toolbar-main">
                 <div class="search-field">
                     <label class="field-label" for="buscador">Buscar alumno</label>
-                    <input type="search" id="buscador" placeholder="Nombre, DNI o legajo..." autocomplete="off" oninput="programarBusqueda()">
+                    <input type="search" id="buscador" placeholder="Nombre, DNI, legajo o email..." autocomplete="off" oninput="programarBusqueda()">
                 </div>
             </div>
             <div class="filters">
@@ -86,16 +65,28 @@
             </div>
         </section>
 
+        <label class="archivo-toggle" for="ver-archivados">
+            <span class="switch">
+                <input type="checkbox" id="ver-archivados" onchange="cambiarVistaArchivados()">
+                <span class="switch-slider" aria-hidden="true"></span>
+            </span>
+            <span class="archivo-toggle-text">
+                <span class="archivo-toggle-title">Ver Ex-Alumnos / Ocultos por Inactividad (+3 meses)</span>
+                <span class="archivo-toggle-hint" id="archivo-toggle-hint">Mostrando solo alumnos activos.</span>
+            </span>
+        </label>
+
         <section class="panel">
             <div class="panel-head">
-                <h2>Listado de alumnos</h2>
-                <span class="panel-hint">El legajo y la regularidad se usan para la generación de cuotas</span>
+                <h2 id="panel-titulo">Listado de alumnos</h2>
+                <span class="panel-hint" id="panel-hint">El legajo y la regularidad se usan para la generación de cuotas</span>
             </div>
             <div class="table-wrap">
                 <table>
-                    <thead>
+                    <thead id="cabecera-alumnos">
                         <tr>
                             <th>Alumno</th>
+                            <th>Email</th>
                             <th>Legajo</th>
                             <th>Cursos</th>
                             <th>Regularidad</th>
@@ -103,7 +94,7 @@
                         </tr>
                     </thead>
                     <tbody id="cuerpo-alumnos">
-                        <tr><td colspan="5" class="empty">Cargando alumnos...</td></tr>
+                        <tr><td colspan="6" class="empty">Cargando alumnos...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -137,6 +128,11 @@
                             <input type="text" id="alumno-legajo" maxlength="30" placeholder="Ej: LEG-001" autocomplete="off">
                             <span class="field-hint">Opcional, pero recomendado.</span>
                         </div>
+                        <div class="field full">
+                            <label for="alumno-email">Correo electrónico</label>
+                            <input type="email" id="alumno-email" maxlength="160" placeholder="Ej: alumno@correo.com" autocomplete="email">
+                            <span class="field-hint">Opcional. Se usa para avisar cuando se agenda un examen del curso.</span>
+                        </div>
                         <div class="field">
                             <label for="alumno-edad">Edad</label>
                             <input type="number" id="alumno-edad" min="1" max="120" placeholder="Ej: 24">
@@ -152,11 +148,39 @@
                         </div>
                     </div>
 
-                    <p class="nota">El DNI es único por persona. Si el alumno tiene cuotas o inscripciones, no se podrá eliminar hasta dar de baja esas relaciones.</p>
+                    <p class="nota">El DNI es único por persona, incluso para ex-alumnos. Para dar de baja a un alumno, usá “Desafiliar”: el registro y su historial se conservan.</p>
                 </div>
                 <div class="modal-actions">
                     <button type="button" class="btn btn-ghost" onclick="cerrarModal('modal-alumno')">Cancelar</button>
                     <button type="submit" class="btn btn-primary" id="btn-guardar-alumno">Guardar alumno</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: desafiliación con motivo opcional -->
+    <div class="modal-overlay hidden" id="modal-desafiliar" onclick="cerrarModalPorOverlay(event, 'modal-desafiliar')">
+        <div class="modal modal-sm" role="dialog" aria-modal="true" aria-labelledby="titulo-desafiliar">
+            <div class="modal-head">
+                <h3 id="titulo-desafiliar">Desafiliar alumno</h3>
+                <button type="button" class="icon-btn" aria-label="Cerrar" onclick="cerrarModal('modal-desafiliar')">&times;</button>
+            </div>
+            <form id="form-desafiliar" onsubmit="confirmarDesafiliacion(event)">
+                <div class="modal-body">
+                    <input type="hidden" id="desafiliar-id">
+                    <p class="modal-message" id="desafiliar-mensaje">¿Confirmás la baja del alumno?</p>
+
+                    <div class="field field-spaced">
+                        <label for="desafiliar-motivo">Motivo (opcional)</label>
+                        <textarea id="desafiliar-motivo" maxlength="255" rows="3" placeholder="Ej: mudanza, decisión personal, finalización de estudios..."></textarea>
+                        <span class="field-hint">Máximo 255 caracteres. Podés dejarlo vacío.</span>
+                    </div>
+
+                    <p class="nota">El alumno no se elimina de la base: queda archivado con todo su historial y podés reactivarlo cuando quieras.</p>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-ghost" onclick="cerrarModal('modal-desafiliar')">Cancelar</button>
+                    <button type="submit" class="btn btn-danger" id="btn-confirmar-desafiliar">Desafiliar</button>
                 </div>
             </form>
         </div>
@@ -168,11 +192,13 @@
     <script>
         const state = {
             alumnos: [],
+            archivados: [],
             cursos: [],
             inscripciones: [],
             busqueda: '',
             filtroCursoId: null,
             filtroRegularidad: '',
+            verArchivados: false,
             timerBusqueda: null
         };
 
@@ -191,9 +217,13 @@
             });
 
             document.addEventListener('keydown', event => {
-                if (event.key === 'Escape' && !document.getElementById('modal-alumno').classList.contains('hidden')) {
-                    cerrarModal('modal-alumno');
-                }
+                if (event.key !== 'Escape') return;
+                ['modal-alumno', 'modal-desafiliar'].forEach(id => {
+                    const modal = document.getElementById(id);
+                    if (modal && !modal.classList.contains('hidden')) {
+                        cerrarModal(id);
+                    }
+                });
             });
 
             await cargarTodo();
@@ -211,10 +241,18 @@
                 state.cursos = Array.isArray(cursos) ? cursos : [];
                 state.inscripciones = Array.isArray(inscripciones) ? inscripciones : [];
 
+                try {
+                    const archivados = await apiFetch(API + '/alumnos/archivados');
+                    state.archivados = Array.isArray(archivados) ? archivados : [];
+                } catch (error) {
+                    state.archivados = [];
+                    mostrarToast('No se pudieron cargar los ex-alumnos: ' + error.message, 'error');
+                }
+
                 actualizarFiltroCursos();
                 renderTodo();
             } catch (error) {
-                document.getElementById('cuerpo-alumnos').innerHTML = filaVacia(5, 'No se pudieron cargar los alumnos.');
+                document.getElementById('cuerpo-alumnos').innerHTML = filaVacia(6, 'No se pudieron cargar los alumnos.');
                 document.getElementById('resultados-info').textContent = 'Error de conexión';
                 mostrarToast('No se pudieron cargar los datos: ' + error.message, 'error');
             }
@@ -254,6 +292,20 @@
             renderTodo();
         }
 
+        function cambiarVistaArchivados() {
+            state.verArchivados = document.getElementById('ver-archivados').checked;
+
+            if (state.verArchivados) {
+                // El filtro de curso se aplica sobre inscripciones activas;
+                // al mirar el archivo se limpia para no confundir el resultado.
+                state.filtroCursoId = null;
+                document.getElementById('filtro-curso').value = '';
+                actualizarUrl();
+            }
+
+            renderTodo();
+        }
+
         function quitarFiltros() {
             state.busqueda = '';
             state.filtroCursoId = null;
@@ -281,10 +333,11 @@
 
         function obtenerAlumnosFiltrados() {
             const busqueda = normalizarTexto(state.busqueda);
+            const base = state.verArchivados ? state.archivados : state.alumnos;
 
-            return state.alumnos
+            return base
                 .filter(alumno => {
-                    if (state.filtroCursoId) {
+                    if (!state.verArchivados && state.filtroCursoId) {
                         const estaEnCurso = cursosDeAlumno(alumno.id).some(curso => curso.id === state.filtroCursoId);
                         if (!estaEnCurso) return false;
                     }
@@ -295,53 +348,65 @@
 
                     if (!busqueda) return true;
 
-                    const texto = [alumno.nya, alumno.dni, alumno.legajo].join(' ');
+                    const texto = [alumno.nya, alumno.dni, alumno.legajo, alumno.email, alumno.motivoBaja].join(' ');
                     return normalizarTexto(texto).includes(busqueda);
                 })
-                .sort((a, b) => String(a.nya || '').localeCompare(String(b.nya || ''), 'es'));
+                .sort((a, b) => {
+                    if (state.verArchivados) {
+                        const prioridad = { DESAFILIADO: 0, INACTIVO_OCULTO: 1 };
+                        const diferencia = (prioridad[a.estado] ?? 2) - (prioridad[b.estado] ?? 2);
+                        if (diferencia !== 0) return diferencia;
+                    }
+                    return String(a.nya || '').localeCompare(String(b.nya || ''), 'es');
+                });
         }
 
         function renderTodo() {
-            renderKpis();
             renderFiltroActivo();
+            renderCabecera();
+            renderPanelInfo();
             renderTabla(obtenerAlumnosFiltrados());
         }
 
-        function renderKpis() {
-            const regulares = state.alumnos.filter(alumno => alumno.esRegular === true).length;
-            const noRegulares = state.alumnos.filter(alumno => alumno.esRegular === false).length;
-            const sinDefinir = state.alumnos.filter(alumno => alumno.esRegular === null || alumno.esRegular === undefined).length;
-            const conLegajo = state.alumnos.filter(alumno => alumno.legajo).length;
-            const alumnosInscriptos = new Set(
-                state.inscripciones.map(inscripcion => inscripcion.alumno?.id).filter(Boolean)
-            );
-            const sinInscripcion = state.alumnos.filter(alumno => !alumnosInscriptos.has(alumno.id)).length;
+        function renderCabecera() {
+            const cabecera = document.getElementById('cabecera-alumnos');
+            cabecera.innerHTML = state.verArchivados
+                ? '<tr>' +
+                    '<th>Alumno</th>' +
+                    '<th>Email</th>' +
+                    '<th>Legajo</th>' +
+                    '<th>Última actividad</th>' +
+                    '<th>Estado</th>' +
+                    '<th class="acciones">Acciones</th>' +
+                  '</tr>'
+                : '<tr>' +
+                    '<th>Alumno</th>' +
+                    '<th>Email</th>' +
+                    '<th>Legajo</th>' +
+                    '<th>Cursos</th>' +
+                    '<th>Regularidad</th>' +
+                    '<th class="acciones">Acciones</th>' +
+                  '</tr>';
+        }
 
-            document.getElementById('kpi-total').textContent = state.alumnos.length;
-            document.getElementById('kpi-total-detalle').textContent =
-                state.alumnos.length + ' ' + pluralizar(state.alumnos.length, 'alumno registrado', 'alumnos registrados');
-
-            document.getElementById('kpi-regulares').textContent = regulares;
-            document.getElementById('kpi-regulares-detalle').textContent =
-                noRegulares + ' no ' + pluralizar(noRegulares, 'regular', 'regulares') +
-                ' · ' + sinDefinir + ' sin definir';
-
-            document.getElementById('kpi-legajos').textContent = conLegajo;
-            document.getElementById('kpi-legajos-detalle').textContent =
-                (state.alumnos.length - conLegajo) + ' ' +
-                pluralizar(state.alumnos.length - conLegajo, 'alumno sin legajo', 'alumnos sin legajo');
-
-            document.getElementById('kpi-inscriptos').textContent = alumnosInscriptos.size;
-            document.getElementById('kpi-inscriptos-detalle').textContent = sinInscripcion
-                ? sinInscripcion + ' ' + pluralizar(sinInscripcion, 'alumno sin curso', 'alumnos sin curso')
-                : 'Todos tienen al menos un curso';
+        function renderPanelInfo() {
+            document.getElementById('filtro-curso').disabled = state.verArchivados;
+            document.getElementById('panel-titulo').textContent = state.verArchivados
+                ? 'Ex-alumnos y ocultos por inactividad'
+                : 'Listado de alumnos';
+            document.getElementById('panel-hint').textContent = state.verArchivados
+                ? 'Registros conservados con todo su historial. Reactivá un alumno para reincorporarlo.'
+                : 'El legajo y la regularidad se usan para la generación de cuotas';
+            document.getElementById('archivo-toggle-hint').textContent = state.verArchivados
+                ? 'Mostrando desafiliados y ocultos por +3 meses sin actividad.'
+                : 'Mostrando solo alumnos activos.';
         }
 
         function renderFiltroActivo() {
             const contenedor = document.getElementById('filtro-activo');
             const partes = [];
 
-            if (state.filtroCursoId) {
+            if (!state.verArchivados && state.filtroCursoId) {
                 const curso = state.cursos.find(item => item.id === state.filtroCursoId);
                 partes.push('Curso: <strong>' + escapeHtml(curso?.nombre || ('#' + state.filtroCursoId)) + '</strong>');
             }
@@ -363,48 +428,102 @@
                 contenedor.classList.add('hidden');
             }
 
-            const hayFiltros = Boolean(state.busqueda || state.filtroCursoId || state.filtroRegularidad);
+            const hayFiltros = Boolean(
+                state.busqueda ||
+                state.filtroRegularidad ||
+                (!state.verArchivados && state.filtroCursoId)
+            );
             document.getElementById('btn-limpiar').classList.toggle('hidden', !hayFiltros);
         }
 
         function renderTabla(alumnos) {
             const cuerpo = document.getElementById('cuerpo-alumnos');
+            const base = state.verArchivados ? state.archivados : state.alumnos;
             let info = alumnos.length + ' ' + pluralizar(alumnos.length, 'alumno', 'alumnos');
-            if (alumnos.length !== state.alumnos.length) info += ' de ' + state.alumnos.length;
+            if (alumnos.length !== base.length) info += ' de ' + base.length;
             document.getElementById('resultados-info').textContent = info;
 
             if (!alumnos.length) {
-                const mensaje = state.alumnos.length
+                const mensaje = base.length
                     ? 'No se encontraron alumnos con los filtros seleccionados.'
-                    : 'Todavía no hay alumnos. Usá “Nuevo alumno” para registrar el primero.';
-                cuerpo.innerHTML = filaVacia(5, mensaje);
+                    : (state.verArchivados
+                        ? 'No hay ex-alumnos ni alumnos ocultos por inactividad.'
+                        : 'Todavía no hay alumnos. Usá “Nuevo alumno” para registrar el primero.');
+                cuerpo.innerHTML = filaVacia(6, mensaje);
                 return;
             }
 
-            cuerpo.innerHTML = alumnos.map(alumno => {
-                const cursos = cursosDeAlumno(alumno.id);
-                const edad = alumno.edad ? ' · ' + alumno.edad + ' años' : '';
-                const urlCuotas = 'Pagos.html?busqueda=' + encodeURIComponent(alumno.nya || '');
-                const urlInscribir = 'index.html?alumnoId=' + alumno.id + '&amp;nuevo=1';
+            cuerpo.innerHTML = alumnos
+                .map(state.verArchivados ? renderFilaArchivado : renderFilaActivo)
+                .join('');
+        }
 
-                return '<tr>' +
-                    '<td>' +
-                        '<div class="cell-main">' + escapeHtml(alumno.nya) + '</div>' +
-                        '<div class="cell-sub">DNI ' + escapeHtml(alumno.dni) + edad + '</div>' +
-                    '</td>' +
-                    '<td>' + (alumno.legajo
-                        ? '<span class="cell-main">' + escapeHtml(alumno.legajo) + '</span>'
-                        : '<span class="cell-sub">Sin asignar</span>') + '</td>' +
-                    '<td>' + renderCursos(cursos) + '</td>' +
-                    '<td>' + renderRegularidad(alumno.esRegular) + '</td>' +
-                    '<td class="acciones">' +
-                        '<button type="button" class="action-link" onclick="abrirModalEditar(' + alumno.id + ')">Editar</button>' +
-                        '<a class="action-link" href="' + urlInscribir + '">Inscribir</a>' +
-                        '<a class="action-link" href="' + urlCuotas + '">Ver cuotas</a>' +
-                        '<button type="button" class="btn-danger-link" onclick="eliminarAlumno(' + alumno.id + ')">Eliminar</button>' +
-                    '</td>' +
-                    '</tr>';
-            }).join('');
+        function renderFilaActivo(alumno) {
+            const cursos = cursosDeAlumno(alumno.id);
+            const edad = alumno.edad ? ' · ' + alumno.edad + ' años' : '';
+            const urlCuotas = 'Pagos.html?busqueda=' + encodeURIComponent(alumno.nya || '');
+            const urlInscribir = 'index.html?alumnoId=' + alumno.id + '&amp;nuevo=1';
+
+            return '<tr>' +
+                '<td>' +
+                    '<div class="cell-main">' + escapeHtml(alumno.nya) + '</div>' +
+                    '<div class="cell-sub">DNI ' + escapeHtml(alumno.dni) + edad + '</div>' +
+                '</td>' +
+                '<td>' + renderEmail(alumno.email) + '</td>' +
+                '<td>' + (alumno.legajo
+                    ? '<span class="cell-main">' + escapeHtml(alumno.legajo) + '</span>'
+                    : '<span class="cell-sub">Sin asignar</span>') + '</td>' +
+                '<td>' + renderCursos(cursos) + '</td>' +
+                '<td>' + renderRegularidad(alumno.esRegular) + '</td>' +
+                '<td class="acciones">' +
+                    '<button type="button" class="action-link" onclick="abrirModalEditar(' + alumno.id + ')">Editar</button>' +
+                    '<a class="action-link" href="' + urlInscribir + '">Inscribir</a>' +
+                    '<a class="action-link" href="' + urlCuotas + '">Ver cuotas</a>' +
+                    '<button type="button" class="btn-danger-link" onclick="abrirModalDesafiliar(' + alumno.id + ')">Desafiliar</button>' +
+                '</td>' +
+                '</tr>';
+        }
+
+        function renderFilaArchivado(alumno) {
+            const esDesafiliado = alumno.estado === 'DESAFILIADO';
+            const badge = esDesafiliado
+                ? '<span class="badge DESAFILIADO">Desafiliado manual</span>'
+                : '<span class="badge INACTIVO_OCULTO">Oculto por +3 meses</span>';
+            const edad = alumno.edad ? ' · ' + alumno.edad + ' años' : '';
+            const baja = alumno.fechaBaja
+                ? '<div class="cell-sub">Baja: ' + formatearFecha(alumno.fechaBaja) + '</div>'
+                : '';
+            const motivo = alumno.motivoBaja
+                ? '<div class="cell-sub archivo-motivo" title="' + escapeHtml(alumno.motivoBaja) + '">' +
+                    escapeHtml(alumno.motivoBaja) + '</div>'
+                : '';
+            const urlCuotas = 'Pagos.html?busqueda=' + encodeURIComponent(alumno.nya || '');
+
+            return '<tr>' +
+                '<td>' +
+                    '<div class="cell-main">' + escapeHtml(alumno.nya) + '</div>' +
+                    '<div class="cell-sub">DNI ' + escapeHtml(alumno.dni) + edad + '</div>' +
+                '</td>' +
+                '<td>' + renderEmail(alumno.email) + '</td>' +
+                '<td>' + (alumno.legajo
+                    ? '<span class="cell-main">' + escapeHtml(alumno.legajo) + '</span>'
+                    : '<span class="cell-sub">Sin asignar</span>') + '</td>' +
+                '<td>' + formatearFecha(alumno.fechaUltimaActividad) + '</td>' +
+                '<td>' + badge + baja + motivo + '</td>' +
+                '<td class="acciones">' +
+                    '<a class="action-link" href="' + urlCuotas + '">Ver cuotas</a>' +
+                    '<button type="button" class="btn btn-success btn-sm btn-reactivar" onclick="reactivarAlumno(' + alumno.id + ')">Reactivar Alumno</button>' +
+                '</td>' +
+                '</tr>';
+        }
+
+        function renderEmail(email) {
+            if (!email) {
+                return '<span class="cell-sub">Sin correo</span>';
+            }
+
+            return '<a class="cell-main email-cell" href="mailto:' + escapeHtml(email) + '">' +
+                escapeHtml(email) + '</a>';
         }
 
         function renderCursos(cursos) {
@@ -439,6 +558,7 @@
         function abrirModalNuevo() {
             document.getElementById('form-alumno').reset();
             document.getElementById('alumno-id').value = '';
+            document.getElementById('alumno-email').value = '';
             document.getElementById('alumno-regular').checked = true;
             document.getElementById('titulo-alumno').textContent = 'Nuevo alumno';
             document.getElementById('btn-guardar-alumno').textContent = 'Guardar alumno';
@@ -456,6 +576,7 @@
             document.getElementById('alumno-nya').value = alumno.nya || '';
             document.getElementById('alumno-dni').value = alumno.dni || '';
             document.getElementById('alumno-legajo').value = alumno.legajo || '';
+            document.getElementById('alumno-email').value = alumno.email || '';
             document.getElementById('alumno-edad').value = alumno.edad || '';
             document.getElementById('alumno-regular').checked = alumno.esRegular !== false;
             document.getElementById('titulo-alumno').textContent = 'Editar alumno';
@@ -470,6 +591,7 @@
             const nya = document.getElementById('alumno-nya').value.trim();
             const dniOriginal = document.getElementById('alumno-dni').value.trim();
             const legajo = document.getElementById('alumno-legajo').value.trim();
+            const email = document.getElementById('alumno-email').value.trim();
             const edadTexto = document.getElementById('alumno-edad').value.trim();
             const esRegular = document.getElementById('alumno-regular').checked;
 
@@ -489,10 +611,16 @@
                 return;
             }
 
+            if (email && (!/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(email) || email.length > 160)) {
+                mostrarToast('Ingresá un correo electrónico válido.', 'error');
+                return;
+            }
+
             const datos = {
                 nya: nya,
                 dni: dni,
                 legajo: legajo || null,
+                email: email || null,
                 edad: edadTexto ? Number(edadTexto) : null,
                 esRegular: esRegular
             };
@@ -509,6 +637,12 @@
 
                 cerrarModal('modal-alumno');
                 mostrarToast(id ? 'Alumno actualizado correctamente.' : 'Alumno registrado correctamente.', 'success');
+
+                if (!id && state.verArchivados) {
+                    state.verArchivados = false;
+                    document.getElementById('ver-archivados').checked = false;
+                }
+
                 await cargarTodo();
             } catch (error) {
                 mostrarToast(error.message, 'error');
@@ -517,21 +651,71 @@
             }
         }
 
-        async function eliminarAlumno(id) {
+        function abrirModalDesafiliar(id) {
             const alumno = state.alumnos.find(item => item.id === id);
-            if (!alumno) return;
+            if (!alumno) {
+                mostrarToast('No se encontró el alumno seleccionado.', 'error');
+                return;
+            }
+
+            document.getElementById('desafiliar-id').value = alumno.id;
+            document.getElementById('desafiliar-mensaje').textContent =
+                '¿Desafiliar a ' + alumno.nya + '? El registro se conserva con todo su historial.';
+            document.getElementById('desafiliar-motivo').value = '';
+            document.getElementById('btn-confirmar-desafiliar').textContent = 'Desafiliar';
+            abrirModal('modal-desafiliar');
+        }
+
+        async function confirmarDesafiliacion(event) {
+            event.preventDefault();
+
+            const id = Number(document.getElementById('desafiliar-id').value);
+            const motivo = document.getElementById('desafiliar-motivo').value.trim();
+            const boton = document.getElementById('btn-confirmar-desafiliar');
+
+            if (!id) {
+                mostrarToast('No se encontró el alumno seleccionado.', 'error');
+                return;
+            }
+
+            setBotonCargando(boton, true, 'Desafiliando...');
+
+            try {
+                await apiFetch(API + '/alumnos/' + id + '/desafiliar', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ motivo: motivo || null })
+                });
+
+                cerrarModal('modal-desafiliar');
+                mostrarToast('Alumno desafiliado. Su historial quedó archivado.', 'success');
+                await cargarTodo();
+            } catch (error) {
+                mostrarToast(error.message, 'error');
+            } finally {
+                setBotonCargando(boton, false);
+            }
+        }
+
+        async function reactivarAlumno(id) {
+            const alumno = state.archivados.find(item => item.id === id);
+            if (!alumno) {
+                mostrarToast('No se encontró el alumno archivado.', 'error');
+                return;
+            }
 
             const confirmado = await confirmarAccion({
-                titulo: 'Eliminar alumno',
-                mensaje: '¿Eliminar a ' + alumno.nya + '? Solo es posible si no tiene inscripciones, cuotas ni pagos registrados.',
-                textoConfirmar: 'Eliminar alumno'
+                titulo: 'Reactivar alumno',
+                mensaje: '¿Reactivar a ' + alumno.nya + '? Volverá a la lista de alumnos activos con todo su historial.',
+                textoConfirmar: 'Reactivar alumno',
+                peligro: false
             });
 
             if (!confirmado) return;
 
             try {
-                await apiFetch(API + '/alumnos/' + id, { method: 'DELETE' });
-                mostrarToast('Alumno eliminado correctamente.', 'success');
+                await apiFetch(API + '/alumnos/' + id + '/reactivar', { method: 'PUT' });
+                mostrarToast('Alumno reactivado correctamente.', 'success');
                 await cargarTodo();
             } catch (error) {
                 mostrarToast(error.message, 'error');

@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="js/auth-guard.js?v=20261028-2"></script>
     <title>Pagos y Cuotas - Instituto</title>
     <style>
         :root {
@@ -61,6 +62,53 @@
 
         .topbar nav a:hover { color: #fff; }
         .topbar nav a.active { color: #fff; border-bottom-color: #7fb3ae; }
+
+        .topbar nav a.nav-highlight {
+            color: #e8f4f2;
+            background: rgba(127, 179, 174, .14);
+            border: 1px solid rgba(127, 179, 174, .35);
+            border-radius: 999px;
+            padding: 7px 12px;
+            margin: 0 2px;
+            border-bottom-color: rgba(127, 179, 174, .35);
+        }
+
+        .topbar nav a.nav-highlight:hover {
+            color: #fff;
+            background: rgba(127, 179, 174, .24);
+        }
+
+        .topbar nav a.nav-highlight.active {
+            color: #fff;
+            background: rgba(127, 179, 174, .24);
+            border-color: #7fb3ae;
+            border-bottom-color: #7fb3ae;
+        }
+
+        .topbar nav .nav-logout {
+            background: transparent;
+            border: 1px solid rgba(203, 213, 225, .28);
+            border-radius: 999px;
+            color: #cbd5e1;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 12.5px;
+            line-height: 1;
+            padding: 8px 12px;
+            white-space: nowrap;
+            transition: color .15s ease, border-color .15s ease, background .15s ease;
+        }
+
+        .topbar nav .nav-logout:hover {
+            background: rgba(127, 179, 174, .14);
+            border-color: rgba(127, 179, 174, .65);
+            color: #fff;
+        }
+
+        .topbar nav .nav-logout:focus-visible {
+            outline: 2px solid #7fb3ae;
+            outline-offset: 2px;
+        }
 
         /* ----------------------------- Estructura ----------------------------- */
         .page { max-width: 1260px; margin: 0 auto; padding: 30px 32px 60px; }
@@ -501,6 +549,13 @@
         .toast.salir { opacity: 0; transform: translateY(8px); }
 
         /* ----------------------------- Responsive ----------------------------- */
+        @media (max-width: 1100px) {
+            .topbar { height: auto; padding: 12px 18px; flex-direction: column; align-items: flex-start; gap: 8px; }
+            .topbar nav { gap: 16px; flex-wrap: wrap; }
+            .topbar nav a { padding: 4px 0; }
+            .topbar nav a.nav-highlight { padding: 7px 12px; }
+        }
+
         @media (max-width: 980px) {
             .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         }
@@ -524,7 +579,8 @@
     <header class="topbar">
         <div class="brand">Instituto <span>Gestión Académica</span></div>
         <nav>
-            <a href="Dashboard.html">Dashboard</a>
+            <a href="Dashboard.html">Inicio</a>
+            <a href="Estadisticas.html" class="nav-highlight">Estadísticas</a>
             <a href="index.html">Inscripciones</a>
             <a href="Alumnos.html">Alumnos</a>
             <a href="Curso.html">Cursos</a>
@@ -544,29 +600,6 @@
             </div>
             <button type="button" class="btn btn-primary" onclick="abrirModalGenerar()">Generar cuotas del mes</button>
         </div>
-
-        <section class="kpis" aria-label="Indicadores">
-            <article class="kpi">
-                <p class="kpi-label">Cuotas pendientes</p>
-                <div class="kpi-value" id="kpi-pendientes">—</div>
-                <div class="kpi-detail" id="kpi-pendientes-monto">—</div>
-            </article>
-            <article class="kpi">
-                <p class="kpi-label">Cuotas vencidas</p>
-                <div class="kpi-value danger" id="kpi-vencidas">—</div>
-                <div class="kpi-detail" id="kpi-vencidas-monto">—</div>
-            </article>
-            <article class="kpi">
-                <p class="kpi-label">Cuotas pagadas</p>
-                <div class="kpi-value" id="kpi-pagadas">—</div>
-                <div class="kpi-detail" id="kpi-pagadas-monto">—</div>
-            </article>
-            <article class="kpi">
-                <p class="kpi-label">Alumnos morosos</p>
-                <div class="kpi-value danger" id="kpi-morosos">—</div>
-                <div class="kpi-detail" id="kpi-morosos-monto">—</div>
-            </article>
-        </section>
 
         <section class="toolbar">
             <div class="search-field">
@@ -1007,25 +1040,12 @@
         }
 
         // ------------------------------------------------------------------
-        // Indicadores y resumen
+        // Resumen de morosos
         // ------------------------------------------------------------------
         function cargarResumen() {
             return apiFetch(API + '/cuotas/resumen')
                 .then(resumen => {
-                    document.getElementById('kpi-pendientes').textContent = resumen.pendientes;
-                    document.getElementById('kpi-pendientes-monto').textContent =
-                        formatearMoneda(resumen.totalPendiente);
-                    document.getElementById('kpi-vencidas').textContent = resumen.vencidas;
-                    document.getElementById('kpi-vencidas-monto').textContent =
-                        formatearMoneda(resumen.totalVencido);
-                    document.getElementById('kpi-pagadas').textContent = resumen.pagadas;
-                    document.getElementById('kpi-pagadas-monto').textContent =
-                        formatearMoneda(resumen.totalPagado);
-
                     state.totalMorosos = Number(resumen.alumnosMorosos || 0);
-                    document.getElementById('kpi-morosos').textContent = state.totalMorosos;
-                    document.getElementById('kpi-morosos-monto').textContent =
-                        'Deuda: ' + formatearMoneda(resumen.totalVencido);
                     document.getElementById('badge-morosos').textContent = state.totalMorosos;
                 })
                 .catch(error => console.error('Error al cargar el resumen:', error));

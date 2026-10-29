@@ -3,88 +3,114 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="js/auth-guard.js?v=20261028-2"></script>
     <title>Profesores - Instituto</title>
-    <link rel="stylesheet" href="css/instituto.css?v=20261024">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/instituto.css?v=20261028-2">
+    <link rel="stylesheet" href="css/taste-app.css?v=20261028-11">
+    <link rel="stylesheet" href="css/taste-profesores.css?v=20261028-11">
 </head>
 <body>
 
-    <header class="topbar">
-        <div class="brand">Instituto <span>Gestión Académica</span></div>
-        <nav>
-            <a href="Dashboard.html">Dashboard</a>
-            <a href="index.html">Inscripciones</a>
-            <a href="Alumnos.html">Alumnos</a>
-            <a href="Curso.html">Cursos</a>
-            <a href="Profesores.html" class="active">Profesores</a>
-            <a href="Pagos.html">Pagos y Cuotas</a>
-            <a href="Calendario.html">Calendario</a>
-            <a href="Finanzas.html">Finanzas</a>
-        </nav>
-    </header>
-
-    <main class="page">
-
-        <div class="page-head">
-            <div>
-                <h1>Profesores</h1>
-                <p class="subtitle">Plantel docente, especialidades, datos de contacto y foto de perfil.</p>
+    <div class="app">
+        <aside class="sidebar" id="sidebar" aria-label="Navegación principal">
+            <div class="sidebar-head">
+                <a class="app-brand" href="Dashboard.html" aria-label="Instituto, ir al inicio">
+                    <span class="app-brand-mark" aria-hidden="true">I</span>
+                    <span class="app-brand-text">
+                        <strong>Instituto</strong>
+                        <span>Gestión Académica</span>
+                    </span>
+                </a>
+                <button type="button" class="sidebar-close" id="sidebar-close" aria-label="Cerrar menú">&times;</button>
             </div>
-            <div class="page-actions">
-                <span class="last-update" id="ultima-actualizacion">Cargando...</span>
-                <button type="button" class="btn btn-ghost" onclick="cargarTodo()">Actualizar</button>
-                <button type="button" class="btn btn-primary" onclick="abrirModalNuevo()">Nuevo profesor</button>
+
+            <nav aria-label="Secciones del sistema">
+                <a class="nav-item" href="Dashboard.html">Inicio</a>
+                <a class="nav-item" href="Estadisticas.html">Estadísticas</a>
+                <a class="nav-item" href="index.html">Inscripciones</a>
+                <a class="nav-item" href="Alumnos.html">Alumnos</a>
+                <a class="nav-item" href="Curso.html">Cursos</a>
+                <a class="nav-item" href="Profesores.html" aria-current="page">Profesores</a>
+                <a class="nav-item" href="Pagos.html">Pagos y cuotas</a>
+                <a class="nav-item" href="Calendario.html">Calendario</a>
+                <a class="nav-item" href="Finanzas.html">Finanzas</a>
+            </nav>
+
+            <div class="bottom">
+                <div class="user-row" id="sidebar-user">
+                    <span class="avatar avatar-sm avatar-color-1" id="sidebar-user-avatar" aria-hidden="true">?</span>
+                    <span class="user-meta">
+                        <strong id="sidebar-user-name">Sesión activa</strong>
+                        <span id="sidebar-user-role">Instituto</span>
+                    </span>
+                </div>
+                <button type="button" class="nav-item logout" onclick="salirInstituto()">Salir</button>
             </div>
-        </div>
+        </aside>
 
-        <section class="kpis" aria-label="Indicadores de profesores">
-            <article class="kpi">
-                <p class="kpi-label">Total de profesores</p>
-                <div class="kpi-value" id="kpi-total">—</div>
-                <div class="kpi-detail" id="kpi-total-detalle">—</div>
-            </article>
-            <article class="kpi">
-                <p class="kpi-label">Con foto de perfil</p>
-                <div class="kpi-value success" id="kpi-con-foto">—</div>
-                <div class="kpi-detail" id="kpi-con-foto-detalle">—</div>
-            </article>
-            <article class="kpi">
-                <p class="kpi-label">Con cursos asignados</p>
-                <div class="kpi-value" id="kpi-con-cursos">—</div>
-                <div class="kpi-detail" id="kpi-con-cursos-detalle">—</div>
-            </article>
-            <article class="kpi">
-                <p class="kpi-label">Especialidades</p>
-                <div class="kpi-value" id="kpi-especialidades">—</div>
-                <div class="kpi-detail" id="kpi-especialidades-detalle">—</div>
-            </article>
-        </section>
+        <main class="canvas">
+            <div class="mobile-bar">
+                <button type="button" class="btn ghost menu-toggle" id="menu-toggle" aria-label="Abrir menú" aria-controls="sidebar" aria-expanded="false">Menú</button>
+                <span class="mobile-brand">Instituto</span>
+            </div>
 
-        <section class="toolbar" aria-label="Búsqueda y filtros">
-            <div class="toolbar-main">
-                <div class="search-field">
-                    <label class="field-label" for="buscador">Buscar profesor</label>
-                    <input type="search" id="buscador" placeholder="Nombre, DNI, email o especialidad..." autocomplete="off" oninput="programarBusqueda()">
+            <div class="title-row">
+                <div>
+                    <h1>Profesores</h1>
+                    <p class="sub">Plantel docente, especialidades, datos de contacto y foto de perfil.</p>
+                </div>
+                <div class="title-actions">
+                    <span class="stamp" id="ultima-actualizacion">Cargando...</span>
+                    <button type="button" class="btn" onclick="cargarTodo()">Actualizar</button>
+                    <button type="button" class="btn primary" onclick="abrirModalNuevo()">Nuevo profesor</button>
                 </div>
             </div>
-            <div class="filters">
+
+            <section class="filters" aria-label="Búsqueda y filtros">
+                <div class="search-field">
+                    <label class="sr-only" for="buscador">Buscar profesor</label>
+                    <input class="input" type="search" id="buscador" placeholder="Nombre, DNI, email o especialidad..." autocomplete="off" oninput="programarBusqueda()">
+                </div>
                 <div class="filter-field">
-                    <label for="filtro-especialidad">Especialidad</label>
-                    <select id="filtro-especialidad" onchange="cambiarFiltroEspecialidad()">
-                        <option value="">Todas</option>
+                    <label class="sr-only" for="filtro-especialidad">Especialidad</label>
+                    <select class="input" id="filtro-especialidad" onchange="cambiarFiltroEspecialidad()">
+                        <option value="">Todas las especialidades</option>
                     </select>
                 </div>
-            </div>
-            <div class="toolbar-meta">
-                <div class="results-info" id="resultados-info">—</div>
-                <button type="button" class="btn btn-ghost btn-sm hidden" id="btn-limpiar" onclick="quitarFiltros()">Limpiar</button>
-            </div>
-        </section>
+                <span class="spacer"></span>
+                <span class="stamp" id="resultados-info" aria-live="polite">—</span>
+                <button type="button" class="btn ghost hidden" id="btn-limpiar" onclick="quitarFiltros()">Limpiar</button>
+            </section>
 
-        <section class="profesores-grid" id="grid-profesores" aria-label="Listado de profesores">
-            <div class="empty-state">Cargando profesores...</div>
-        </section>
-
-    </main>
+            <section class="panel" aria-label="Listado de profesores">
+                <div class="table-wrap">
+                    <table class="table-profesores">
+                        <caption class="sr-only">Profesores del instituto</caption>
+                        <thead>
+                            <tr>
+                                <th scope="col" class="col-profesor">Profesor</th>
+                                <th scope="col" class="col-dni">DNI</th>
+                                <th scope="col" class="col-edad n">Edad</th>
+                                <th scope="col" class="col-contacto">Contacto</th>
+                                <th scope="col" class="col-cursos">Cursos</th>
+                                <th scope="col" class="col-acciones n">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-profesores">
+                            <tr>
+                                <td colspan="6">
+                                    <div class="empty">Cargando profesores...</div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
 
     <!-- Modal: alta / edición de profesor -->
     <div class="modal-overlay hidden" id="modal-profesor" onclick="cerrarModalPorOverlay(event, 'modal-profesor')">
@@ -105,9 +131,9 @@
                             <strong>Foto de perfil</strong>
                             <span class="field-hint">Se comprime en el navegador y se guarda en la base de datos.</span>
                             <div class="foto-editor-actions">
-                                <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('profesor-foto').click()">Seleccionar imagen</button>
+                                <button type="button" class="btn ghost small" onclick="document.getElementById('profesor-foto').click()">Seleccionar imagen</button>
                                 <input type="file" id="profesor-foto" class="file-input-oculto" accept="image/png,image/jpeg,image/webp" aria-label="Seleccionar foto de perfil" onchange="seleccionarFotoProfesor(event)">
-                                <button type="button" class="btn btn-ghost btn-sm" id="btn-quitar-foto" onclick="quitarFotoProfesor()" disabled>Quitar foto</button>
+                                <button type="button" class="btn ghost small" id="btn-quitar-foto" onclick="quitarFotoProfesor()" disabled>Quitar foto</button>
                             </div>
                             <span class="field-hint" id="foto-estado">JPG, PNG o WebP. Máximo 8 MB.</span>
                         </div>
@@ -116,40 +142,40 @@
                     <div class="form-grid">
                         <div class="field">
                             <label for="profesor-nombre">Nombre *</label>
-                            <input type="text" id="profesor-nombre" maxlength="80" placeholder="Ej: Laura" required oninput="actualizarPreviewIniciales()">
+                            <input class="input" type="text" id="profesor-nombre" maxlength="80" placeholder="Ej: Laura" required oninput="actualizarPreviewIniciales()">
                         </div>
                         <div class="field">
                             <label for="profesor-apellido">Apellido *</label>
-                            <input type="text" id="profesor-apellido" maxlength="80" placeholder="Ej: Gómez" required oninput="actualizarPreviewIniciales()">
+                            <input class="input" type="text" id="profesor-apellido" maxlength="80" placeholder="Ej: Gómez" required oninput="actualizarPreviewIniciales()">
                         </div>
                         <div class="field">
                             <label for="profesor-dni">DNI *</label>
-                            <input type="text" id="profesor-dni" maxlength="11" placeholder="Ej: 30123456" required>
-                            <span class="field-hint">7 u 8 cifras, sin comas.</span>
+                            <input class="input" type="text" id="profesor-dni" maxlength="11" inputmode="numeric" placeholder="Ej: 30123456" aria-describedby="profesor-dni-hint" required>
+                            <span class="field-hint" id="profesor-dni-hint">7 u 8 cifras, sin comas.</span>
                         </div>
                         <div class="field">
                             <label for="profesor-fecha">Fecha de nacimiento *</label>
-                            <input type="date" id="profesor-fecha" required>
+                            <input class="input" type="date" id="profesor-fecha" required>
                         </div>
                         <div class="field">
                             <label for="profesor-email">Email</label>
-                            <input type="email" id="profesor-email" maxlength="120" placeholder="Ej: laura@instituto.com">
+                            <input class="input" type="email" id="profesor-email" maxlength="120" placeholder="Ej: laura@instituto.com">
                         </div>
                         <div class="field">
                             <label for="profesor-telefono">Teléfono</label>
-                            <input type="tel" id="profesor-telefono" maxlength="40" placeholder="Ej: 11 5555-5555">
+                            <input class="input" type="tel" id="profesor-telefono" maxlength="40" placeholder="Ej: 11 5555-5555">
                         </div>
                         <div class="field full">
                             <label for="profesor-especialidad">Especialidad / título</label>
-                            <input type="text" id="profesor-especialidad" maxlength="120" placeholder="Ej: Profesora de inglés">
+                            <input class="input" type="text" id="profesor-especialidad" maxlength="120" placeholder="Ej: Profesora de inglés">
                         </div>
                     </div>
 
                     <p class="nota">El DNI es único por persona. Si el profesor tiene cursos asignados, no se podrá eliminar hasta reasignar esos cursos.</p>
                 </div>
                 <div class="modal-actions">
-                    <button type="button" class="btn btn-ghost" onclick="cerrarModal('modal-profesor')">Cancelar</button>
-                    <button type="submit" class="btn btn-primary" id="btn-guardar-profesor">Guardar profesor</button>
+                    <button type="button" class="btn ghost" onclick="cerrarModal('modal-profesor')">Cancelar</button>
+                    <button type="submit" class="btn primary" id="btn-guardar-profesor">Guardar profesor</button>
                 </div>
             </form>
         </div>
@@ -176,6 +202,9 @@
         document.addEventListener('DOMContentLoaded', iniciarProfesores);
 
         async function iniciarProfesores() {
+            configurarMenuMovil();
+            completarUsuarioSidebar();
+
             document.getElementById('buscador').addEventListener('keydown', event => {
                 if (event.key === 'Enter') {
                     event.preventDefault();
@@ -192,6 +221,70 @@
             await cargarTodo();
         }
 
+        function configurarMenuMovil() {
+            const sidebar = document.getElementById('sidebar');
+            const toggle = document.getElementById('menu-toggle');
+            const close = document.getElementById('sidebar-close');
+            if (!sidebar || !toggle || !close) return;
+
+            const abrir = () => {
+                sidebar.classList.add('open');
+                toggle.setAttribute('aria-expanded', 'true');
+                close.focus();
+            };
+
+            const cerrar = () => {
+                sidebar.classList.remove('open');
+                toggle.setAttribute('aria-expanded', 'false');
+            };
+
+            toggle.addEventListener('click', abrir);
+            close.addEventListener('click', cerrar);
+
+            sidebar.querySelectorAll('a.nav-item').forEach(enlace => {
+                enlace.addEventListener('click', cerrar);
+            });
+
+            document.addEventListener('keydown', event => {
+                if (event.key === 'Escape' && sidebar.classList.contains('open')) {
+                    cerrar();
+                }
+            });
+
+            window.addEventListener('resize', () => {
+                if (window.innerWidth > 860) cerrar();
+            });
+        }
+
+        function completarUsuarioSidebar() {
+            const sesion = window.institutoUsuario || {};
+            const nombre = String(sesion.nombre || sesion.nombreUsuario || 'Sesión activa').trim();
+            const rol = String(sesion.rolEtiqueta || sesion.rol || 'Instituto').trim();
+            const nombreEl = document.getElementById('sidebar-user-name');
+            const rolEl = document.getElementById('sidebar-user-role');
+            const avatarEl = document.getElementById('sidebar-user-avatar');
+            const fila = document.getElementById('sidebar-user');
+
+            if (nombreEl) nombreEl.textContent = nombre;
+            if (rolEl) rolEl.textContent = rol;
+            if (avatarEl) avatarEl.textContent = inicialesDeNombre(nombre);
+            if (fila) fila.title = nombre + ' · ' + rol;
+        }
+
+        function inicialesDeNombre(texto) {
+            const partes = String(texto || '').trim().split(/\s+/).filter(Boolean);
+            const iniciales = (partes[0]?.charAt(0) || '') + (partes[1]?.charAt(0) || '');
+            return (iniciales || '?').toUpperCase();
+        }
+
+        function salirInstituto() {
+            if (typeof window.cerrarSesionInstituto === 'function') {
+                window.cerrarSesionInstituto();
+                return;
+            }
+            window.location.href = 'login.html?v=20261028-2';
+        }
+
         async function cargarTodo() {
             try {
                 const [profesores, cursos] = await Promise.all([
@@ -206,8 +299,8 @@
                 renderTodo();
                 actualizarUltimaActualizacion();
             } catch (error) {
-                document.getElementById('grid-profesores').innerHTML =
-                    '<div class="empty-state">No se pudieron cargar los profesores.</div>';
+                document.getElementById('tabla-profesores').innerHTML =
+                    '<tr><td colspan="6"><div class="empty">No se pudieron cargar los profesores.</div></td></tr>';
                 document.getElementById('resultados-info').textContent = 'Error de conexión';
                 document.getElementById('ultima-actualizacion').textContent = 'Sin conexión';
                 mostrarToast('No se pudieron cargar los datos: ' + error.message, 'error');
@@ -238,7 +331,7 @@
                 .map(texto => ({ id: texto, nombre: texto }));
 
             llenarSelect(document.getElementById('filtro-especialidad'), valores, {
-                placeholder: 'Todas'
+                placeholder: 'Todas las especialidades'
             });
         }
 
@@ -267,39 +360,11 @@
         }
 
         function renderTodo() {
-            renderKpis();
-            renderTarjetas();
+            renderTabla();
             document.getElementById('btn-limpiar').classList.toggle(
                 'hidden',
                 !(state.busqueda || state.filtroEspecialidad)
             );
-        }
-
-        function renderKpis() {
-            const total = state.profesores.length;
-            const conFoto = state.profesores.filter(profesor => esFotoPerfilValida(profesor.fotoPerfil)).length;
-            const conCursos = state.profesores.filter(profesor => cursosDeProfesor(profesor.id).length > 0).length;
-            const especialidades = new Set(
-                state.profesores
-                    .map(profesor => normalizarTexto(profesor.especialidad))
-                    .filter(Boolean)
-            ).size;
-
-            document.getElementById('kpi-total').textContent = total;
-            document.getElementById('kpi-total-detalle').textContent =
-                conFoto + ' ' + pluralizar(conFoto, 'profesor con foto', 'profesores con foto');
-
-            document.getElementById('kpi-con-foto').textContent = conFoto;
-            document.getElementById('kpi-con-foto-detalle').textContent =
-                (total - conFoto) + ' ' + pluralizar(total - conFoto, 'sin foto de perfil', 'sin foto de perfil');
-
-            document.getElementById('kpi-con-cursos').textContent = conCursos;
-            document.getElementById('kpi-con-cursos-detalle').textContent =
-                (total - conCursos) + ' ' + pluralizar(total - conCursos, 'sin curso asignado', 'sin curso asignado');
-
-            document.getElementById('kpi-especialidades').textContent = especialidades;
-            document.getElementById('kpi-especialidades-detalle').textContent =
-                pluralizar(especialidades, 'especialidad registrada', 'especialidades registradas');
         }
 
         function obtenerProfesoresFiltrados() {
@@ -327,8 +392,8 @@
                 .sort((a, b) => nombreCompleto(a).localeCompare(nombreCompleto(b), 'es'));
         }
 
-        function renderTarjetas() {
-            const contenedor = document.getElementById('grid-profesores');
+        function renderTabla() {
+            const contenedor = document.getElementById('tabla-profesores');
             const profesores = obtenerProfesoresFiltrados();
             let info = profesores.length + ' ' + pluralizar(profesores.length, 'profesor', 'profesores');
             if (profesores.length !== state.profesores.length) {
@@ -340,7 +405,7 @@
                 const mensaje = state.profesores.length
                     ? 'No se encontraron profesores con los filtros seleccionados.'
                     : 'Todavía no hay profesores. Usá “Nuevo profesor” para crear el primero.';
-                contenedor.innerHTML = '<div class="empty-state">' + mensaje + '</div>';
+                contenedor.innerHTML = '<tr><td colspan="6"><div class="empty">' + mensaje + '</div></td></tr>';
                 return;
             }
 
@@ -348,39 +413,43 @@
                 const nombre = nombreCompleto(profesor);
                 const cursos = cursosDeProfesor(profesor.id);
                 const edad = calcularEdad(profesor.fechaNacimiento);
-                const cursosTexto = cursos.length
-                    ? cursos.map(curso => curso.nombre).join(', ')
-                    : 'Sin asignar';
+                const cursosTexto = cursos.map(curso => curso.nombre).filter(Boolean).join(', ');
+                const cursosHtml = cursos.length
+                    ? '<span class="pill">' + cursos.length + ' ' + pluralizar(cursos.length, 'curso', 'cursos') + '</span>' +
+                        (cursosTexto
+                            ? '<span class="sub truncate" title="' + escapeHtml(cursosTexto) + '">' + escapeHtml(cursosTexto) + '</span>'
+                            : '')
+                    : '<span class="pill">Sin cursos</span>';
+                const emailHtml = profesor.email
+                    ? '<span class="contact-line" title="' + escapeHtml(profesor.email) + '">' + escapeHtml(profesor.email) + '</span>'
+                    : '<span class="muted">—</span>';
+                const telefonoHtml = profesor.telefono
+                    ? '<span class="sub truncate" title="' + escapeHtml(profesor.telefono) + '">' + escapeHtml(profesor.telefono) + '</span>'
+                    : '';
+                const edadHtml = edad !== null
+                    ? '<span class="num">' + edad + '</span><span class="sub">' + formatearFecha(profesor.fechaNacimiento) + '</span>'
+                    : '<span class="muted">—</span>';
+                const dniHtml = profesor.dni
+                    ? escapeHtml(profesor.dni)
+                    : '<span class="muted">—</span>';
+                const especialidad = profesor.especialidad || 'Sin especialidad registrada';
 
-                return '<article class="profesor-card">' +
-                    '<div class="profesor-card-head">' +
-                        avatarProfesorHtml(profesor, 'avatar-lg') +
-                        '<div class="profesor-card-title">' +
-                            '<h3>' + escapeHtml(nombre) + '</h3>' +
-                            '<p class="profesor-especialidad">' +
-                                escapeHtml(profesor.especialidad || 'Sin especialidad registrada') +
-                            '</p>' +
+                return '<tr>' +
+                    '<td><div class="person-cell">' + avatarProfesorHtml(profesor, 'avatar-sm') +
+                        '<div class="person-meta">' +
+                            '<strong title="' + escapeHtml(nombre) + '">' + escapeHtml(nombre) + '</strong>' +
+                            '<span class="sub" title="' + escapeHtml(especialidad) + '">' + escapeHtml(especialidad) + '</span>' +
                         '</div>' +
-                    '</div>' +
-                    '<div class="profesor-meta">' +
-                        '<div class="profesor-dato"><span>DNI</span><strong>' +
-                            escapeHtml(profesor.dni || '—') + '</strong></div>' +
-                        '<div class="profesor-dato"><span>Edad</span><strong>' +
-                            (edad !== null ? edad + ' años' : '—') + '</strong></div>' +
-                        '<div class="profesor-dato"><span>Nacimiento</span><strong>' +
-                            formatearFecha(profesor.fechaNacimiento) + '</strong></div>' +
-                        '<div class="profesor-dato"><span>Email</span><strong>' +
-                            escapeHtml(profesor.email || 'Sin email') + '</strong></div>' +
-                        '<div class="profesor-dato"><span>Teléfono</span><strong>' +
-                            escapeHtml(profesor.telefono || 'Sin teléfono') + '</strong></div>' +
-                        '<div class="profesor-dato full"><span>Cursos asignados</span><strong>' +
-                            escapeHtml(cursosTexto) + '</strong></div>' +
-                    '</div>' +
-                    '<div class="profesor-card-actions">' +
-                        '<button type="button" class="action-link" onclick="abrirModalEditar(' + profesor.id + ')">Editar</button>' +
-                        '<button type="button" class="btn-danger-link" onclick="eliminarProfesor(' + profesor.id + ')">Eliminar</button>' +
-                    '</div>' +
-                '</article>';
+                    '</div></td>' +
+                    '<td class="col-dni">' + dniHtml + '</td>' +
+                    '<td class="col-edad n">' + edadHtml + '</td>' +
+                    '<td class="col-contacto">' + emailHtml + telefonoHtml + '</td>' +
+                    '<td class="col-cursos">' + cursosHtml + '</td>' +
+                    '<td class="col-acciones n"><div class="row-actions">' +
+                        '<button type="button" class="btn ghost small" onclick="abrirModalEditar(' + profesor.id + ')">Editar</button>' +
+                        '<button type="button" class="btn ghost small danger" onclick="eliminarProfesor(' + profesor.id + ')">Eliminar</button>' +
+                    '</div></td>' +
+                '</tr>';
             }).join('');
         }
 

@@ -2,6 +2,7 @@ package com.instituto.gestion.service;
 
 import com.instituto.gestion.model.Alumno;
 import com.instituto.gestion.model.Curso;
+import com.instituto.gestion.model.EstadoAlumno;
 import com.instituto.gestion.model.Inscripcion;
 import com.instituto.gestion.repository.AlumnoRepository;
 import com.instituto.gestion.repository.CursoRepository;
@@ -9,6 +10,7 @@ import com.instituto.gestion.repository.InscripcionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
@@ -26,13 +28,22 @@ public class InscripcionService {
     @Autowired
     private CursoRepository cursoRepository;
 
+    @Autowired
+    private AlumnoService alumnoService;
+
+    /**
+     * La operatoria diaria solo muestra inscripciones de alumnos ACTIVO.
+     * Los registros históricos de alumnos archivados se conservan en la base.
+     */
     public List<Inscripcion> obtenerTodas() {
-        return repository.findAll();
+        return repository.findByAlumno_EstadoOrderByFechaInscripcionDesc(EstadoAlumno.ACTIVO);
     }
 
+    @Transactional
     public Inscripcion guardarInscripcion(Inscripcion inscripcion) {
         Alumno alumno = resolverAlumno(inscripcion);
         Curso curso = resolverCurso(inscripcion);
+        validarAlumnoActivo(alumno);
 
         if (repository.existsByAlumnoAndCursoIds(alumno.getId(), curso.getId())) {
             throw new ResponseStatusException(
@@ -43,11 +54,14 @@ public class InscripcionService {
         inscripcion.setAlumno(alumno);
         inscripcion.setCurso(curso);
         inscripcion.setFechaInscripcion(LocalDate.now());
-        return repository.save(inscripcion);
+        Inscripcion guardada = repository.save(inscripcion);
+        alumnoService.registrarActividad(alumno.getId());
+        return guardada;
     }
 
     public List<Inscripcion> buscarPorCurso(Long cursoId) {
-        return repository.findByCurso_Id(cursoId);
+        return repository.findByCurso_IdAndAlumno_EstadoOrderByFechaInscripcionDesc(
+                cursoId, EstadoAlumno.ACTIVO);
     }
 
     public void eliminarInscripcion(Long id) {
@@ -59,6 +73,7 @@ public class InscripcionService {
         repository.deleteById(id);
     }
 
+    @Transactional
     public Inscripcion actualizarInscripcion(Long id, Inscripcion inscripcionNueva) {
         Inscripcion inscripcion = repository.findById(id).orElseThrow(() ->
                 new ResponseStatusException(
@@ -67,6 +82,7 @@ public class InscripcionService {
 
         Alumno alumno = resolverAlumno(inscripcionNueva);
         Curso curso = resolverCurso(inscripcionNueva);
+        validarAlumnoActivo(alumno);
 
         if (repository.existsByAlumno_IdAndCurso_IdAndIdNot(alumno.getId(), curso.getId(), id)) {
             throw new ResponseStatusException(
@@ -98,5 +114,13 @@ public class InscripcionService {
 
         return cursoRepository.findById(inscripcion.getCurso().getId()).orElseThrow(() ->
                 new ResponseStatusException(HttpStatus.BAD_REQUEST, "El curso seleccionado no existe."));
+    }
+
+    private void validarAlumnoActivo(Alumno alumno) {
+        if (alumno.getEstado() != EstadoAlumno.ACTIVO) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "El alumno está archivado. Reactivalo antes de inscribirlo en un curso.");
+        }
     }
 }

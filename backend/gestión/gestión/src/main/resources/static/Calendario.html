@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="js/auth-guard.js?v=20261028-2"></script>
     <title>Calendario - Instituto</title>
-    <link rel="stylesheet" href="css/instituto.css?v=20261024">
+    <link rel="stylesheet" href="css/instituto.css?v=20261028-2">
     <script defer src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.15/locales/es.global.min.js"></script>
     <style>
@@ -435,7 +436,8 @@
     <header class="topbar">
         <div class="brand">Instituto <span>Gestión Académica</span></div>
         <nav>
-            <a href="Dashboard.html">Dashboard</a>
+            <a href="Dashboard.html">Inicio</a>
+            <a href="Estadisticas.html" class="nav-highlight">Estadísticas</a>
             <a href="index.html">Inscripciones</a>
             <a href="Alumnos.html">Alumnos</a>
             <a href="Curso.html">Cursos</a>
@@ -459,24 +461,6 @@
                 <button type="button" class="btn btn-primary" onclick="abrirModalNuevo()">Nuevo evento</button>
             </div>
         </div>
-
-        <section class="kpis kpis-3" aria-label="Resumen del calendario">
-            <article class="kpi">
-                <p class="kpi-label">Eventos del mes</p>
-                <div class="kpi-value" id="kpi-mes">—</div>
-                <div class="kpi-detail" id="kpi-mes-detalle">—</div>
-            </article>
-            <article class="kpi">
-                <p class="kpi-label">Próximos 7 días</p>
-                <div class="kpi-value" id="kpi-semana">—</div>
-                <div class="kpi-detail" id="kpi-semana-detalle">—</div>
-            </article>
-            <article class="kpi">
-                <p class="kpi-label">Exámenes próximos</p>
-                <div class="kpi-value danger" id="kpi-examenes">—</div>
-                <div class="kpi-detail" id="kpi-examenes-detalle">En los próximos 30 días</div>
-            </article>
-        </section>
 
         <section class="calendario-layout">
             <article class="panel calendario-panel">
@@ -816,7 +800,6 @@
                         desde: fechaAISO(info.view.currentStart),
                         hasta: sumarDiasISO(fechaAISO(info.view.currentEnd), -1)
                     };
-                    actualizarKpisMes();
                 },
                 dateClick: info => abrirModalNuevo(info.dateStr),
                 eventClick: info => abrirDetalle(info.event.extendedProps.evento),
@@ -844,7 +827,6 @@
                 state.eventosMes = eventos;
                 state.rangoMes = state.rangoMes || { desde, hasta };
 
-                actualizarKpisMes();
                 actualizarHintCalendario();
                 successCallback(eventos.map(eventoAFullCalendar));
             } catch (error) {
@@ -900,29 +882,13 @@
         }
 
         // ------------------------------------------------------------------
-        // Indicadores y próximos eventos
+        // Próximos eventos
         // ------------------------------------------------------------------
-        function actualizarKpisMes() {
-            const rango = state.rangoMes;
-            const eventos = rango
-                ? state.eventosMes.filter(evento => solapa(evento, rango.desde, rango.hasta))
-                : state.eventosMes;
-
-            const examenes = eventos.filter(evento => evento.tipo === 'EXAMEN').length;
-            const festejos = eventos.filter(evento => evento.tipo === 'FESTEJO').length;
-
-            document.getElementById('kpi-mes').textContent = eventos.length;
-            document.getElementById('kpi-mes-detalle').textContent =
-                examenes + ' ' + pluralizar(examenes, 'examen', 'exámenes') + ' · ' +
-                festejos + ' ' + pluralizar(festejos, 'festejo', 'festejos');
-        }
-
         async function cargarProximos() {
             try {
                 const eventos = await apiFetch(API + '/calendario/proximos?dias=60');
                 state.proximos = Array.isArray(eventos) ? eventos : [];
                 renderProximos();
-                actualizarKpisProximos();
             } catch (error) {
                 document.getElementById('lista-proximos').innerHTML =
                     '<div class="empty-state">No se pudieron cargar los próximos eventos.</div>';
@@ -972,27 +938,6 @@
                     '</span>' +
                 '</button>';
             }).join('');
-        }
-
-        function actualizarKpisProximos() {
-            const hoy = hoyISO();
-            const enSieteDias = sumarDiasISO(hoy, 7);
-            const enTreintaDias = sumarDiasISO(hoy, 30);
-
-            const semana = state.proximos.filter(evento => solapa(evento, hoy, enSieteDias));
-            const examenes = state.proximos.filter(evento =>
-                evento.tipo === 'EXAMEN' && solapa(evento, hoy, enTreintaDias)
-            );
-
-            const examenesSemana = semana.filter(evento => evento.tipo === 'EXAMEN').length;
-            const festejosSemana = semana.filter(evento => evento.tipo === 'FESTEJO').length;
-
-            document.getElementById('kpi-semana').textContent = semana.length;
-            document.getElementById('kpi-semana-detalle').textContent =
-                examenesSemana + ' ' + pluralizar(examenesSemana, 'examen', 'exámenes') + ' · ' +
-                festejosSemana + ' ' + pluralizar(festejosSemana, 'festejo', 'festejos');
-
-            document.getElementById('kpi-examenes').textContent = examenes.length;
         }
 
         // ------------------------------------------------------------------
@@ -1069,6 +1014,7 @@
                 hora,
                 descripcion
             };
+            const esExamenConCurso = !id && tipo === 'EXAMEN' && Boolean(cursoId);
 
             const boton = document.getElementById('btn-guardar-evento');
             setBotonCargando(boton, true, id ? 'Guardando...' : 'Creando...');
@@ -1081,7 +1027,12 @@
                 });
 
                 cerrarModal('modal-evento');
-                mostrarToast(id ? 'Evento actualizado correctamente.' : 'Evento creado correctamente.', 'success');
+                mostrarToast(
+                    esExamenConCurso
+                        ? 'Examen agendado correctamente. Se están enviando las notificaciones por correo a los alumnos inscriptos.'
+                        : (id ? 'Evento actualizado correctamente.' : 'Evento creado correctamente.'),
+                    'success'
+                );
                 await refrescarCalendario();
                 await cargarProximos();
                 actualizarUltimaActualizacion();
@@ -1179,7 +1130,6 @@
             try {
                 const eventos = await fetchEventos({ desde, hasta, tipo: state.filtroTipo });
                 state.eventosMes = eventos;
-                actualizarKpisMes();
                 actualizarHintCalendario();
                 renderFallback();
             } catch (error) {

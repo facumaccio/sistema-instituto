@@ -3,15 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="js/auth-guard.js?v=20261028-2"></script>
     <title>Inscripciones - Instituto</title>
-    <link rel="stylesheet" href="css/instituto.css?v=20261024">
+    <link rel="stylesheet" href="css/instituto.css?v=20261028-2">
 </head>
 <body>
 
     <header class="topbar">
         <div class="brand">Instituto <span>Gestión Académica</span></div>
         <nav>
-            <a href="Dashboard.html">Dashboard</a>
+            <a href="Dashboard.html">Inicio</a>
+            <a href="Estadisticas.html" class="nav-highlight">Estadísticas</a>
             <a href="index.html" class="active">Inscripciones</a>
             <a href="Alumnos.html">Alumnos</a>
             <a href="Curso.html">Cursos</a>
@@ -31,29 +33,6 @@
             </div>
             <button type="button" class="btn btn-primary" id="btn-nueva-inscripcion" onclick="abrirModalInscripcion()" disabled>Nueva inscripción</button>
         </div>
-
-        <section class="kpis" aria-label="Indicadores de inscripciones">
-            <article class="kpi">
-                <p class="kpi-label">Inscripciones activas</p>
-                <div class="kpi-value" id="kpi-total">—</div>
-                <div class="kpi-detail" id="kpi-total-detalle">—</div>
-            </article>
-            <article class="kpi">
-                <p class="kpi-label">Alumnos inscriptos</p>
-                <div class="kpi-value" id="kpi-alumnos">—</div>
-                <div class="kpi-detail" id="kpi-alumnos-detalle">—</div>
-            </article>
-            <article class="kpi">
-                <p class="kpi-label">Cursos con alumnos</p>
-                <div class="kpi-value" id="kpi-cursos">—</div>
-                <div class="kpi-detail" id="kpi-cursos-detalle">—</div>
-            </article>
-            <article class="kpi">
-                <p class="kpi-label">Altas este mes</p>
-                <div class="kpi-value success" id="kpi-mes">—</div>
-                <div class="kpi-detail" id="kpi-mes-detalle">—</div>
-            </article>
-        </section>
 
         <section class="toolbar" aria-label="Búsqueda y filtros">
             <div class="toolbar-main">
@@ -286,41 +265,8 @@
 
         function renderTodo() {
             const filtradas = obtenerInscripcionesFiltradas();
-            renderKpis();
             renderFiltroActivo();
             renderTabla(filtradas);
-        }
-
-        function renderKpis() {
-            const alumnosInscriptos = new Set(state.inscripciones.map(inscripcion => inscripcion.alumno?.id).filter(Boolean));
-            const cursosConAlumnos = new Set(state.inscripciones.map(inscripcion => inscripcion.curso?.id).filter(Boolean));
-            const alumnosSinInscripcion = state.alumnos.filter(alumno => !alumnosInscriptos.has(alumno.id)).length;
-
-            const hoy = new Date();
-            const periodoActual = hoy.getFullYear() + '-' + String(hoy.getMonth() + 1).padStart(2, '0');
-            const altasDelMes = state.inscripciones.filter(inscripcion =>
-                String(inscripcion.fechaInscripcion || '').startsWith(periodoActual)
-            ).length;
-
-            const nombreMes = new Intl.DateTimeFormat('es-AR', { month: 'long', year: 'numeric' }).format(hoy);
-
-            document.getElementById('kpi-total').textContent = state.inscripciones.length;
-            document.getElementById('kpi-total-detalle').textContent =
-                alumnosInscriptos.size + ' ' + pluralizar(alumnosInscriptos.size, 'alumno', 'alumnos') +
-                ' · ' + cursosConAlumnos.size + ' ' + pluralizar(cursosConAlumnos.size, 'curso', 'cursos');
-
-            document.getElementById('kpi-alumnos').textContent = alumnosInscriptos.size;
-            document.getElementById('kpi-alumnos-detalle').textContent = alumnosSinInscripcion
-                ? alumnosSinInscripcion + ' ' + pluralizar(alumnosSinInscripcion, 'alumno sin inscripción', 'alumnos sin inscripción')
-                : 'Todos los alumnos tienen curso';
-
-            document.getElementById('kpi-cursos').textContent = cursosConAlumnos.size;
-            document.getElementById('kpi-cursos-detalle').textContent =
-                state.cursos.length + ' ' + pluralizar(state.cursos.length, 'curso registrado', 'cursos registrados');
-
-            document.getElementById('kpi-mes').textContent = altasDelMes;
-            document.getElementById('kpi-mes-detalle').textContent =
-                nombreMes.charAt(0).toUpperCase() + nombreMes.slice(1);
         }
 
         function renderFiltroActivo() {

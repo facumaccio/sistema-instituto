@@ -1,10 +1,14 @@
 package com.instituto.gestion.repository;
 
 import com.instituto.gestion.model.Alumno;
+import com.instituto.gestion.model.EstadoAlumno;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+
+import java.util.List;
 
 @Repository
 public interface AlumnoRepository extends JpaRepository<Alumno, Long> {
@@ -15,15 +19,35 @@ public interface AlumnoRepository extends JpaRepository<Alumno, Long> {
     @Query("SELECT COUNT(a) > 0 FROM Alumno a WHERE a.dni = :dni AND a.id <> :id")
     boolean existsByDniAndIdNot(@Param("dni") String dni, @Param("id") Long id);
 
+    List<Alumno> findByEstadoOrderByNyaAsc(EstadoAlumno estado);
+
+    List<Alumno> findByEstadoInOrderByNyaAsc(List<EstadoAlumno> estados);
+
+    long countByEstado(EstadoAlumno estado);
+
     /**
-     * Alumno activo para reportes: tiene al menos una inscripción y no está
-     * marcado como no regular. La regularidad nula se considera activa.
+     * Completa el estado de filas creadas antes de incorporar la baja lógica.
+     * Es idempotente y se ejecuta antes de cada verificación de inactividad.
+     */
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("UPDATE Alumno a SET a.estado = :estado WHERE a.estado IS NULL")
+    int marcarEstadoInicial(@Param("estado") EstadoAlumno estado);
+
+    /**
+     * Alumno activo para reportes: tiene al menos una inscripción, está
+     * marcado como ACTIVO y no está marcado como no regular. La regularidad
+     * nula se considera activa.
      */
     @Query("""
             SELECT COUNT(DISTINCT a.id)
             FROM Alumno a
-            WHERE (a.esRegular IS NULL OR a.esRegular = true)
+            WHERE a.estado = :estado
+              AND (a.esRegular IS NULL OR a.esRegular = true)
               AND EXISTS (SELECT i.id FROM Inscripcion i WHERE i.alumno = a)
             """)
-    long contarAlumnosActivos();
+    long contarAlumnosActivosPorEstado(@Param("estado") EstadoAlumno estado);
+
+    default long contarAlumnosActivos() {
+        return contarAlumnosActivosPorEstado(EstadoAlumno.ACTIVO);
+    }
 }

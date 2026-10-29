@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ingresar - Instituto</title>
+    <link rel="stylesheet" href="css/instituto.css?v=20261028-2">
+</head>
+<body class="login-page">
+
+    <main class="login-shell">
+        <section class="login-card" aria-labelledby="login-title">
+            <div class="login-brand">
+                <span class="login-brand-mark" aria-hidden="true">I</span>
+                <div>
+                    <h1>Instituto</h1>
+                    <p>Gestión Académica</p>
+                </div>
+            </div>
+
+            <div class="login-heading">
+                <h2 id="login-title">Acceso al sistema</h2>
+                <p>Ingresá con tu cuenta o creá una nueva para comenzar.</p>
+            </div>
+
+            <div class="login-tabs" role="tablist" aria-label="Opciones de acceso">
+                <button
+                    type="button"
+                    class="login-tab active"
+                    id="tab-login"
+                    role="tab"
+                    aria-selected="true"
+                    aria-controls="form-login"
+                    tabindex="0">Ingresar</button>
+                <button
+                    type="button"
+                    class="login-tab"
+                    id="tab-registro"
+                    role="tab"
+                    aria-selected="false"
+                    aria-controls="form-registro"
+                    tabindex="-1">Crear cuenta</button>
+            </div>
+
+            <form
+                id="form-login"
+                class="login-form"
+                role="tabpanel"
+                aria-labelledby="tab-login"
+                novalidate>
+                <div class="login-field">
+                    <label for="login-identificador">Correo o usuario</label>
+                    <input
+                        type="text"
+                        id="login-identificador"
+                        name="identificador"
+                        placeholder="Tu correo o usuario"
+                        autocomplete="username"
+                        maxlength="120"
+                        required
+                        autofocus>
+                </div>
+
+                <div class="login-field">
+                    <label for="login-password">Contraseña</label>
+                    <div class="login-password-wrap">
+                        <input
+                            type="password"
+                            id="login-password"
+                            name="password"
+                            placeholder="Tu contraseña"
+                            autocomplete="current-password"
+                            required>
+                        <button
+                            type="button"
+                            class="login-toggle-password"
+                            id="btn-toggle-password"
+                            aria-label="Mostrar contraseña">Ver</button>
+                    </div>
+                </div>
+
+                <div class="login-error hidden" id="login-error" role="alert" aria-live="polite"></div>
+
+                <button type="submit" class="btn btn-primary login-submit" id="btn-login">
+                    Ingresar
+                </button>
+            </form>
+
+            <form
+                id="form-registro"
+                class="login-form hidden"
+                role="tabpanel"
+                aria-labelledby="tab-registro"
+                novalidate>
+                <div class="login-field">
+                    <label for="registro-nombre">Nombre completo</label>
+                    <input
+                        type="text"
+                        id="registro-nombre"
+                        name="nombre"
+                        placeholder="Ej. Ana Pérez"
+                        autocomplete="name"
+                        maxlength="120"
+                        required>
+                </div>
+
+                <div class="login-field">
+                    <label for="registro-dni">DNI</label>
+                    <input
+                        type="text"
+                        id="registro-dni"
+                        name="dni"
+                        placeholder="Ej. 30123456"
+                        inputmode="numeric"
+                        autocomplete="off"
+                        maxlength="20"
+                        required>
+                </div>
+
+                <div class="login-field">
+                    <label for="registro-correo">Correo electrónico</label>
+                    <input
+                        type="email"
+                        id="registro-correo"
+                        name="correo"
+                        placeholder="tu@correo.com"
+                        autocomplete="email"
+                        maxlength="120"
+                        required>
+                </div>
+
+                <div class="login-field">
+                    <label for="registro-password">Contraseña</label>
+                    <input
+                        type="password"
+                        id="registro-password"
+                        name="password"
+                        placeholder="Creá una contraseña"
+                        autocomplete="new-password"
+                        required>
+                    <p class="login-hint">Mínimo 5 caracteres, una letra mayúscula y un número.</p>
+                </div>
+
+                <div class="login-error hidden" id="registro-error" role="alert" aria-live="polite"></div>
+
+                <button type="submit" class="btn btn-primary login-submit" id="btn-registro">
+                    Crear cuenta
+                </button>
+
+                <p class="login-register-note">
+                    La primera cuenta creada será Dueño del sistema; las siguientes se crean como Profesor.
+                </p>
+            </form>
+
+            <p class="login-footnote">Acceso exclusivo para personal autorizado del instituto.</p>
+        </section>
+
+        <p class="login-copy">Sistema de Gestión Académica · Instituto</p>
+    </main>
+
+    <noscript>
+        <p class="login-noscript">Este sistema requiere JavaScript para iniciar sesión.</p>
+    </noscript>
+
+    <script src="js/instituto.js"></script>
+    <script>
+        const SESION_KEY = 'institutoUsuario';
+
+        const tabLogin = document.getElementById('tab-login');
+        const tabRegistro = document.getElementById('tab-registro');
+        const formLogin = document.getElementById('form-login');
+        const formRegistro = document.getElementById('form-registro');
+
+        const inputIdentificador = document.getElementById('login-identificador');
+        const inputPassword = document.getElementById('login-password');
+        const cajaErrorLogin = document.getElementById('login-error');
+        const btnLogin = document.getElementById('btn-login');
+        const btnTogglePassword = document.getElementById('btn-toggle-password');
+
+        const inputNombre = document.getElementById('registro-nombre');
+        const inputDni = document.getElementById('registro-dni');
+        const inputCorreo = document.getElementById('registro-correo');
+        const inputPasswordRegistro = document.getElementById('registro-password');
+        const cajaErrorRegistro = document.getElementById('registro-error');
+        const btnRegistro = document.getElementById('btn-registro');
+
+        function leerSesion() {
+            try {
+                const guardado = localStorage.getItem(SESION_KEY);
+                if (!guardado) return null;
+                const datos = JSON.parse(guardado);
+                return datos && datos.nombreUsuario ? datos : null;
+            } catch (_) {
+                return null;
+            }
+        }
+
+        function guardarSesion(datos) {
+            const sesion = {
+                nombreUsuario: datos.nombreUsuario,
+                nombre: datos.nombre || '',
+                correo: datos.correo || '',
+                rol: datos.rol,
+                rolEtiqueta: datos.rolEtiqueta || datos.rol,
+                loginEn: new Date().toISOString()
+            };
+            localStorage.setItem(SESION_KEY, JSON.stringify(sesion));
+        }
+
+        function mostrarError(caja, mensaje) {
+            caja.textContent = mensaje;
+            caja.classList.remove('hidden');
+        }
+
+        function ocultarError(caja) {
+            caja.textContent = '';
+            caja.classList.add('hidden');
+        }
+
+        function cambiarVista(vista) {
+            const esLogin = vista === 'login';
+
+            tabLogin.classList.toggle('active', esLogin);
+            tabRegistro.classList.toggle('active', !esLogin);
+            tabLogin.setAttribute('aria-selected', esLogin ? 'true' : 'false');
+            tabRegistro.setAttribute('aria-selected', esLogin ? 'false' : 'true');
+            tabLogin.tabIndex = esLogin ? 0 : -1;
+            tabRegistro.tabIndex = esLogin ? -1 : 0;
+
+            formLogin.classList.toggle('hidden', !esLogin);
+            formRegistro.classList.toggle('hidden', esLogin);
+
+            ocultarError(cajaErrorLogin);
+            ocultarError(cajaErrorRegistro);
+
+            if (esLogin) {
+                inputIdentificador.focus();
+            } else {
+                inputNombre.focus();
+            }
+        }
+
+        function alternarPassword() {
+            const mostrar = inputPassword.type === 'password';
+            inputPassword.type = mostrar ? 'text' : 'password';
+            btnTogglePassword.textContent = mostrar ? 'Ocultar' : 'Ver';
+            btnTogglePassword.setAttribute(
+                'aria-label',
+                mostrar ? 'Ocultar contraseña' : 'Mostrar contraseña'
+            );
+            inputPassword.focus();
+        }
+
+        function mensajeDeError(error, mensajePorDefecto) {
+            if (error instanceof TypeError) {
+                return 'No se pudo conectar con el servidor. Verificá que esté en ejecución.';
+            }
+            return error.message || mensajePorDefecto;
+        }
+
+        function guardarSesionYRedirigir(datos, boton, cajaError) {
+            try {
+                guardarSesion(datos);
+            } catch (_) {
+                mostrarError(cajaError, 'No se pudo guardar la sesión en este navegador. Revisá la configuración de almacenamiento.');
+                setBotonCargando(boton, false);
+                return false;
+            }
+
+            window.location.replace('index.html?v=20261028-2');
+            return true;
+        }
+
+        async function iniciarSesion(event) {
+            event.preventDefault();
+            ocultarError(cajaErrorLogin);
+
+            const identificador = inputIdentificador.value.trim();
+            const password = inputPassword.value;
+
+            if (!identificador || !password) {
+                mostrarError(cajaErrorLogin, 'Ingresá tu correo o usuario y contraseña.');
+                (!identificador ? inputIdentificador : inputPassword).focus();
+                return;
+            }
+
+            setBotonCargando(btnLogin, true, 'Ingresando...');
+
+            try {
+                const datos = await apiFetch(API + '/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nombreUsuario: identificador, password })
+                });
+
+                guardarSesionYRedirigir(datos, btnLogin, cajaErrorLogin);
+            } catch (error) {
+                mostrarError(
+                    cajaErrorLogin,
+                    mensajeDeError(error, 'No se pudo iniciar sesión. Intentá nuevamente.')
+                );
+                setBotonCargando(btnLogin, false);
+                inputPassword.select();
+            }
+        }
+
+        async function crearCuenta(event) {
+            event.preventDefault();
+            ocultarError(cajaErrorRegistro);
+
+            const nombre = inputNombre.value.trim();
+            const dni = inputDni.value.trim();
+            const correo = inputCorreo.value.trim();
+            const password = inputPasswordRegistro.value;
+
+            if (!nombre || !dni || !correo || !password) {
+                mostrarError(cajaErrorRegistro, 'Completá nombre, DNI, correo y contraseña.');
+                const primerVacio = [
+                    [inputNombre, nombre],
+                    [inputDni, dni],
+                    [inputCorreo, correo],
+                    [inputPasswordRegistro, password]
+                ].find(([, valor]) => !valor);
+                if (primerVacio) primerVacio[0].focus();
+                return;
+            }
+
+            setBotonCargando(btnRegistro, true, 'Creando cuenta...');
+
+            try {
+                const datos = await apiFetch(API + '/auth/registro', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nombre, dni, correo, password })
+                });
+
+                guardarSesionYRedirigir(datos, btnRegistro, cajaErrorRegistro);
+            } catch (error) {
+                mostrarError(
+                    cajaErrorRegistro,
+                    mensajeDeError(error, 'No se pudo crear la cuenta. Intentá nuevamente.')
+                );
+                setBotonCargando(btnRegistro, false);
+            }
+        }
+
+        tabLogin.addEventListener('click', () => cambiarVista('login'));
+        tabRegistro.addEventListener('click', () => cambiarVista('registro'));
+
+        tabLogin.addEventListener('keydown', event => {
+            if (event.key === 'ArrowRight') {
+                event.preventDefault();
+                cambiarVista('registro');
+                tabRegistro.focus();
+            }
+        });
+
+        tabRegistro.addEventListener('keydown', event => {
+            if (event.key === 'ArrowLeft') {
+                event.preventDefault();
+                cambiarVista('login');
+                tabLogin.focus();
+            }
+        });
+
+        formLogin.addEventListener('submit', iniciarSesion);
+        formRegistro.addEventListener('submit', crearCuenta);
+        btnTogglePassword.addEventListener('click', alternarPassword);
+
+        [inputIdentificador, inputPassword].forEach(input => {
+            input.addEventListener('input', () => ocultarError(cajaErrorLogin));
+        });
+
+        [inputNombre, inputDni, inputCorreo, inputPasswordRegistro].forEach(input => {
+            input.addEventListener('input', () => ocultarError(cajaErrorRegistro));
+        });
+
+        // Si ya hay una sesión guardada, se entra directamente al sistema.
+        if (leerSesion()) {
+            window.location.replace('index.html?v=20261028-2');
+        } else if (window.location.hash === '#registro') {
+            cambiarVista('registro');
+        }
+    </script>
+</body>
+</html>
